@@ -10,8 +10,18 @@ find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 
 include_directories(${SDL2_INCLUDE_DIRS})
 
-add_executable(CityBuilder main.cpp)
+include_directories(include)
+
+add_executable(CityBuilder
+  "source/Storage/Check.cpp"
+  "source/Storage/String.cpp"
+  "Source/Camera.cpp"
+  "Source/Game.cpp"
+  "Source/Input.cpp"
+  main.cpp
+)
 target_link_libraries(CityBuilder OgreBites ${SDL2_LIBRARIES})
+target_precompile_headers(CityBuilder PRIVATE include/CityBuilder/Common.h)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
