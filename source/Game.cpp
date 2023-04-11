@@ -23,17 +23,39 @@ Game::Game() : _ctx("City Builder") {
   // Create the sun
   _sun = _scene->createLight("Sun");
   _sun->setType(Ogre::Light::LT_DIRECTIONAL);
+  _scene->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
   
   Ogre::SceneNode* lightNode = _scene->getRootSceneNode()->createChildSceneNode();
-  lightNode->setDirection(0, -1, 0);
+  lightNode->setDirection(-0.1, -1, -0.1);
   lightNode->attachObject(_sun);
   
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
   
-  Ogre::Entity* ent = _scene->createEntity("TestLevel_b0.mesh");
-  Ogre::SceneNode* node = _scene->getRootSceneNode()->createChildSceneNode();
-  node->attachObject(ent);
+  // Add the ground plane
+  Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(
+    "Ground Plane Material", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+  
+  Ogre::TextureUnitState* planeTexture =
+    planeMaterial->getTechnique(0)->getPass(0)->createTextureUnitState("grass-tmp.jpg");
+  planeTexture->setTextureUScale(0.01);
+  planeTexture->setTextureVScale(0.01);
+  
+  Ogre::MovablePlane *planeDef = new Ogre::MovablePlane("Ground Plane");
+  planeDef->d = 0;
+  planeDef->normal = Ogre::Vector3::UNIT_Y;
+  
+  Ogre::MeshManager::getSingleton().createPlane(
+    "Ground Plane Mesh",
+    Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+    *planeDef,
+    120, 120, 1, 1,
+    true,
+    1, 1, 1,
+    Ogre::Vector3::UNIT_Z);
+  Ogre::Entity* plane = _scene->createEntity("Ground Plane Mesh");
+  plane->setMaterial(planeMaterial);
+  _scene->getRootSceneNode()->createChildSceneNode()->attachObject(plane);
   
   // Handle input
   _ctx.addInputListener(&_input);
