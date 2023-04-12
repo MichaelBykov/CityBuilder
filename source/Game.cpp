@@ -6,6 +6,7 @@
  */
 
 #include <CityBuilder/Game.h>
+#include <CityBuilder/Building/Road.h>
 USING_NS_CITY_BUILDER
 
 Game *Game::_instance = nullptr;
@@ -31,6 +32,10 @@ Game::Game() : _ctx("City Builder") {
   
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
+  
+  // Load the roads
+  RoadDef singleRoad;
+  RoadDef::load("roads/single.road", singleRoad);
   
   // Add the ground plane
   Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(

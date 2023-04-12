@@ -262,6 +262,36 @@ public:
     return _data->contents[index];
   }
   
+  /// Get the first element in the list.
+  const T &first() const {
+    if (_data == nullptr || _data->count == 0)
+      throw IndexOutOfBounds();
+    return _data->contents[0];
+  }
+  
+  /// Get the last element in the list.
+  const T &last() const {
+    if (_data == nullptr || _data->count == 0)
+      throw IndexOutOfBounds();
+    return _data->contents[_data->count - 1];
+  }
+  
+  /// Get the first element in the list.
+  T &setFirst() {
+    if (_data == nullptr || _data->count == 0)
+      throw IndexOutOfBounds();
+    _makeUnique();
+    return _data->contents[0];
+  }
+  
+  /// Get the last element in the list.
+  T &setLast() {
+    if (_data == nullptr || _data->count == 0)
+      throw IndexOutOfBounds();
+    _makeUnique();
+    return _data->contents[_data->count - 1];
+  }
+  
   /// Append an element to the list.
   /// \param[in] element
   ///   The element to append.

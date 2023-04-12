@@ -1,0 +1,25 @@
+[road]
+name "Single Lane Road"
+
+[profile]
+M  0, 0   uv 0    normal -1,0
+D  0, 1   uv 0.05 normal -1,0 normal 0,1
+D  3, 1   uv 0.2  normal  0,1 normal 1,0
+D  3, 0.1 uv 0.25 normal  1,0 normal 0,1
+C 10, 0.1 uv 0.5  normal  0,1
+D 17, 0.1 uv 0.75 normal  0,1 normal -1,0
+D 17, 1   uv 0.8  normal -1,0 normal  0,1
+D 20, 1   uv 0.95 normal  0,1 normal  1,0
+M 20, 0   uv 1    normal  1,0
+
+[traffic]
+U  0-3 ,1   all.peds
+L  3-10,0.1 all.vehicle speed 25mph
+R 10-17,0.1 all.vehicle speed 25mph
+U 17-20,1   all.peds
+
+[dividers]
+cross-traffic 10,0.1
+
+[texture]
+main "Roads/single.jpg"

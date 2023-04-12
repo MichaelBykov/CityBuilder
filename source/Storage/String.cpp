@@ -985,6 +985,37 @@ namespace {
     return true;
   }
   
+  template<typename T>
+  bool convertToFloat(const String &string, T *number) {
+    // Check that the string is entirely digits
+    bool decimal = false;
+    for (wchar_t c : string)
+      if (c == '.') {
+        if (decimal)
+          return false;
+        decimal = true;
+      } else if (notDigit(c))
+        return false;
+    
+    // Convert
+    *number = 0;
+    T fraction = 0.1;
+    decimal = false;
+    for (wchar_t c : string) {
+      if (c == '.')
+        decimal = true;
+      else if (decimal) {
+        *number += fraction * (c - '0');
+        fraction /= 10;
+      } else {
+        *number *= 10;
+        *number += c - '0'; 
+      }
+    }
+    
+    return true;
+  }
+  
   const char uint8Max[] = "255";
   const char uint16Max[] = "65535";
   const char uint32Max[] = "4294967295";
@@ -1005,6 +1036,10 @@ bool String::tryParseUInt32(uint32_t *integer) const {
 
 bool String::tryParseUInt64(uint64_t *integer) const {
   return convertToInt<uint64_t, 20, uint64Max>(*this, integer);
+}
+
+bool String::tryParseReal(float *real) const {
+  return convertToFloat(*this, real);
 }
 
 

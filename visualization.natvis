@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="String">
+    <DisplayString Condition="_data == nullptr">{{ empty }}</DisplayString>
+    <DisplayString>{_data->contents,s8}</DisplayString>
+  </Type>
+  <Type Name="List&lt;*&gt;">
+    <DisplayString Condition="_data == nullptr">{{ empty }}</DisplayString>
+    <DisplayString>{{ count={_data->count} }}</DisplayString>
+    <Expand>
+      <ArrayItems>
+          <Size>_data->count</Size>
+          <ValuePointer>_data->contents</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="Stack&lt;*&gt;">
+    <DisplayString Condition="_data == nullptr">{{ empty }}</DisplayString>
+    <DisplayString>{{ count={_data->count} }}</DisplayString>
+    <Expand>
+      <IndexListItems>
+        <Size>_data->count</Size>
+        <ValueNode>_data->contents[_data->count - 1 - $i]</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>

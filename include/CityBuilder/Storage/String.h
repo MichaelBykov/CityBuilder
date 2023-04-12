@@ -313,6 +313,13 @@ public:
       return tryParseUInt32((uint32_t *)integer);
   }
   
+  /// Try to parse a real number from the string.
+  /// \param[out] real
+  ///   The parsed real number, if successful.
+  /// \returns
+  ///   Whether or not a real number could be parsed.
+  bool tryParseReal(float *real) const;
+  
   
   
   /// [Blocking]

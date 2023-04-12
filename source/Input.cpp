@@ -189,6 +189,10 @@ bool InputDelegate::keyPressed(const OgreBites::KeyboardEvent &event) {
   case 1073742050: // MacOS-specific
     Input::_optionDown = true;
     return true;
+  
+  case (int)KeyCode::_1: // For testing: road 1
+    
+    return true;
   }
   
   std::cout << "Key pressed: " << key << std::endl;
