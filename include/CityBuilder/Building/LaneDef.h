@@ -1,5 +1,5 @@
 /**
- * @file Lane.h
+ * @file LaneDef.h
  * @brief The definition of a road traffic lane.
  * @date April 12, 2023
  * @copyright Copyright (c) 2023

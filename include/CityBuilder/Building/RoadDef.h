@@ -1,5 +1,5 @@
 /**
- * @file Road.h
+ * @file RoadDef.h
  * @brief An interface for constructing and designing roads.
  * @date April 11, 2023
  * @copyright Copyright (c) 2023
@@ -9,7 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/List.h>
-#include "Lane.h"
+#include "LaneDef.h"
 
 NS_CITY_BUILDER_BEGIN
 

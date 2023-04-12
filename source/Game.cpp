@@ -6,7 +6,7 @@
  */
 
 #include <CityBuilder/Game.h>
-#include <CityBuilder/Building/Road.h>
+#include <CityBuilder/Building/RoadDef.h>
 USING_NS_CITY_BUILDER
 
 Game *Game::_instance = nullptr;
