@@ -1,0 +1,12 @@
+[lane]
+name "roadway"
+
+[profile]
+M 0, 0.1 uv 0 normal 0,1
+M 7, 0.1 uv 1 normal 0,1
+
+[traffic]
+D 0-7, 0.1 all.vehicle
+
+[texture]
+main "Lanes/roadway.png"

@@ -9,52 +9,17 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/List.h>
+#include "Lane.h"
 
 NS_CITY_BUILDER_BEGIN
 
 
 /// A definition for a road type.
 struct RoadDef {
-  /// A point on the road profile.
-  struct Point {
-    /// The point type.
-    enum class Type {
-      /// A "move" node that connects to either the previous or next non-move
-      /// node.
-      /// \remarks
-      ///   Has a single position, normal, and uv.
-      move,
-      /// A disjoint node that separates a point into two distinct vertices used
-      /// to create sharp edges.
-      /// \remarks
-      ///   Has a single position and uv but two normals.
-      disjoint,
-      /// A connected node that connects to the previous and next nodes.
-      /// \remarks
-      ///   Has a single position, normal, and uv.
-      connected
-    };
-    
-    /// The position of the point in the profile.
-    /// \remarks
-    ///   Positions start at the origin (0, 0) and extend into the positive x-
-    ///   and y-axes.
-    ///   Points should never have a negative x or y value.
-    Real2 position;
-    /// The first normal vector.
-    Real2 normal0;
-    /// The second normal vector.
-    Real2 normal1;
-    /// The first uv coordinate.
-    Real uv0;
-    /// The point type.
-    Type type;
-  };
-  
   /// A description of a traffic lane.
-  struct Traffic {
-    /// The lane type.
-    enum class Type {
+  struct Lane {
+    /// The lane direction.
+    enum class Direction {
       /// An unordered traffic flow.
       /// Only applicable to pedestrian sidewalks.
       unordered,
@@ -64,26 +29,17 @@ struct RoadDef {
       right
     };
     
-    /// The category of traffic that can operate on the lane.
-    enum class Category {
-      /// Any pedestrian.
-      all_peds,
-      /// Any vehicle.
-      all_vehicles,
-    };
+    /// The lane definition.
+    LaneDef *definition;
     
-    /// The start x-coordinate of the lane.
-    Real start;
-    /// The end x-coordinate of the lane.
-    Real end;
-    /// The elevation of the lane.
-    Real elevation;
-    /// The speed limit of the lane in miles per hour.
+    /// The position of the lane from the origin of the road.
+    Real2 position;
+    
+    /// The traffic direction.
+    Direction direction;
+    
+    /// The speed limit of the lane, in miles per hour.
     int speedLimit;
-    /// The lane type.
-    Type type;
-    /// The traffic category of the lane.
-    Category category;
   };
   
   /// A lane divider description.
@@ -104,17 +60,24 @@ struct RoadDef {
     Type type;
   };
   
-  /// The profile of the road.
-  List<Point> profile;
+  enum class Buildings {
+    none,
+    left,
+    right,
+    all
+  };
   
-  /// The traffic patterns of the road.
-  List<Traffic> traffic;
+  /// The decorations of the road.
+  Building::ProfileMesh decorations;
+  
+  /// The lanes of the road.
+  List<Lane> lanes;
   
   /// Any dividers drawn on the road.
   List<Divider> dividers;
   
-  /// The name of the main texture to use for the road.
-  String mainTexture;
+  /// The name of the texture to use for road decorations.
+  String decorationsTexture;
   
   /// The name of the road.
   String name;
@@ -122,16 +85,31 @@ struct RoadDef {
   /// The total width and height of the road.
   Real2 dimensions;
   
+  /// The places in which a building can be built on the road.
+  Buildings allowBuildings = Buildings::all;
+  
+  
+  
+  /// A map of all of the loaded roads.
+  static Map<String, RoadDef> roads;
+  
   
   
   /// Attempt to load a road.
   /// \param[in] path
   ///   The path to the road file.
-  /// \param[out] road
-  ///   The read road, if successful.
   /// \returns
   ///   Whether or not the read was successful.
-  static bool load(const String& path, RoadDef& road);
+  static bool load(const String& path);
+  
+  /// Attempt to load a batch of roads.
+  /// \param[in] directory
+  ///   The path to the directory containing the road files.
+  /// \param[in] ...
+  ///   A list of road names to load.
+  /// \returns
+  ///   Whether or not all of the loading operations were successful.
+  static bool loadBatch(const char *directory, ...);
 };
 
 

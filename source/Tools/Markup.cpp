@@ -45,7 +45,9 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
   
   // Standard error output
   auto error = [&](const String &message, int line, int column) {
-    std::cout << "Error at line " << line << " col " << column << ": " << (const char *)message << std::endl;
+    std::cout <<
+      "Error in '" << (const char *)path << "' at line " << line <<
+      " col " << column << ": " << (const char *)message << std::endl;
     success = false;
   };
   

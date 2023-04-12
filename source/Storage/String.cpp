@@ -737,6 +737,22 @@ String String::truncate(size_t width) const {
   return truncated;
 }
 
+uint32_t String::hash() const {
+  if (_data == nullptr)
+    // Nothing to hash
+    return 0;
+  
+  // Simple hash
+  uint32_t hash = 0;
+  for (wchar_t c : *this) {
+    hash <<= 16;
+    hash |= c;
+    hash ^= hash >> 16;
+  }
+  
+  return hash;
+}
+
 String String::wrap(
   size_t width, size_t *outWidth, size_t *outHeight
 ) const {

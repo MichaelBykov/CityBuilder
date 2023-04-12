@@ -7,53 +7,44 @@
 
 #include <CityBuilder/Building/Road.h>
 #include <CityBuilder/Tools/Markup.h>
+#include <CityBuilder/Storage/Map.h>
 #include <iostream>
 USING_NS_CITY_BUILDER
 
-bool RoadDef::load(const String &path, RoadDef &road) {
+Map<String, RoadDef> RoadDef::roads { };
+
+bool RoadDef::load(const String &path) {
   // Aliases
-  typedef RoadDef::Point Point;
-  typedef RoadDef::Traffic Traffic;
+  typedef RoadDef::Lane Lane;
   typedef RoadDef::Divider Divider;
   
+  RoadDef road { };
+  
+  List<Building::ProfilePoint> decorations { };
   bool success = parseMarkup(path, road)
     .section("road")
       .field("name", road.name)
+      .field("allow-buildings", road.allowBuildings, {
+        { "none" , RoadDef::Buildings::none },
+        { "left" , RoadDef::Buildings::left },
+        { "right", RoadDef::Buildings::right },
+        { "all"  , RoadDef::Buildings::all }
+      })
     .section("texture")
-      .field("main", road.mainTexture)
-    .section("profile")
-      .records({ "M", "D", "C" }, road.profile)
-        .set(&Point::type, {
-          Point::Type::move,
-          Point::Type::disjoint,
-          Point::Type::connected
+      .field("decorations", road.decorationsTexture)
+    .section("decorations")
+      .profilePoints(decorations)
+    .section("lane")
+      .records({ "U", "L", "R" }, road.lanes)
+        .set(&Lane::direction, {
+          Lane::Direction::unordered,
+          Lane::Direction::left,
+          Lane::Direction::right
         })
-        .point(&Point::position)
-        .option("uv")
-          .real(&Point::uv0)
-        .option("normal")
-          .vector(&Point::normal0)
-        .option("normal")
-          .vector(&Point::normal1)
-      .end()
-    .section("traffic")
-      .records({ "U", "L", "R" }, road.traffic)
-        .set(&Traffic::type, {
-          Traffic::Type::unordered,
-          Traffic::Type::left,
-          Traffic::Type::right
-        })
-        .real(&Traffic::start)
-        .identifier("-")
-        .real(&Traffic::end)
-        .comma()
-        .real(&Traffic::elevation)
-        .match(&Traffic::category, {
-          { "all.peds", Traffic::Category::all_peds },
-          { "all.vehicle", Traffic::Category::all_vehicles },
-        })
+        .match(&Lane::definition, LaneDef::lanes)
+        .point(&Lane::position)
         .option("speed")
-          .integer(&Traffic::speedLimit)
+          .integer(&Lane::speedLimit)
           .identifier("mph")
       .end()
     .section("dividers")
@@ -69,11 +60,35 @@ bool RoadDef::load(const String &path, RoadDef &road) {
     return false;
   
   // Compute the bounds
-  for (const Point &point : road.profile) {
-    if (point.position.x > road.dimensions.x)
-      road.dimensions.x = point.position.x;
-    if (point.position.y > road.dimensions.y)
-      road.dimensions.y = point.position.y;
+  road.dimensions = { 0, 0 };
+  for (const Lane &lane : road.lanes) {
+    Real2 bound = lane.position + lane.definition->profile.dimensions;
+    if (bound.x > road.dimensions.x) road.dimensions.x = bound.x;
+    if (bound.y > road.dimensions.y) road.dimensions.y = bound.y;
   }
+  if (road.decorations.dimensions.x > road.dimensions.x)
+    road.dimensions.x = road.decorations.dimensions.x;
+  if (road.decorations.dimensions.y > road.dimensions.y)
+    road.dimensions.y = road.decorations.dimensions.y;
+  
+  // Save
+  RoadDef::roads.set(road.name, road);
+  
   return true;
+}
+
+bool RoadDef::loadBatch(const char *directory, ...) {
+  bool success = true;
+  
+  String dir = directory;
+  
+  const char *path;
+  va_list args;
+  va_start(args, directory);
+  while ((path = va_arg(args, const char *))) {
+    success &= RoadDef::load(dir + path + ".road");
+  }
+  va_end(args);
+  
+  return success;
 }

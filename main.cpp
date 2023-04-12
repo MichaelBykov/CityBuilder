@@ -10,9 +10,19 @@
 USING_NS_CITY_BUILDER
 
 int main(int argc, char** argv) {
-  
-  RoadDef singleRoad;
-  RoadDef::load("roads/single.road", singleRoad);
+  // Load the roads
+  if (
+    !LaneDef::loadBatch("roads/",
+      "sidewalk",
+      "roadway",
+      nullptr
+    ) ||
+    !RoadDef::loadBatch("roads/",
+      "single",
+      "highway",
+      nullptr
+    )
+  ) return 1;
   
   Game game { };
   game.run();

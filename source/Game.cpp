@@ -33,10 +33,6 @@ Game::Game() : _ctx("City Builder") {
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
   
-  // Load the roads
-  RoadDef singleRoad;
-  RoadDef::load("roads/single.road", singleRoad);
-  
   // Add the ground plane
   Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(
     "Ground Plane Material", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);

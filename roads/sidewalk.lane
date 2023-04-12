@@ -1,0 +1,14 @@
+[lane]
+name "sidewalk"
+
+[profile]
+M 0, 0    uv 0     normal -1,0
+D 0, 0.33 uv 0.125 normal -1,0 normal 0,1
+D 3, 0.33 uv 0.875 normal  0,1 normal 1,0
+M 3, 0    uv 1     normal  1,0
+
+[traffic]
+U 0-3, 0.33 all.peds
+
+[texture]
+main "Lanes/sidewalk.png"

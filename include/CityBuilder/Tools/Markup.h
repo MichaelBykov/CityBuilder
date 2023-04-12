@@ -8,8 +8,8 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
-#include <functional>
-#include <iostream> // For errors
+#include <CityBuilder/Storage/Map.h>
+#include <CityBuilder/Building/Profile.h>
 
 NS_CITY_BUILDER_BEGIN
 
@@ -36,15 +36,6 @@ struct Markup {
   /// A record parser builder.
   template<typename U>
   struct Record {
-    /// A named value.
-    template<typename V>
-    struct Named {
-      /// The name of the value.
-      String name;
-      /// The value.
-      V value;
-    };
-    
     /// Set a field in accordance with the record name.
     /// \param[in] member
     ///   The member to set.
@@ -194,7 +185,30 @@ struct Markup {
     ///   bat ...    # -> { .type = MyRecord::Type::bat, ... }
     ///   ```
     template<typename V>
-    Record &match(V U::*member, const List<Named<V>> &values);
+    Record &match(V U::*member, const Map<String, V> &values);
+    
+    /// Match a set of identifiers to a set of corresponding values.
+    /// \param[in] member
+    ///   The member to set with the matched value.
+    /// \param[in] values
+    ///   A set of identifiers and corresponding values.
+    /// \remarks
+    ///   Usage:
+    ///   ```
+    ///   .match(&MyRecord::type, {
+    ///     { "foo", MyRecord::Type::foo },
+    ///     { "bar", MyRecord::Type::bar },
+    ///     { "bat", MyRecord::Type::bat }
+    ///   })
+    ///   ```
+    ///   When parsing a file with the above configuration:
+    ///   ```
+    ///   foo ...    # -> { .type = MyRecord::Type::foo, ... }
+    ///   bar ...    # -> { .type = MyRecord::Type::bar, ... }
+    ///   bat ...    # -> { .type = MyRecord::Type::bat, ... }
+    ///   ```
+    template<typename V>
+    Record &match(V *U::*member, const Map<String, V> &values);
     
     /// End the current record.
     /// \remarks
@@ -252,6 +266,31 @@ struct Markup {
   ///   ```
   Markup &field(const String &name, String &value);
   
+  /// Parse a named field.
+  /// \param[in] name
+  ///   The name of the field.
+  /// \param[in] value
+  ///   The value to set upon parsing.
+  /// \param[in] values
+  ///   A map of the accepted identifiers and their corresponding values.
+  /// \remarks
+  ///   Usage:
+  ///   ```
+  ///   .section("colors")
+  ///     .field("primary", myRecord.primary, {
+  ///       { "red",   Color::red   },
+  ///       { "green", Color::green },
+  ///       { "blue",  Color::blue  },
+  ///     })
+  ///   ```
+  ///   When parsing a file with the above configuration:
+  ///   ```
+  ///   [colors]
+  ///   primary red    # -> { .primary = Color::red, ... }
+  ///   ```
+  template<typename U>
+  Markup &field(const String &name, U &value, const Map<String, U> &values);
+  
   /// Parse a set of named records.
   /// \param[in] names
   ///   The possible names of the records.
@@ -276,6 +315,30 @@ struct Markup {
   ///   ```
   template<typename U>
   Record<U> &records(const List<String> &names, List<U> &values);
+  
+  /// Parse a set of profile points.
+  /// \param[out] points
+  ///   The list of points to add to when parsing.
+  /// \remarks
+  ///   Usage:
+  ///   ```
+  ///   .section("profile")
+  ///     .profilePoints(myRecord.profile)
+  ///   ```
+  ///   When parsing a file with the above configuration:
+  ///   ```
+  ///   [profile]
+  ///   M 0,0 uv 0 normal 0,1
+  ///   D 3,1 uv 0 normal 0,1 normal 1,0
+  ///   M 3,0 uv 0 normal 1,0
+  ///   ```
+  ///   Becomes:
+  ///   ```
+  ///   [0] = { .type = move, .position = { 0, 0 }, ... }
+  ///   [1] = { .type = disjoint, .position = { 3, 1 }, ... }
+  ///   [2] = { .type = move, .position = { 3, 0 }, ... }
+  ///   ```
+  Markup &profilePoints(List<Building::ProfilePoint> &points);
   
   /// Parse the given markup file into the given item.
   /// \returns

@@ -242,6 +242,9 @@ public:
   ///   inserted as necessary.
   String truncate(size_t width) const;
   
+  /// Generate a 32-bit hash of the string.
+  uint32_t hash() const;
+  
   /// Wrap a string to a set width.
   /// \param[in] width
   ///   The maximum width of the wrapped string.
