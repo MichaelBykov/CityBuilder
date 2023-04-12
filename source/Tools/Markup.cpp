@@ -19,6 +19,8 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
   
   // Tokenize
   List<Token> tokens { };
+  
+  // Determine what token we're currently in
   enum class In {
     none,
     string,
@@ -27,9 +29,12 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
     comment,
   };
   In in = In::none;
+  
+  // Where we are in the file
+  int line = 1, column = 1, startColumn = 1;
+  
+  // The buffer for the current token
   String buffer { };
-  int line = 1, column = 1;
-  int startColumn = 1;
   auto flush = [&]() {
     if (buffer.length() > 0) {
       tokens.append({ buffer, Token::Type::identifier, line, startColumn });
@@ -37,23 +42,30 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
     }
     startColumn = column;
   };
+  
+  // Standard error output
   auto error = [&](const String &message, int line, int column) {
     std::cout << "Error at line " << line << " col " << column << ": " << (const char *)message << std::endl;
     success = false;
   };
+  
+  // Iterate through the file
   for (wchar_t c : file) {
     switch (in) {
     case In::none:
     none:
       if (c == '[') {
+        // Start of a section
         flush();
         in = In::section;
         column++, startColumn++;
       } else if (c == '"') {
+        // Start of a string
         flush();
         in = In::string;
         column++, startColumn++;
       } else if ('0' <= c && c <= '9') {
+        // Start of a number
         flush();
         in = In::number;
         buffer.append(c);
@@ -63,6 +75,7 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
         flush();
         column++, startColumn++;
       } else if (c == '\n' || c == '\r') {
+        // Line break
         flush();
         if (!tokens.isEmpty() && tokens.last().type != Token::Type::lineBreak)
           tokens.append({ c, Token::Type::lineBreak, line, column });
@@ -70,6 +83,7 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
         column = 1;
         startColumn = 1;
       } else if (c == ',') {
+        // Comma
         flush();
         tokens.append({ L',', Token::Type::comma, line, column });
         buffer.removeAll();
@@ -80,6 +94,7 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
         in = In::comment;
         column++;
       } else {
+        // Identifier
         buffer.append(c);
         column++;
       }
@@ -138,6 +153,7 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
     case In::comment:
       // Handle comments
       if (c == '\n' || c == '\r') {
+        // End of line: done
         in = In::none;
         if (tokens.last().type != Token::Type::lineBreak)
           tokens.append({ c, Token::Type::lineBreak, line, column });
@@ -150,6 +166,7 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
       break;
     }
   }
+  // Check that we finished up our tokens
   switch (in) {
   case In::string:
     error("Unexpected end-of-file in string.", line, column);
@@ -170,12 +187,14 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
   case In::comment:
     break;
   }
+  // Final line break, as needed
   if (tokens.isEmpty()) {
     std::cout << "No content found in the file '" << (const char *)path << "'." << std::endl;
     return false;
   } else if (tokens.last().type != Token::Type::lineBreak)
     tokens.append({ L'\n', Token::Type::lineBreak, line, column });
   
+  // Don't cause errors-on-top-of-errors
   if (!success)
     return false;
   
