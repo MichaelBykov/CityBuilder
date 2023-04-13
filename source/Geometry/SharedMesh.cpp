@@ -1,39 +1,36 @@
 /**
- * @file Mesh.cpp
- * @brief Implement the mesh interface.
- * @date April 12, 2023
+ * @file SharedMesh.cpp
+ * @brief Implement the shared mesh interface.
+ * @date April 13, 2023
  * @copyright Copyright (c) 2023
  */
 
-#include <CityBuilder/Geometry/Mesh.h>
+#include <CityBuilder/Geometry/SharedMesh.h>
 #include <CityBuilder/Geometry/Internal.h>
+#include <CityBuilder/Units/Angle.h>
 USING_NS_CITY_BUILDER
 using namespace GeometryInternal;
 
-Mesh::Mesh() {
-  // Create the mesh and its associated data
+SharedMesh::SharedMesh() {
+  // Create the shared mesh
   _mesh = Ogre::MeshManager::getSingleton().createManual(
     uniqueName(), "General");
-  _entity = scene->createEntity(_mesh);
-  _node = scene->getRootSceneNode()->createChildSceneNode();
-  _node->attachObject(_entity);
 }
 
-Mesh::~Mesh() {
-  // // Destroy all the mesh materials
-  // for (Ogre::SubMesh *sub : _mesh->getSubMeshes())
-  //   Ogre::MaterialManager::getSingleton().remove(sub->getMaterialName());
-  //
-  // // Destroy the mesh and its associated data
-  // _node->detachObject(_entity);
-  // scene->destroyEntity(_entity);
-  scene->destroySceneNode(_node);
-  // Ogre::MeshManager::getSingleton().remove(_mesh->getHandle());
+SharedMesh::~SharedMesh() {
+  /*
+  // Destroy all the mesh materials
+  for (Ogre::SubMesh *sub : _mesh->getSubMeshes())
+    Ogre::MaterialManager::getSingleton().remove(sub->getMaterialName());
+  
+  // Destroy the mesh itself
+  Ogre::MeshManager::getSingleton().remove(_mesh->getHandle());
+  */
 }
 
 
 
-Mesh &Mesh::addSubMesh(
+SharedMesh &SharedMesh::addSubMesh(
   const List<Vertex> &vertices,
   const List<int> &indices,
   const String &textureName,
@@ -99,16 +96,41 @@ Mesh &Mesh::addSubMesh(
   return *this;
 }
 
-Mesh &Mesh::addExtrusion(
-  Extrusion extrusion,
+SharedMesh &SharedMesh::addRevolution(
+  Revolution revolution,
   const String &textureName,
   Real2 textureScale
 ) {
-  return addExtrusions({ extrusion }, textureName, textureScale);
+  return addRevolutions({ revolution }, textureName, textureScale);
 }
 
-Mesh &Mesh::addExtrusions(
-  List<Extrusion> extrusions,
+namespace {
+  // 17 vectors for a semi-circle
+  Real2 vectors[] {
+    { 0, 1 },
+    { cos(80_deg), sin(80_deg) },
+    { cos(70_deg), sin(70_deg) },
+    { cos(60_deg), sin(60_deg) },
+    { cos(50_deg), sin(50_deg) },
+    { cos(40_deg), sin(40_deg) },
+    { cos(30_deg), sin(30_deg) },
+    { cos(20_deg), sin(20_deg) },
+    { cos(10_deg), sin(10_deg) },
+    { 1, 0 },
+    { cos(10_deg), -sin(10_deg) },
+    { cos(20_deg), -sin(20_deg) },
+    { cos(30_deg), -sin(30_deg) },
+    { cos(40_deg), -sin(40_deg) },
+    { cos(50_deg), -sin(50_deg) },
+    { cos(60_deg), -sin(60_deg) },
+    { cos(70_deg), -sin(70_deg) },
+    { cos(80_deg), -sin(80_deg) },
+    { 0, -1 },
+  };
+}
+
+SharedMesh &SharedMesh::addRevolutions(
+  List<Revolution> revolutions,
   const String &textureName,
   Real2 textureScale
 ) {
@@ -116,39 +138,26 @@ Mesh &Mesh::addExtrusions(
   List<int> triangles;
   int indexOffset = 0;
   
-  for (const Extrusion &ext : extrusions) {
-    // Get the path points
-    List<Real4> points = ext.path.pointNormals();
-    
-    if (points.count() < 2)
-      // Nothing to extrude over
-      return *this;
-    
-    // Extrude the profile
-    for (intptr_t i = 0; i < points.count(); i++) {
-      // Get the current point data
-      const Real4 &pointNormal = points[i];
-      Real2 point  = { pointNormal.x, pointNormal.y };
-      Real2 normal = { pointNormal.z, pointNormal.w };
+  for (const Revolution &ext : revolutions) {
+    // Revolve the profile
+    for (int i = 0; i < 17; i++) {
+      // Get the current vector
+      Real2 vector = vectors[i];
       
       // Add the vertices
       for (const ProfileMesh::Vertex &vertex : ext.profile.vertices) {
-        Real2 norm = normal * vertex.normal.x;
+        Real2 norm = vector * vertex.normal.x;
         vertices.append({
-          Real3(
-            point.x,
-            (ext.offset.y + vertex.position.y) * ext.scale,
-            point.y
-          ) +
-          Real3(normal.x, 0, normal.y) *
+          Real3(0, (ext.offset.y + vertex.position.y) * ext.scale, 0) +
+          Real3(vector.x, 0, vector.y) *
           (vertex.position.x + ext.offset.x) * ext.scale,
           { norm.x, vertex.normal.y, norm.y },
-          { vertex.uv, i / (Real)(points.count() - 1) }
+          { vertex.uv, (Real)i / 16 }
         });
       }
       
       if (i > 0) {
-        // Connect triangles with the previous extrusion
+        // Connect triangles with the previous revolution
         int prev = indexOffset + (i - 1) * ext.profile.vertices.count();
         int curr = prev + ext.profile.vertices.count();
         for (intptr_t j = 0; j < ext.profile.triangles.count(); j += 2) {
@@ -170,7 +179,7 @@ Mesh &Mesh::addExtrusions(
   return addSubMesh(vertices, triangles, textureName, textureScale);
 }
 
-void Mesh::finish() {
+void SharedMesh::finish() {
   // Update the bounding box
   _mesh->_setBounds(_bounds);
   _mesh->_setBoundingSphereRadius(
@@ -178,4 +187,32 @@ void Mesh::finish() {
   
   // Update the mesh
   _mesh->load();
+}
+
+
+
+SharedMesh::Instance::Instance(const SharedMesh &mesh) {
+  _entity = scene->createEntity(mesh._mesh);
+  _node = scene->getRootSceneNode()->createChildSceneNode();
+  _node->attachObject(_entity);
+}
+
+SharedMesh::Instance::~Instance() {
+  // _node->detachObject(_entity);
+  // scene->destroyEntity(_entity);
+  scene->destroySceneNode(_node);
+}
+
+SharedMesh::Instance &SharedMesh::Instance::setPosition(Real3 position) {
+  _node->setPosition(position);
+  return *this;
+}
+
+SharedMesh::Instance &SharedMesh::Instance::setOrientation(Ogre::Quaternion orientation) {
+  _node->setOrientation(orientation);
+  return *this;
+}
+
+Ref<SharedMesh::Instance &> SharedMesh::instantiate() {
+  return new Instance(*this);
 }

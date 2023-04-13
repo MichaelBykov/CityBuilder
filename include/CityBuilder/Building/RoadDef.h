@@ -9,6 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/List.h>
+#include <CityBuilder/Geometry/SharedMesh.h>
 #include "LaneDef.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -91,6 +92,14 @@ struct RoadDef {
   
   /// The places in which a building can be built on the road.
   Buildings allowBuildings = Buildings::all;
+  
+  /// The road end cap.
+  Ref<SharedMesh &> endCap;
+  
+  
+  
+  /// Generate an end cap for the road.
+  void generateEndCap();
   
   
   

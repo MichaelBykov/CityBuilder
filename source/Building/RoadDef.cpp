@@ -75,6 +75,22 @@ bool RoadDef::load(const String &path) {
   if (road.decorations.dimensions.y > road.dimensions.y)
     road.dimensions.y = road.decorations.dimensions.y;
   
+  // Generate the end cap
+  road.endCap = new SharedMesh();
+  for (const Lane &lane : road.lanes)
+    if (lane.position.x + lane.definition->profile.dimensions.x / 2 <= road.dimensions.x / 2 + 0.01) {
+      road.endCap->addRevolution(
+        {
+          lane.definition->profile,
+          lane.position,
+          0.1
+        },
+        lane.definition->mainTexture,
+        { 1, 1 }
+      );
+    }
+  road.endCap->finish();
+  
   // Save
   RoadDef::roads.set(road.name, road);
   

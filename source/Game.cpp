@@ -7,6 +7,7 @@
 
 #include <CityBuilder/Game.h>
 #include <CityBuilder/Building/Road.h>
+#include <CityBuilder/Geometry/Internal.h>
 USING_NS_CITY_BUILDER
 
 Game *Game::_instance = nullptr;
@@ -33,11 +34,28 @@ Game::Game() : _ctx("City Builder") {
   
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
-  Mesh::setSceneManager(_scene);
+  GeometryInternal::scene = _scene;
+  
+  // Load the roads
+  if (
+    !LaneDef::loadBatch("roads/",
+      "sidewalk",
+      "roadway",
+      nullptr
+    ) ||
+    !RoadDef::loadBatch("roads/",
+      "single",
+      "highway",
+      nullptr
+    )
+  ) exit(1);
   
   // Create the road
-  new Road(&RoadDef::roads["2-Lane Highway"], *new Line2({ 0, 0 }, { 10, 10 }));
-  new Road(&RoadDef::roads["2-Lane Highway"], *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }));
+  RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
+  new Road(highway, *new Line2({ 0, 0 }, { 10, 10 }));
+  new Road(highway, *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }));
+  auto cap = new Ref<SharedMesh::Instance &> { highway->endCap->instantiate() };
+  (*cap)->setPosition({ 0, 0, 0 });
   
   new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }));
   
