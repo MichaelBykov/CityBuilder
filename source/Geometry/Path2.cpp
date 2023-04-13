@@ -41,6 +41,17 @@ Real Line2::length() {
   return (b - a).length();
 }
 
+Path2 *Line2::offset(Real distance) {
+  Real2 normal = b - a;
+  normal.normalise();
+  normal = { normal.y, -normal.x };
+  
+  return new Line2(
+    a + normal * distance,
+    b + normal * distance
+  );
+}
+
 List<Real4> Line2::_pointNormals() {
   Real2 normal = b - a;
   normal.normalise();
@@ -93,6 +104,18 @@ Real Arc2::length() {
   return _length;
 }
 
+Path2 *Arc2::offset(Real distance) {
+  _getPointNormals();
+  Real cs = (start - _center).length();
+  Real ce = (end   - _center).length();
+  
+  Real2 _start   = _center + (start   - _center) * ((cs + distance) / cs);
+  Real2 _end     = _center + (end     - _center) * ((ce + distance) / ce);
+  Real2 _control = _center + (control - _center) * ((cs + distance) / cs);
+  
+  return new Arc2(_start, _control, _end);
+}
+
 List<Real4> Arc2::_pointNormals() {
   // Determine the radius and center of the arc
   Real2 middle = (start + end) / 2;
@@ -100,24 +123,24 @@ List<Real4> Arc2::_pointNormals() {
   Real controlMiddle = cm.length();
   Real controlStart = (control - start).length();
   Real theta = acos(controlMiddle / controlStart);
-  Real2 center = control + cm * (controlStart / (controlMiddle * sin(theta)));
-  Real radius = (center - start).length();
+  _center = control + cm * (controlStart / (controlMiddle * sin(theta)));
+  Real radius = (_center - start).length();
   Real angle = Angle::pi - theta * 2;
   _length = radius * angle;
-  Real startAngle = atan2(start.y - center.y, start.x - center.x);
+  Real startAngle = atan2(start.y - _center.y, start.x - _center.x);
   
   // Generate the equidistant points
-  Real2 normal = (start - center).normalisedCopy();
+  Real2 normal = (start - _center).normalisedCopy();
   List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
   int pointCount = _length;
   for (int i = 1; i < pointCount; i++) {
     Real2 sinCos = Angle::sinCos(startAngle + angle * i / pointCount) * radius;
     sinCos = { sinCos.y, sinCos.x };
-    Real2 point = center + sinCos;
-    normal = (point - center).normalisedCopy();
+    Real2 point = _center + sinCos;
+    normal = (point - _center).normalisedCopy();
     points.append({ point.x, point.y, normal.x, normal.y });
   }
-  normal = (end - center).normalisedCopy();
+  normal = (end - _center).normalisedCopy();
   points.append({ end.x, end.y, normal.x, normal.y });
   
   return points;

@@ -17,6 +17,8 @@ struct Path2 {
   
   virtual Real length() = 0;
   
+  virtual Path2 *offset(Real distance) = 0;
+  
   /// Generate a list of equally-spaced points that define the path along with
   /// their normals.
   inline List<Real4> pointNormals() {
@@ -47,6 +49,8 @@ struct Line2 : Path2 {
   
   Real length() override;
   
+  Path2 *offset(Real distance) override;
+  
 protected:
   List<Real4> _pointNormals() override;
 };
@@ -62,7 +66,10 @@ struct Arc2 : Path2 {
   
   Real length() override;
   
+  Path2 *offset(Real distance) override;
+  
 protected:
+  Real2 _center;
   Real _length;
   
   List<Real4> _pointNormals() override;
