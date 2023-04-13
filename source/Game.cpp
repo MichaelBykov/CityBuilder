@@ -24,10 +24,11 @@ Game::Game() : _ctx("City Builder") {
   // Create the sun
   _sun = _scene->createLight("Sun");
   _sun->setType(Ogre::Light::LT_DIRECTIONAL);
-  _scene->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
+  _scene->setAmbientLight(Ogre::ColourValue(0.33, 0.33, 0.33));
+  _scene->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
   
   Ogre::SceneNode* lightNode = _scene->getRootSceneNode()->createChildSceneNode();
-  lightNode->setDirection(-0.1, -1, -0.1);
+  lightNode->setDirection(-0.2, -1, -0.2);
   lightNode->attachObject(_sun);
   
   // Everything else
@@ -36,6 +37,8 @@ Game::Game() : _ctx("City Builder") {
   // Create the road
   new Road(&RoadDef::roads["2-Lane Highway"], *new Line2({ 0, 0 }, { 10, 10 }), _scene);
   new Road(&RoadDef::roads["2-Lane Highway"], *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }), _scene);
+  
+  new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }), _scene);
   
   // Add the ground plane
   Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(

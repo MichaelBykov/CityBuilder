@@ -1,5 +1,5 @@
 [road]
-name "Single Lane Road"
+name "Single-Lane Road"
 
 [lanes]
 U "sidewalk" 0,0

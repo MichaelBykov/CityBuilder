@@ -11,4 +11,4 @@ M 3, 0    uv 1     normal  1,0
 U 0-3, 0.33 all.peds
 
 [texture]
-main "Lanes/sidewalk.png"
+main "sidewalk.png"
