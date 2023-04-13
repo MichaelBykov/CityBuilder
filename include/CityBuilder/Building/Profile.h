@@ -8,6 +8,7 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/List.h>
+#include "CityBuilder/Geometry/Path2.h"
 
 NS_CITY_BUILDER_BEGIN
 namespace Building {
@@ -82,7 +83,7 @@ struct ProfileMesh {
   /// Create a profile mesh from a list of points.
   /// \param points
   ///   The points to create the mesh from.
-  ProfileMesh(const List<ProfilePoint> &points) { }
+  ProfileMesh(const List<ProfilePoint> &points);
   
   
   
@@ -91,7 +92,11 @@ struct ProfileMesh {
   ///   The path to extrude the mesh along.
   /// \param offset
   ///   The cross-section offset of the extrusion from the center of the path.
-  // void extrude(const Path &path, const Real2 offset);
+  /// \return
+  ///   The extruded mesh.
+  /// \remarks
+  ///   The mesh should be released when it is no longer needed.
+  Ogre::MeshPtr extrude(Path2 &path, const Real2 offset);
 };
 
 
