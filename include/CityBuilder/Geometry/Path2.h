@@ -13,6 +13,10 @@ NS_CITY_BUILDER_BEGIN
 
 /// A 2-dimensional path.
 struct Path2 {
+  virtual ~Path2() { }
+  
+  virtual Real length() = 0;
+  
   /// Generate a list of equally-spaced points that define the path.
   inline List<Real2> points() {
     return _getPoints();
@@ -25,7 +29,7 @@ protected:
   List<Real2> _pointCache;
   
   /// A generator for equidistant path points.
-  virtual List<Real2> _points() const = 0;
+  virtual List<Real2> _points() = 0;
   
   /// Either get the path points from the cache or generate them.
   List<Real2> _getPoints();
@@ -40,8 +44,10 @@ struct Line2 : Path2 {
   
   Line2(const Real2 &a, const Real2 &b);
   
+  Real length() override;
+  
 protected:
-  List<Real2> _points() const override;
+  List<Real2> _points() override;
 };
 
 /// A two-dimensional cubic Bezier curve.
@@ -63,8 +69,12 @@ struct Cubic2 : Path2 {
   ///   The interpolated point.
   Real2 interpolate(Real t) const;
   
+  Real length() override;
+  
 protected:
-  List<Real2> _points() const override;
+  Real _length;
+  
+  List<Real2> _points() override;
 };
 
 NS_CITY_BUILDER_END

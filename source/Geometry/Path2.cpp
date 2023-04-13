@@ -36,7 +36,11 @@ Line2::Line2(const Real2 &a, const Real2 &b) : a(a), b(b) {
   }
 }
 
-List<Real2> Line2::_points() const {
+Real Line2::length() {
+  return (b - a).length();
+}
+
+List<Real2> Line2::_points() {
   return { a, b };
 }
 
@@ -93,6 +97,11 @@ Cubic2::Cubic2(
   }
 }
 
+Real Cubic2::length() {
+  _getPoints();
+  return _length;
+}
+
 Real2 Cubic2::interpolate(Real t) const {
   // Exponents
   Real t2 = t * t;
@@ -111,33 +120,38 @@ Real2 Cubic2::interpolate(Real t) const {
   ;
 }
 
-List<Real2> Cubic2::_points() const {
+List<Real2> Cubic2::_points() {
   // Generate a look-up table first
   // x,y = the coordinate itself
   // z = the distance to the previous point
   Real3 lut[33];
+  _length = 0;
   lut[0] = { start.x, start.y, 0 };
   for (int i = 1; i < 33; i++) {
     Real2 point = interpolate(i / 32.0);
     lut[i] = { point.x, point.y, point.distance(lut[i - 1].xy()) };
+    _length += lut[i].z;
   }
-  Real length = lut[32].z;
   
   // Generate the equidistant points
   List<Real2> points { start };
-  Real distance = length / 9;
+  int pointCount = _length / 2;
+  Real distance = _length / (pointCount + 1);
   Real current = 0;
+  Real total = 0;
   for (int i = 1; i < 33; i++) {
     if (current + lut[i].z < distance)
       current += lut[i].z;
-    else {
+    else while (current + lut[i].z >= distance) {
       // Add the point
-      Real t = (lut[i].z - current) / (lut[i].z - lut[i - 1].z);
-      t += lut[i - 1].z / length;
-      points.append(interpolate(t));
+      Real remaining = distance - current;
+      Real t = remaining / lut[i].z;
+      t += total;
+      points.append(interpolate(t / _length));
       
       // Adjust current
-      current -= lut[i - 1].z - (lut[i].z - current);
+      current = lut[i].z - remaining;
+      total += distance;
     }
   }
   points.append(end);

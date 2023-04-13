@@ -34,30 +34,33 @@ bool RoadDef::load(const String &path) {
       .field("decorations", road.decorationsTexture)
     .section("decorations")
       .profilePoints(decorations)
-    .section("lane")
+    .section("lanes")
       .records({ "U", "L", "R" }, road.lanes)
         .set(&Lane::direction, {
           Lane::Direction::unordered,
           Lane::Direction::left,
           Lane::Direction::right
         })
-        .match(&Lane::definition, LaneDef::lanes)
+        .matchString(&Lane::definition, LaneDef::lanes)
         .point(&Lane::position)
         .option("speed")
           .integer(&Lane::speedLimit)
           .identifier("mph")
       .end()
     .section("dividers")
-      .records({ "cross-traffic", "lane" }, road.dividers)
+      .records({ "cross-traffic", "lane", "edge" }, road.dividers)
         .set(&Divider::type, {
           Divider::Type::crossTraffic,
-          Divider::Type::lane
+          Divider::Type::lane,
+          Divider::Type::edge
         })
         .point(&Divider::position)
       .end()
   ;
   if (!success)
     return false;
+  
+  road.decorations = decorations;
   
   // Compute the bounds
   road.dimensions = { 0, 0 };

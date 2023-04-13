@@ -9,4 +9,4 @@ M 7, 0.1 uv 1 normal 0,1
 D 0-7, 0.1 all.vehicle
 
 [texture]
-main "Lanes/roadway.png"
+main "pavement.png"

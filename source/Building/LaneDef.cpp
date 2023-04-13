@@ -47,7 +47,7 @@ bool LaneDef::load(const String &path) {
     return false;
   
   // Compute the profile mesh
-  lane.profile = Building::ProfileMesh(profile);
+  lane.profile = profile;
   
   // Save
   LaneDef::lanes.set(lane.name, lane);

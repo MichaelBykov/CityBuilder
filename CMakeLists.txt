@@ -15,10 +15,12 @@ include_directories(include)
 add_executable(CityBuilder
   "source/Storage/Check.cpp"
   "source/Storage/String.cpp"
+  "source/Geometry/Path2.cpp"
   "source/Tools/Markup.cpp"
   "source/Building/Profile.cpp"
   "source/Building/LaneDef.cpp"
   "source/Building/RoadDef.cpp"
+  "source/Building/Road.cpp"
   "Source/Camera.cpp"
   "Source/Game.cpp"
   "Source/Input.cpp"

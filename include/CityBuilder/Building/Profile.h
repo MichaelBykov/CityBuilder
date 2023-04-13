@@ -92,11 +92,11 @@ struct ProfileMesh {
   ///   The path to extrude the mesh along.
   /// \param offset
   ///   The cross-section offset of the extrusion from the center of the path.
-  /// \return
-  ///   The extruded mesh.
-  /// \remarks
-  ///   The mesh should be released when it is no longer needed.
-  Ogre::MeshPtr extrude(Path2 &path, const Real2 offset);
+  /// \param sub
+  ///   The sub-mesh to extrude into.
+  /// \returns
+  ///   The bounds of the extruded mesh.
+  Ogre::AxisAlignedBox extrude(Path2 &path, const Real2 offset, Ogre::SubMesh *sub, Real2 startNormal, Real2 endNormal, Real scale = 1);
 };
 
 

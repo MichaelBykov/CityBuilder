@@ -210,6 +210,52 @@ struct Markup {
     template<typename V>
     Record &match(V *U::*member, const Map<String, V> &values);
     
+    /// Match a set of strings to a set of corresponding values.
+    /// \param[in] member
+    ///   The member to set with the matched value.
+    /// \param[in] values
+    ///   A set of strings and corresponding values.
+    /// \remarks
+    ///   Usage:
+    ///   ```
+    ///   .matchString(&MyRecord::type, {
+    ///     { "foo", MyRecord::Type::foo },
+    ///     { "bar", MyRecord::Type::bar },
+    ///     { "bat baz", MyRecord::Type::batBaz }
+    ///   })
+    ///   ```
+    ///   When parsing a file with the above configuration:
+    ///   ```
+    ///   "foo"     ...    # -> { .type = MyRecord::Type::foo, ... }
+    ///   "bar"     ...    # -> { .type = MyRecord::Type::bar, ... }
+    ///   "bat baz" ...    # -> { .type = MyRecord::Type::batBaz, ... }
+    ///   ```
+    template<typename V>
+    Record &matchString(V U::*member, const Map<String, V> &values);
+    
+    /// Match a set of strings to a set of corresponding values.
+    /// \param[in] member
+    ///   The member to set with the matched value.
+    /// \param[in] values
+    ///   A set of strings and corresponding values.
+    /// \remarks
+    ///   Usage:
+    ///   ```
+    ///   .matchString(&MyRecord::type, {
+    ///     { "foo", MyRecord::Type::foo },
+    ///     { "bar", MyRecord::Type::bar },
+    ///     { "bat baz", MyRecord::Type::batBaz }
+    ///   })
+    ///   ```
+    ///   When parsing a file with the above configuration:
+    ///   ```
+    ///   "foo"     ...    # -> { .type = MyRecord::Type::foo, ... }
+    ///   "bar"     ...    # -> { .type = MyRecord::Type::bar, ... }
+    ///   "bat baz" ...    # -> { .type = MyRecord::Type::batBaz, ... }
+    ///   ```
+    template<typename V>
+    Record &matchString(V *U::*member, const Map<String, V> &values);
+    
     /// End the current record.
     /// \remarks
     ///   Required after each record.

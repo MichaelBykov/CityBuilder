@@ -163,6 +163,10 @@ struct Markup<T>::_section {
     
     /// The base type of a match definition, for type erasure.
     struct _matchBase {
+      bool acceptsStrings;
+      
+      _matchBase(bool acceptsStrings) : acceptsStrings(acceptsStrings) { }
+      
       virtual ~_matchBase() { }
       
       /// Clone the match definition.
@@ -191,8 +195,9 @@ struct Markup<T>::_section {
       
       _match(
         V U::*member,
-        const Map<String, V> &values
-      ) : member(member), values(values) { }
+        const Map<String, V> &values,
+        bool acceptsStrings
+      ) : member(member), values(values), _matchBase(acceptsStrings) { }
       
       /// Clone the match definition.
       _matchBase *clone() const override {
@@ -223,8 +228,9 @@ struct Markup<T>::_section {
       
       _matchPtr(
         V *U::*member,
-        const Map<String, V> &values
-      ) : member(member), values(values) { }
+        const Map<String, V> &values,
+        bool acceptsStrings
+      ) : member(member), values(values), _matchBase(acceptsStrings) { }
       
       /// Clone the match definition.
       _matchBase *clone() const override {
@@ -593,11 +599,11 @@ Markup<T>::template Record<U>::match(V U::*member, const Map<String, V> &values)
        record->matchers.last().type == _record::_matcher::Type::option) {
     // Add to the previous matcher
     record->matchers.setLast().option->matchers.append(
-      new typename _record::template _match<V>(member, values));
+      new typename _record::template _match<V>(member, values, false));
   } else {
     // Add to the end
     record->matchers.append(
-      new typename _record::template _match<V>(member, values));
+      new typename _record::template _match<V>(member, values, false));
   }
   
   return *this;
@@ -615,11 +621,55 @@ Markup<T>::template Record<U>::match(V *U::*member, const Map<String, V> &values
        record->matchers.last().type == _record::_matcher::Type::option) {
     // Add to the previous matcher
     record->matchers.setLast().option->matchers.append(
-      new typename _record::template _matchPtr<V>(member, values));
+      new typename _record::template _matchPtr<V>(member, values, false));
   } else {
     // Add to the end
     record->matchers.append(
-      new typename _record::template _matchPtr<V>(member, values));
+      new typename _record::template _matchPtr<V>(member, values, false));
+  }
+  
+  return *this;
+}
+
+template<typename T>
+template<typename U>
+template<typename V>
+typename Markup<T>::template Record<U>&
+Markup<T>::template Record<U>::matchString(V U::*member, const Map<String, V> &values) {
+  typedef typename Markup<T>::_section::template _record<U> _record;
+  _record *record = (_record *)markup._sections.setLast().records.last();
+  
+  if (!record->matchers.isEmpty() &&
+       record->matchers.last().type == _record::_matcher::Type::option) {
+    // Add to the previous matcher
+    record->matchers.setLast().option->matchers.append(
+      new typename _record::template _match<V>(member, values, true));
+  } else {
+    // Add to the end
+    record->matchers.append(
+      new typename _record::template _match<V>(member, values, true));
+  }
+  
+  return *this;
+}
+
+template<typename T>
+template<typename U>
+template<typename V>
+typename Markup<T>::template Record<U>&
+Markup<T>::template Record<U>::matchString(V *U::*member, const Map<String, V> &values) {
+  typedef typename Markup<T>::_section::template _record<U> _record;
+  _record *record = (_record *)markup._sections.setLast().records.last();
+  
+  if (!record->matchers.isEmpty() &&
+       record->matchers.last().type == _record::_matcher::Type::option) {
+    // Add to the previous matcher
+    record->matchers.setLast().option->matchers.append(
+      new typename _record::template _matchPtr<V>(member, values, true));
+  } else {
+    // Add to the end
+    record->matchers.append(
+      new typename _record::template _matchPtr<V>(member, values, true));
   }
   
   return *this;
@@ -925,21 +975,39 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
     } break;
     
     case _matcher::Type::match: {
-      // Match one of the provided identifiers
-      if (index >= tokens.count()) {
-        unexpectedError("an identifier");
-        return false;
+      if (matcher.match->acceptsStrings) {
+        // Match one of the provided strings
+        if (index >= tokens.count()) {
+          unexpectedError("a string");
+          return false;
+        }
+        const Internal::Markup::Token &token = tokens[index];
+        if (token.type != Internal::Markup::Token::Type::string) {
+          error("Expected a string.", token.line, token.column);
+          return false;
+        }
+        if (!matcher.match->set(token.content, value)) {
+          error("Unknown value '" + token.content + "'.", token.line, token.column);
+          return false;
+        }
+        index++;
+      } else {
+        // Match one of the provided identifiers
+        if (index >= tokens.count()) {
+          unexpectedError("an identifier");
+          return false;
+        }
+        const Internal::Markup::Token &token = tokens[index];
+        if (token.type != Internal::Markup::Token::Type::identifier) {
+          error("Expected an identifier.", token.line, token.column);
+          return false;
+        }
+        if (!matcher.match->set(token.content, value)) {
+          error("Unknown value '" + token.content + "'.", token.line, token.column);
+          return false;
+        }
+        index++;
       }
-      const Internal::Markup::Token &token = tokens[index];
-      if (token.type != Internal::Markup::Token::Type::identifier) {
-        error("Expected an identifier.", token.line, token.column);
-        return false;
-      }
-      if (!matcher.match->set(token.content, value)) {
-        error("Unknown value '" + token.content + "'.", token.line, token.column);
-        return false;
-      }
-      index++;
     } break;
     
     case _matcher::Type::option: {
@@ -980,10 +1048,13 @@ Markup<T>::operator bool() {
       (const char *)message << std::endl;
     success = false;
   };
-  for (const auto &section : sections)
+  for (const auto &section : sections) {
     // Find the section
+    bool found = false;
     for (const auto &_section : _sections)
       if (_section.name == section.name) {
+        found = true;
+        
         // Go through the entries
         for (const auto &entry : section.entries) {
           // Check if it's a field
@@ -1023,7 +1094,8 @@ Markup<T>::operator bool() {
             for (const String &_prefix : _record->prefixes)
               if (_prefix == entry.identifier) {
                 // Match the record to the entry
-                _record->parse(_path, entry.tokens, _item, entry.line, index);
+                success &= _record->parse(
+                  _path, entry.tokens, _item, entry.line, index);
                 goto nextEntry;
               } else
                 index++;
@@ -1037,6 +1109,9 @@ Markup<T>::operator bool() {
         
         break;
       }
+    if (!found)
+      error("Unknown section '" + section.name + "'.", section.line);
+  }
   
   delete this;
   return success;

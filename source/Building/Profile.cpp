@@ -47,34 +47,47 @@ ProfileMesh::ProfileMesh(const List<ProfilePoint> &points) {
   // Normalize all the vertices
   for (Vertex &vertex : vertices)
     vertex.normal.normalise();
+  
+  // Find the dimensions
+  for (Vertex &vertex : vertices) {
+    if (vertex.position.x > dimensions.x)
+      dimensions.x = vertex.position.x;
+    if (vertex.position.y > dimensions.y)
+      dimensions.y = vertex.position.y;
+  }
 }
 
-Ogre::MeshPtr ProfileMesh::extrude(Path2 &path, const Real2 offset) {
+Ogre::AxisAlignedBox ProfileMesh::extrude(Path2 &path, Real2 offset, Ogre::SubMesh *sub, Real2 startNormal, Real2 endNormal, Real scale) {
   List<Real2> points = path.points();
   
   if (points.count() < 2)
     // Nothing to extrude over
-    return nullptr;
+    return { };
   
   // Generate a set of normals for the path
-  List<Real2> normals;
-  for (intptr_t i = 0; i < points.count(); i++) {
-    Real2 normal;
-    if (i == 0)
-      normal = points[i + 1] - points[i];
-    else if (i == points.count() - 1)
-      normal = points[i] - points[i - 1];
-    else
-      normal = points[i + 1] - points[i - 1];
+  if (startNormal == Real2::ZERO) {
+    startNormal = points[1] - points[0];
+    startNormal.normalise();
+    startNormal = { startNormal.y, -startNormal.x };
+  }
+  List<Real2> normals { startNormal };
+  for (intptr_t i = 1; i < points.count() - 1; i++) {
+    Real2 normal = points[i + 1] - points[i - 1];
     normal.normalise();
     normals.append({ normal.y, -normal.x });
   }
+  if (endNormal == Real2::ZERO) {
+    endNormal = points[points.count() - 1] - points[points.count() - 2];
+    endNormal.normalise();
+    endNormal = { endNormal.y, -endNormal.x };
+  }
+  normals.append(endNormal);
   
   // Allocate the vertices
   size_t vertexCount = points.count() * vertices.count();
   struct {
     Real3 position;
-    Real2 normal;
+    Real3 normal;
     Real2 uv;
   } *verts = (decltype(verts))malloc(vertexCount * sizeof(*verts));
   size_t vertexIndex = 0;
@@ -94,17 +107,17 @@ Ogre::MeshPtr ProfileMesh::extrude(Path2 &path, const Real2 offset) {
     for (const Vertex &vertex : vertices) {
       Real2 norm = normal * vertex.normal.x;
       verts[vertexIndex].position =
-        Real3(point.x, point.y, offset.y + vertex.position.y) +
-        Real3(normal.x, normal.y, 0) * (vertex.position.x + offset.x);
-      verts[vertexIndex].normal = { norm.x, norm.y, vertex.normal.y };
+        Real3(point.x, (offset.y + vertex.position.y) * scale, point.y) +
+        Real3(normal.x, 0, normal.y) * (vertex.position.x + offset.x) * scale;
+      verts[vertexIndex].normal = { norm.x, vertex.normal.y, norm.y };
       verts[vertexIndex].uv = { vertex.uv, i / (Real)(points.count() - 1) };
       vertexIndex++;
     }
     
     if (i > 0) {
       // Connect triangles with the previous extrusion
-      int prev = (i - 1) * 6 * triangles.count();
-      int curr = prev + 6 * triangles.count();
+      int prev = (i - 1) * vertices.count();
+      int curr = prev + vertices.count();
       for (intptr_t j = 0; j < triangles.count(); j += 2) {
         tris[triangleIndex++] = prev + triangles[j];
         tris[triangleIndex++] = curr + triangles[j];
@@ -117,14 +130,10 @@ Ogre::MeshPtr ProfileMesh::extrude(Path2 &path, const Real2 offset) {
     }
   }
   
-  // Create the mesh
-  Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton()
-    .createManual("", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-  Ogre::SubMesh *sub = mesh->createSubMesh();
-  
   
   
   // Create the vertex data
+  sub->vertexData = new Ogre::VertexData();
   sub->vertexData->vertexStart = 0;
   sub->vertexData->vertexCount = points.count() * vertices.count();
   
@@ -171,16 +180,9 @@ Ogre::MeshPtr ProfileMesh::extrude(Path2 &path, const Real2 offset) {
   for (size_t i = 0; i < vertexCount; i++)
     bounds.merge(verts[i].position);
   
-  // Finalize the mesh fields
-  mesh->_setBounds(bounds);
-  mesh->_setBoundingSphereRadius((
-    bounds.getCenter() - bounds.getCorner(Ogre::AxisAlignedBox::FAR_LEFT_BOTTOM)
-  ).length());
-  mesh->load();
-  
   // Cleanup
   free(verts);
   free(tris);
   
-  return mesh;
+  return bounds;
 }
