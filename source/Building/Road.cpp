@@ -85,32 +85,64 @@ Road::Road(RoadDef *definition, Path2 &path)
   Real2 half = { -definition->decorations.dimensions.x / 2, 0 };
   if (!definition->decorations.triangles.isEmpty())
     mesh.addExtrusion(
-      definition->decorations,
-      path, half, 0.1,
+      { // Extrusion
+        definition->decorations,
+        path, half, 0.1,
+      },
       definition->decorationsTexture,
       { 1, 1 / path.length() }
     );
   
   // Extrude the lanes
-  for (const RoadDef::Lane &lane : definition->lanes)
-    mesh.addExtrusion(
-      lane.definition->profile,
-      path, half + lane.position, 0.1,
-      lane.definition->mainTexture,
-      { 1, 1 / path.length() }
-    );
+  {
+    // Batch all extrusions
+    List<LaneDef *> lanes;
+    auto extrusions = Map<LaneDef *, List<Mesh::Extrusion>>::buckets<16>();
+    for (const RoadDef::Lane &lane : definition->lanes) {
+      auto list = extrusions.get(lane.definition);
+      if (list)
+        // Add to the extrusion set
+        list->append({
+          lane.definition->profile,
+          path, half + lane.position, 0.1,
+        });
+      else {
+        // No extrusion set yet for the lane type
+        extrusions.set(lane.definition, {{
+          lane.definition->profile,
+          path, half + lane.position, 0.1,
+        }});
+        lanes.append(lane.definition);
+      }
+    }
+    
+    // Draw all unique extrusions
+    for (LaneDef *lane : lanes)
+      mesh.addExtrusions(
+        extrusions[lane],
+        lane->mainTexture,
+        { 1, 1 / path.length() }
+      );
+  }
   
   // Extrude the lane markings
   if (!definition->dividers.isEmpty()) {
     half.y += 0.01;
     half.x -= 0.1;
+    
+    // Batch the extrusions
+    List<Mesh::Extrusion> extrusions;
     for (const RoadDef::Divider &divider : definition->dividers)
-      mesh.addExtrusion(
+      extrusions.append({
         *dividerMeshes[(int)divider.type],
         path, half + divider.position, 0.1,
-        "lane-markers.png",
-        { 1, Real(0.5) / path.length() }
-      );
+      });
+    
+    mesh.addExtrusions(
+      extrusions,
+      "lane-markers.png",
+      { 1, Real(0.5) / path.length() }
+    );
   }
   
   // Done

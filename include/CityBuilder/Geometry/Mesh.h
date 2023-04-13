@@ -48,25 +48,41 @@ struct Mesh {
     Real2 textureScale = { 1, 1 }
   );
   
+  /// A description of an extrusion of a cross section.
+  struct Extrusion {
+    /// The cross-section to extrude.
+    const ProfileMesh &profile;
+    /// The path to extrude the cross-section along.
+    Path2 &path;
+    /// The offset of the cross-section from the path.
+    Real2 offset;
+    /// The scale of the cross-section.
+    /// Does not affect the path points.
+    Real scale;
+  };
+  
   /// Extrude a cross-section along a path and add it as a sub-mesh.
-  /// \param profile
-  ///   The cross-section to extrude.
-  /// \param path
-  ///   The path to extrude the cross-section along.
-  /// \param offset
-  ///   The offset of the cross-section from the path.
-  /// \param scale
-  ///   The scale of the cross-section.
-  ///   Does not affect the path points.
+  /// \param extrusion
+  ///   The description of the extrusion.
   /// \param textureName
   ///   The name of the texture to use for the sub-mesh.
   /// \param textureScale
   ///   The scale of the sub-mesh's texture.
   Mesh &addExtrusion(
-    const ProfileMesh &profile,
-    Path2 &path,
-    const Real2 offset,
-    Real scale,
+    Extrusion extrusion,
+    const String &textureName,
+    Real2 textureScale = { 1, 1 }
+  );
+  
+  /// Extrude a set of cross-sections along paths and add it as a sub-mesh.
+  /// \param extrusions
+  ///   The extrusion descriptions.
+  /// \param textureName
+  ///   The name of the texture to use for the sub-mesh.
+  /// \param textureScale
+  ///   The scale of the sub-mesh's texture.
+  Mesh &addExtrusions(
+    List<Extrusion> extrusions,
     const String &textureName,
     Real2 textureScale = { 1, 1 }
   );

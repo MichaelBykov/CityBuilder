@@ -10,6 +10,7 @@
 #include "Check.h"
 #include "List.h"
 #include "Optional.h"
+#include "Hash.h"
 #include <stdlib.h> // size_t, malloc, realloc, free
 #include <initializer_list>
 #include <new>
@@ -130,21 +131,36 @@ private:
     }
   }
   
+  Map(DataBase *data) : _data(data) { }
+  
 public:
   /// Create an empty map.
   Map() : _data(nullptr) { }
   
-  /// Create a map with a given bucket count.
-  template<int buckets>
-  Map() : _data(new Data<buckets>()) { }
-  
   /// Create a map from a set of key-value pairs.
   /// \param[in] pairs
-  ///   The pairs to populate the list with.
-  template<int buckets = 64>
-  Map(std::initializer_list<Pair> pairs) : _data(new Data<buckets>()) {
+  ///   The pairs to populate the map with.
+  Map(std::initializer_list<Pair> pairs) : _data(new Data<64>()) {
     for (const Pair &pair : pairs)
       set(pair.key, pair.value);
+  }
+  
+  /// Create a map with a given bucket count.
+  template<int buckets>
+  static Map buckets() {
+    return Map(new Data<buckets>());
+  }
+  
+  /// Create a map with a given bucket count and initialize it with a set of
+  /// key-value pairs.
+  /// \param[in] pairs
+  ///   The pairs to populate the map with.
+  template<int buckets>
+  static Map buckets(std::initializer_list<Pair> pairs) {
+    Map map = Map(new Data<buckets>());
+    for (const Pair &pair : pairs)
+      map.set(pair.key, pair.value);
+    return map;
   }
   
   Map(const Map &other) : _data(other._data) {
@@ -186,9 +202,6 @@ public:
   
   
   
-  /// Generate a hash for the key.
-  uint32_t hash(const TKey &key) const;
-  
   /// Get the value associated with the given key.
   /// \param[in] key
   ///   The key to look up.
@@ -197,7 +210,7 @@ public:
   const TValue &operator[](const TKey &key) const {
     if (_data == nullptr)
       throw IndexOutOfBounds();
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     return _data->lookup(_hash, key);
   }
   
@@ -210,7 +223,7 @@ public:
     if (_data == nullptr)
       throw IndexOutOfBounds();
     _makeUnique();
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     return _data->lookup(_hash, key);
   }
   
@@ -224,7 +237,7 @@ public:
       _data = new Data<64>();
     else
       _makeUnique();
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     _data->set(_hash, key, value);
   }
   
@@ -237,7 +250,7 @@ public:
   Optional<TValue &> get(const TKey &key) {
     if (_data == nullptr)
       throw IndexOutOfBounds();
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     if (_data->exists(_hash, key))
       return _data->lookup(_hash, key);
     else
@@ -253,7 +266,7 @@ public:
   Optional<const TValue &> get(const TKey &key) const {
     if (_data == nullptr)
       throw IndexOutOfBounds();
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     if (_data->exists(_hash, key))
       return _data->lookup(_hash, key);
     else
@@ -268,16 +281,7 @@ public:
   bool has(const TKey &key) const {
     if (_data == nullptr)
       return false;
-    uint32_t _hash = hash(key);
+    uint32_t _hash = Storage::hash(key);
     return _data->exists(_hash, key);
   }
 };
-
-
-
-// Default hash functions:
-
-template<typename TKey, typename TValue>
-uint32_t Map<TKey, TValue>::hash(const TKey &key) const {
-  return key.hash();
-}

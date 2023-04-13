@@ -117,54 +117,70 @@ Mesh &Mesh::addSubMesh(
 }
 
 Mesh &Mesh::addExtrusion(
-  const ProfileMesh &profile,
-  Path2 &path,
-  const Real2 offset,
-  Real scale,
+  Extrusion extrusion,
   const String &textureName,
   Real2 textureScale
 ) {
-  // Get the path points
-  List<Real4> points = path.pointNormals();
-  
-  if (points.count() < 2)
-    // Nothing to extrude over
-    return *this;
-  
-  // Extrude the profile
+  return addExtrusions({ extrusion }, textureName, textureScale);
+}
+
+Mesh &Mesh::addExtrusions(
+  List<Extrusion> extrusions,
+  const String &textureName,
+  Real2 textureScale
+) {
   List<Vertex> vertices;
   List<int> triangles;
-  for (intptr_t i = 0; i < points.count(); ++i) {
-    // Get the current point data
-    const Real4 &pointNormal = points[i];
-    Real2 point  = { pointNormal.x, pointNormal.y };
-    Real2 normal = { pointNormal.z, pointNormal.w };
+  int indexOffset = 0;
+  
+  for (const Extrusion &ext : extrusions) {
+    // Get the path points
+    List<Real4> points = ext.path.pointNormals();
     
-    // Add the vertices
-    for (const ProfileMesh::Vertex &vertex : profile.vertices) {
-      Real2 norm = normal * vertex.normal.x;
-      vertices.append({
-        Real3(point.x, (offset.y + vertex.position.y) * scale, point.y) +
-        Real3(normal.x, 0, normal.y) * (vertex.position.x + offset.x) * scale,
-        { norm.x, vertex.normal.y, norm.y },
-        { vertex.uv, i / (Real)(points.count() - 1) }
-      });
-    }
+    if (points.count() < 2)
+      // Nothing to extrude over
+      return *this;
     
-    if (i > 0) {
-      // Connect triangles with the previous extrusion
-      int prev = (i - 1) * profile.vertices.count();
-      int curr = prev + profile.vertices.count();
-      for (intptr_t j = 0; j < profile.triangles.count(); j += 2) {
-        triangles.append(prev + profile.triangles[j    ]);
-        triangles.append(curr + profile.triangles[j    ]);
-        triangles.append(prev + profile.triangles[j + 1]);
-        
-        triangles.append(curr + profile.triangles[j    ]);
-        triangles.append(curr + profile.triangles[j + 1]);
-        triangles.append(prev + profile.triangles[j + 1]);
+    // Extrude the profile
+    for (intptr_t i = 0; i < points.count(); ++i) {
+      // Get the current point data
+      const Real4 &pointNormal = points[i];
+      Real2 point  = { pointNormal.x, pointNormal.y };
+      Real2 normal = { pointNormal.z, pointNormal.w };
+      
+      // Add the vertices
+      for (const ProfileMesh::Vertex &vertex : ext.profile.vertices) {
+        Real2 norm = normal * vertex.normal.x;
+        vertices.append({
+          Real3(
+            point.x,
+            (ext.offset.y + vertex.position.y) * ext.scale,
+            point.y
+          ) +
+          Real3(normal.x, 0, normal.y) *
+          (vertex.position.x + ext.offset.x) * ext.scale,
+          { norm.x, vertex.normal.y, norm.y },
+          { vertex.uv, i / (Real)(points.count() - 1) }
+        });
+      }
+      
+      if (i > 0) {
+        // Connect triangles with the previous extrusion
+        int prev = indexOffset + (i - 1) * ext.profile.vertices.count();
+        int curr = prev + ext.profile.vertices.count();
+        for (intptr_t j = 0; j < ext.profile.triangles.count(); j += 2) {
+          triangles.append(prev + ext.profile.triangles[j    ]);
+          triangles.append(curr + ext.profile.triangles[j    ]);
+          triangles.append(prev + ext.profile.triangles[j + 1]);
+          
+          triangles.append(curr + ext.profile.triangles[j    ]);
+          triangles.append(curr + ext.profile.triangles[j + 1]);
+          triangles.append(prev + ext.profile.triangles[j + 1]);
+        }
       }
     }
+    
+    indexOffset = vertices.count();
   }
   
   // Add the sub-mesh
