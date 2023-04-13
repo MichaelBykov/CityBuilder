@@ -48,9 +48,10 @@ bool RoadDef::load(const String &path) {
           .identifier("mph")
       .end()
     .section("dividers")
-      .records({ "cross-traffic", "lane", "edge" }, road.dividers)
+      .records({ "cross-traffic", "cross-edge", "lane", "edge" }, road.dividers)
         .set(&Divider::type, {
           Divider::Type::crossTraffic,
+          Divider::Type::crossEdge,
           Divider::Type::lane,
           Divider::Type::edge
         })

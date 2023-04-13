@@ -17,22 +17,23 @@ struct Path2 {
   
   virtual Real length() = 0;
   
-  /// Generate a list of equally-spaced points that define the path.
-  inline List<Real2> points() {
-    return _getPoints();
+  /// Generate a list of equally-spaced points that define the path along with
+  /// their normals.
+  inline List<Real4> pointNormals() {
+    return _getPointNormals();
   }
   
 protected:
   /// The computed bounds of the path.
   Real4 _bounds;
   /// A cache of the path points.
-  List<Real2> _pointCache;
+  List<Real4> _pointCache;
   
   /// A generator for equidistant path points.
-  virtual List<Real2> _points() = 0;
+  virtual List<Real4> _pointNormals() = 0;
   
   /// Either get the path points from the cache or generate them.
-  List<Real2> _getPoints();
+  List<Real4> _getPointNormals();
 };
 
 /// A two-dimensional line.
@@ -47,34 +48,24 @@ struct Line2 : Path2 {
   Real length() override;
   
 protected:
-  List<Real2> _points() override;
+  List<Real4> _pointNormals() override;
 };
 
-/// A two-dimensional cubic Bezier curve.
-struct Cubic2 : Path2 {
+/// A two-dimensional arc curve.
+struct Arc2 : Path2 {
   /// A control point of the curve.
-  const Real2 start, control0, control1, end;
+  const Real2 start, control, end;
   
-  Cubic2() { }
+  Arc2() { }
   
-  Cubic2(
-    const Real2 &start, const Real2 &control0,
-    const Real2 &control1, const Real2 &end
-  );
-  
-  /// Interpolate along the cubic Bezier curve.
-  /// \param t
-  ///   The interpolation parameter.
-  /// \returns
-  ///   The interpolated point.
-  Real2 interpolate(Real t) const;
+  Arc2(const Real2 &start, const Real2 &control, const Real2 &end);
   
   Real length() override;
   
 protected:
   Real _length;
   
-  List<Real2> _points() override;
+  List<Real4> _pointNormals() override;
 };
 
 NS_CITY_BUILDER_END

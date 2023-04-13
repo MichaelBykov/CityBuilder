@@ -49,11 +49,13 @@ struct RoadDef {
       /// A lane-to-lane divider between two lanes traveling in the same
       /// direction.
       lane,
+      /// A divider on the right edge of a travel lane.
+      edge,
       /// A lane-to-lane divider between two lanes traveling in opposite
       /// directions.
       crossTraffic,
-      /// A divider on the right edge of a travel lane.
-      edge,
+      /// A divider on the left edge of a travel lane.
+      crossEdge,
     };
     
     /// The center point of the lane divider.

@@ -22,7 +22,8 @@ R "roadway" 22,0 speed 65mph #interchange prev
 [dividers]
 edge 1,0.1
 lane 8,0.1
-cross-traffic 15,0.1
+cross-edge 14.8,0.1
+cross-edge 15.2,0.1
 lane 22,0.1
 edge 29,0.1
 

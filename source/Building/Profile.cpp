@@ -57,31 +57,12 @@ ProfileMesh::ProfileMesh(const List<ProfilePoint> &points) {
   }
 }
 
-Ogre::AxisAlignedBox ProfileMesh::extrude(Path2 &path, Real2 offset, Ogre::SubMesh *sub, Real2 startNormal, Real2 endNormal, Real scale) {
-  List<Real2> points = path.points();
+Ogre::AxisAlignedBox ProfileMesh::extrude(Path2 &path, Real2 offset, Ogre::SubMesh *sub, Real scale) {
+  List<Real4> points = path.pointNormals();
   
   if (points.count() < 2)
     // Nothing to extrude over
     return { };
-  
-  // Generate a set of normals for the path
-  if (startNormal == Real2::ZERO) {
-    startNormal = points[1] - points[0];
-    startNormal.normalise();
-    startNormal = { startNormal.y, -startNormal.x };
-  }
-  List<Real2> normals { startNormal };
-  for (intptr_t i = 1; i < points.count() - 1; i++) {
-    Real2 normal = points[i + 1] - points[i - 1];
-    normal.normalise();
-    normals.append({ normal.y, -normal.x });
-  }
-  if (endNormal == Real2::ZERO) {
-    endNormal = points[points.count() - 1] - points[points.count() - 2];
-    endNormal.normalise();
-    endNormal = { endNormal.y, -endNormal.x };
-  }
-  normals.append(endNormal);
   
   // Allocate the vertices
   size_t vertexCount = points.count() * vertices.count();
@@ -100,8 +81,9 @@ Ogre::AxisAlignedBox ProfileMesh::extrude(Path2 &path, Real2 offset, Ogre::SubMe
   // Extrude the profile
   for (intptr_t i = 0; i < points.count(); i++) {
     // Get the current point
-    const Real2 &point = points[i];
-    const Real2 &normal = normals[i];
+    const Real4 &pointNormal = points[i];
+    Real2 point = { pointNormal.x, pointNormal.y };
+    Real2 normal = { pointNormal.z, pointNormal.w };
     
     // Add the vertices
     for (const Vertex &vertex : vertices) {

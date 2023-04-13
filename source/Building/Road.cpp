@@ -26,6 +26,21 @@ namespace {
     },
   }};
   
+  Building::ProfileMesh dividerCrossEdgeMesh = {{
+    Building::ProfilePoint {
+      .position = { 0, 0 },
+      .normal0 = { 0, 1 },
+      .uv0 = 0.3,
+      .type = Building::ProfilePoint::Type::move
+    },
+    Building::ProfilePoint {
+      .position = { 0.2, 0 },
+      .normal0 = { 0, 1 },
+      .uv0 = 0.45,
+      .type = Building::ProfilePoint::Type::move
+    },
+  }};
+  
   Building::ProfileMesh dividerNormalMesh = {{
     Building::ProfilePoint {
       .position = { 0, 0 },
@@ -58,8 +73,9 @@ namespace {
   
   Building::ProfileMesh *dividerMeshes[] {
     &dividerNormalMesh,
+    &dividerEdgeMesh,
     &dividerCrossTrafficMesh,
-    &dividerEdgeMesh
+    &dividerCrossEdgeMesh,
   };
 }
 
@@ -74,17 +90,13 @@ Road::Road(RoadDef *definition, Path2 &path, Ogre::SceneManager *scene)
   
   int materialID = 0;
   
-  // Calculate the endpoint normals
-  Real2 startNormal = Real2::ZERO;
-  Real2 endNormal = Real2::ZERO;
-  
   // Extrude any decorations
   Real2 half = { -definition->decorations.dimensions.x / 2, 0 };
   if (!definition->decorations.triangles.isEmpty()) {
     Ogre::SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = false;
     bounds.merge(definition->decorations.extrude(
-      path, half, sub, startNormal, endNormal, 0.1));
+      path, half, sub, 0.1));
     
     // Add the appropriate material
     Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(
@@ -106,7 +118,7 @@ Road::Road(RoadDef *definition, Path2 &path, Ogre::SceneManager *scene)
     sub->useSharedVertices = false;
     bounds.merge(
       lane.definition->profile.extrude(
-        path, half + lane.position, sub, startNormal, endNormal, 0.1)
+        path, half + lane.position, sub, 0.1)
     );
     
     // Add the appropriate material
@@ -125,17 +137,6 @@ Road::Road(RoadDef *definition, Path2 &path, Ogre::SceneManager *scene)
   
   // Extrude the lane markings
   if (!definition->dividers.isEmpty()) {
-    // Add the appropriate material
-    Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(
-      (const char *)(name + "_" + String(materialID++)),
-      Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    
-    Ogre::TextureUnitState* texture =
-      material->getTechnique(0)->getPass(0)->
-      createTextureUnitState("lane-markers.png");
-    texture->setTextureUScale(1);
-    texture->setTextureVScale(0.5 / path.length());
-    
     half.y += 0.01;
     half.x -= 0.1;
     for (const RoadDef::Divider &divider : definition->dividers) {
@@ -144,8 +145,19 @@ Road::Road(RoadDef *definition, Path2 &path, Ogre::SceneManager *scene)
       
       bounds.merge(
         dividerMeshes[(int)divider.type]->
-        extrude(path, half + divider.position, sub, startNormal, endNormal, 0.1)
+        extrude(path, half + divider.position, sub, 0.1)
       );
+      
+      // Add the appropriate material
+      Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(
+        (const char *)(name + "_" + String(materialID++)),
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+      
+      Ogre::TextureUnitState* texture =
+        material->getTechnique(0)->getPass(0)->
+        createTextureUnitState("lane-markers.png");
+      texture->setTextureUScale(1);
+      texture->setTextureVScale(0.5 / path.length());
       
       sub->setMaterial(material);
     }
@@ -165,6 +177,12 @@ Road::~Road() {
   Ogre::SceneManager *scene = node->getCreator();
   
   // Deallocate the mesh and node
+  for (Ogre::SubMesh *sub : mesh->getSubMeshes()) {
+    Ogre::MaterialManager::getSingleton().remove(
+      sub->getMaterial()->getName());
+    sub->getMaterial()->unload();
+  }
+  
   Ogre::MeshManager::getSingleton().remove(mesh);
   node->getParentSceneNode()->removeAndDestroyChild(node);
   scene->destroyEntity(entity);

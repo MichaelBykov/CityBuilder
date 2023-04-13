@@ -35,7 +35,7 @@ Game::Game() : _ctx("City Builder") {
   
   // Create the road
   new Road(&RoadDef::roads["2-Lane Highway"], *new Line2({ 0, 0 }, { 10, 10 }), _scene);
-  new Road(&RoadDef::roads["2-Lane Highway"], *new Cubic2({ 10, 10 }, { 15, 15 }, { 10, 20 }, { 0, 20 }), _scene);
+  new Road(&RoadDef::roads["2-Lane Highway"], *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }), _scene);
   
   // Add the ground plane
   Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(

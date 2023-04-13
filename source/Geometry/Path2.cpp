@@ -6,11 +6,12 @@
  */
 
 #include <CityBuilder/Geometry/Path2.h>
+#include <CityBuilder/Units/Angle.h>
 USING_NS_CITY_BUILDER
 
-List<Real2> Path2::_getPoints() {
+List<Real4> Path2::_getPointNormals() {
   if (_pointCache.isEmpty())
-    return _pointCache = _points();
+    return _pointCache = _pointNormals();
   else
     return _pointCache;
 }
@@ -40,16 +41,20 @@ Real Line2::length() {
   return (b - a).length();
 }
 
-List<Real2> Line2::_points() {
-  return { a, b };
+List<Real4> Line2::_pointNormals() {
+  Real2 normal = b - a;
+  normal.normalise();
+  normal = { normal.y, -normal.x };
+  return {
+    { a.x, a.y, normal.x, normal.y },
+    { b.x, b.y, normal.x, normal.y },
+  };
 }
 
 
 
-Cubic2::Cubic2(
-  const Real2 &start, const Real2 &control0,
-  const Real2 &control1, const Real2 &end
-) : start(start), control0(control0), control1(control1), end(end) {
+Arc2::Arc2(const Real2 &start, const Real2 &control, const Real2 &end)
+  : start(start), control(control), end(end) {
   // Calculate the bounds
   if (start.x < end.x) {
     _bounds.x = start.x;
@@ -67,94 +72,53 @@ Cubic2::Cubic2(
     _bounds.w = start.y - end.y;
   }
   
-  // Expand the bounds to include the control points
-  if (control0.x < _bounds.x) {
-    _bounds.z += _bounds.x - control0.x;
-    _bounds.x = control0.x;
-  } else if (control0.x > _bounds.x + _bounds.z) {
-    _bounds.z = control0.x - _bounds.x;
+  // Expand the bounds to include the control point
+  if (control.x < _bounds.x) {
+    _bounds.z += _bounds.x - control.x;
+    _bounds.x = control.x;
+  } else if (control.x > _bounds.x + _bounds.z) {
+    _bounds.z = control.x - _bounds.x;
   }
   
-  if (control0.y < _bounds.y) {
-    _bounds.w += _bounds.y - control0.y;
-    _bounds.y = control0.y;
-  } else if (control0.y > _bounds.y + _bounds.w) {
-    _bounds.w = control0.y - _bounds.y;
-  }
-  
-  if (control1.x < _bounds.x) {
-    _bounds.z += _bounds.x - control1.x;
-    _bounds.x = control1.x;
-  } else if (control1.x > _bounds.x + _bounds.z) {
-    _bounds.z = control1.x - _bounds.x;
-  }
-  
-  if (control1.y < _bounds.y) {
-    _bounds.w += _bounds.y - control1.y;
-    _bounds.y = control1.y;
-  } else if (control1.y > _bounds.y + _bounds.w) {
-    _bounds.w = control1.y - _bounds.y;
+  if (control.y < _bounds.y) {
+    _bounds.w += _bounds.y - control.y;
+    _bounds.y = control.y;
+  } else if (control.y > _bounds.y + _bounds.w) {
+    _bounds.w = control.y - _bounds.y;
   }
 }
 
-Real Cubic2::length() {
-  _getPoints();
+Real Arc2::length() {
+  _getPointNormals();
   return _length;
 }
 
-Real2 Cubic2::interpolate(Real t) const {
-  // Exponents
-  Real t2 = t * t;
-  Real t3 = t2 * t;
-  
-  // Inverse
-  Real i = 1 - t;
-  Real i2 = i * i;
-  Real i3 = i2 * i;
-  
-  return
-    start    * i3 +
-    control0 *  3 * i2 * t  +
-    control1 *  3 * i  * t2 +
-    end      * t3
-  ;
-}
-
-List<Real2> Cubic2::_points() {
-  // Generate a look-up table first
-  // x,y = the coordinate itself
-  // z = the distance to the previous point
-  Real3 lut[33];
-  _length = 0;
-  lut[0] = { start.x, start.y, 0 };
-  for (int i = 1; i < 33; i++) {
-    Real2 point = interpolate(i / 32.0);
-    lut[i] = { point.x, point.y, point.distance(lut[i - 1].xy()) };
-    _length += lut[i].z;
-  }
+List<Real4> Arc2::_pointNormals() {
+  // Determine the radius and center of the arc
+  Real2 middle = (start + end) / 2;
+  Real2 cm = (middle - control);
+  Real controlMiddle = cm.length();
+  Real controlStart = (control - start).length();
+  Real theta = acos(controlMiddle / controlStart);
+  Real2 center = control + cm * (controlStart / (controlMiddle * sin(theta)));
+  Real radius = (center - start).length();
+  Real angle = Angle::pi - theta * 2;
+  _length = radius * angle;
+  Real startAngle = atan2(start.y - center.y, start.x - center.x);
   
   // Generate the equidistant points
-  List<Real2> points { start };
-  int pointCount = _length / 2;
-  Real distance = _length / (pointCount + 1);
-  Real current = 0;
-  Real total = 0;
-  for (int i = 1; i < 33; i++) {
-    if (current + lut[i].z < distance)
-      current += lut[i].z;
-    else while (current + lut[i].z >= distance) {
-      // Add the point
-      Real remaining = distance - current;
-      Real t = remaining / lut[i].z;
-      t += total;
-      points.append(interpolate(t / _length));
-      
-      // Adjust current
-      current = lut[i].z - remaining;
-      total += distance;
-    }
+  Real2 normal = (start - center).normalisedCopy();
+  List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
+  int pointCount = _length;
+  for (int i = 1; i < pointCount; i++) {
+    Real2 sinCos = Angle::sinCos(startAngle + angle * i / pointCount) * radius;
+    sinCos = { sinCos.y, sinCos.x };
+    Real2 point = center + sinCos;
+    normal = (point - center).normalisedCopy();
+    points.append({ point.x, point.y, normal.x, normal.y });
   }
-  points.append(end);
+  normal = (end - center).normalisedCopy();
+  points.append({ end.x, end.y, normal.x, normal.y });
   
   return points;
 }
