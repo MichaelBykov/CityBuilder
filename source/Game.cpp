@@ -6,6 +6,8 @@
  */
 
 #include <CityBuilder/Game.h>
+#include <CityBuilder/Building/Road.h>
+#include <CityBuilder/Geometry/Internal.h>
 USING_NS_CITY_BUILDER
 
 Game *Game::_instance = nullptr;
@@ -23,17 +25,64 @@ Game::Game() : _ctx("City Builder") {
   // Create the sun
   _sun = _scene->createLight("Sun");
   _sun->setType(Ogre::Light::LT_DIRECTIONAL);
+  _scene->setAmbientLight(Ogre::ColourValue(0.33, 0.33, 0.33));
+  _scene->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
   
   Ogre::SceneNode* lightNode = _scene->getRootSceneNode()->createChildSceneNode();
-  lightNode->setDirection(0, -1, 0);
+  lightNode->setDirection(-0.2, -1, -0.2);
   lightNode->attachObject(_sun);
   
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
+  GeometryInternal::scene = _scene;
   
-  Ogre::Entity* ent = _scene->createEntity("TestLevel_b0.mesh");
-  Ogre::SceneNode* node = _scene->getRootSceneNode()->createChildSceneNode();
-  node->attachObject(ent);
+  // Load the roads
+  if (
+    !LaneDef::loadBatch("roads/",
+      "sidewalk",
+      "roadway",
+      nullptr
+    ) ||
+    !RoadDef::loadBatch("roads/",
+      "single",
+      "highway",
+      nullptr
+    )
+  ) exit(1);
+  
+  // Create the road
+  RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
+  new Road(highway, *new Line2({ 0, 0 }, { 10, 10 }));
+  new Road(highway, *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }));
+  auto cap = new Ref<SharedMesh::Instance &> { highway->endCap->instantiate() };
+  (*cap)->setPosition({ 0, 0, 0 });
+  
+  new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }));
+  
+  // Add the ground plane
+  Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(
+    "Ground Plane Material", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+  
+  Ogre::TextureUnitState* planeTexture =
+    planeMaterial->getTechnique(0)->getPass(0)->createTextureUnitState("grass-tmp.jpg");
+  planeTexture->setTextureUScale(0.01);
+  planeTexture->setTextureVScale(0.01);
+  
+  Ogre::MovablePlane *planeDef = new Ogre::MovablePlane("Ground Plane");
+  planeDef->d = 0;
+  planeDef->normal = Ogre::Vector3::UNIT_Y;
+  
+  Ogre::MeshManager::getSingleton().createPlane(
+    "Ground Plane Mesh",
+    Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+    *planeDef,
+    120, 120, 1, 1,
+    true,
+    1, 1, 1,
+    Ogre::Vector3::UNIT_Z);
+  Ogre::Entity* plane = _scene->createEntity("Ground Plane Mesh");
+  plane->setMaterial(planeMaterial);
+  _scene->getRootSceneNode()->createChildSceneNode()->attachObject(plane);
   
   // Handle input
   _ctx.addInputListener(&_input);

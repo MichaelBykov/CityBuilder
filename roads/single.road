@@ -1,0 +1,11 @@
+[road]
+name "Single-Lane Road"
+
+[lanes]
+U "sidewalk" 0,0
+L "roadway"  3,0 speed 25mph
+R "roadway" 10,0 speed 25mph
+U "sidewalk" 17,0
+
+[dividers]
+cross-traffic 10,0.1

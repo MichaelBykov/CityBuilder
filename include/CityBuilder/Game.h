@@ -13,7 +13,7 @@
 NS_CITY_BUILDER_BEGIN
 
 /// The main game controller.
-struct Game : private OgreBites::InputListener {
+struct Game {
   /// Start a new game.
   Game();
   

@@ -242,6 +242,9 @@ public:
   ///   inserted as necessary.
   String truncate(size_t width) const;
   
+  /// Generate a 32-bit hash of the string.
+  uint32_t hash() const;
+  
   /// Wrap a string to a set width.
   /// \param[in] width
   ///   The maximum width of the wrapped string.
@@ -312,6 +315,13 @@ public:
     else
       return tryParseUInt32((uint32_t *)integer);
   }
+  
+  /// Try to parse a real number from the string.
+  /// \param[out] real
+  ///   The parsed real number, if successful.
+  /// \returns
+  ///   Whether or not a real number could be parsed.
+  bool tryParseReal(float *real) const;
   
   
   

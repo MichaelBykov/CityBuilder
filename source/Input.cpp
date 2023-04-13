@@ -12,10 +12,9 @@ USING_NS_CITY_BUILDER
 
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
-| Default Values                                                               |
+| Default values                                                               |
 |                                                                              |
 \* -------------------------------------------------------------------------- */
-
 
 KeyCode Input::_moveKeys[4] { (KeyCode)0 };
 
@@ -188,6 +187,10 @@ bool InputDelegate::keyPressed(const OgreBites::KeyboardEvent &event) {
   
   case 1073742050: // MacOS-specific
     Input::_optionDown = true;
+    return true;
+  
+  case (int)KeyCode::_1: // For testing: road 1
+    
     return true;
   }
   
