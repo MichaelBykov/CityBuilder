@@ -9,7 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/Map.h>
-#include <CityBuilder/Building/Profile.h>
+#include <CityBuilder/Geometry/Profile.h>
 
 NS_CITY_BUILDER_BEGIN
 
@@ -384,7 +384,7 @@ struct Markup {
   ///   [1] = { .type = disjoint, .position = { 3, 1 }, ... }
   ///   [2] = { .type = move, .position = { 3, 0 }, ... }
   ///   ```
-  Markup &profilePoints(List<Building::ProfilePoint> &points);
+  Markup &profilePoints(List<ProfilePoint> &points);
   
   /// Parse the given markup file into the given item.
   /// \returns

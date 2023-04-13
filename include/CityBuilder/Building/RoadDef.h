@@ -72,7 +72,7 @@ struct RoadDef {
   };
   
   /// The decorations of the road.
-  Building::ProfileMesh decorations;
+  ProfileMesh decorations;
   
   /// The lanes of the road.
   List<Lane> lanes;

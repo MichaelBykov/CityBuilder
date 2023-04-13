@@ -18,7 +18,7 @@ bool LaneDef::load(const String &path) {
   
   LaneDef lane { };
   
-  List<Building::ProfilePoint> profile { };
+  List<ProfilePoint> profile { };
   bool success = parseMarkup(path, lane)
     .section("lane")
       .field("name", lane.name)

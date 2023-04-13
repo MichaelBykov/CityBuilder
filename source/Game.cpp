@@ -33,12 +33,13 @@ Game::Game() : _ctx("City Builder") {
   
   // Everything else
   _mainCamera = new Camera(&_ctx, _scene);
+  Mesh::setSceneManager(_scene);
   
   // Create the road
-  new Road(&RoadDef::roads["2-Lane Highway"], *new Line2({ 0, 0 }, { 10, 10 }), _scene);
-  new Road(&RoadDef::roads["2-Lane Highway"], *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }), _scene);
+  new Road(&RoadDef::roads["2-Lane Highway"], *new Line2({ 0, 0 }, { 10, 10 }));
+  new Road(&RoadDef::roads["2-Lane Highway"], *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 }));
   
-  new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }), _scene);
+  new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }));
   
   // Add the ground plane
   Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(

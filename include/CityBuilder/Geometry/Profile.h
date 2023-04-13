@@ -11,8 +11,6 @@
 #include "CityBuilder/Geometry/Path2.h"
 
 NS_CITY_BUILDER_BEGIN
-namespace Building {
-
 
 /// A point in a side profile.
 struct ProfilePoint {
@@ -84,24 +82,6 @@ struct ProfileMesh {
   /// \param points
   ///   The points to create the mesh from.
   ProfileMesh(const List<ProfilePoint> &points);
-  
-  
-  
-  /// Extrude the profile mesh.
-  /// \param path
-  ///   The path to extrude the mesh along.
-  /// \param offset
-  ///   The cross-section offset of the extrusion from the center of the path.
-  /// \param sub
-  ///   The sub-mesh to extrude into.
-  /// \param scale
-  ///    The scale of the extrusion.
-  ///    Does not affect the path points.
-  /// \returns
-  ///   The bounds of the extruded mesh.
-  Ogre::AxisAlignedBox extrude(Path2 &path, const Real2 offset, Ogre::SubMesh *sub, Real scale = 1);
 };
 
-
-} // namespace Building
 NS_CITY_BUILDER_END

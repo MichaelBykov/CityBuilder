@@ -8,6 +8,7 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Geometry/Path2.h>
+#include <CityBuilder/Geometry/Mesh.h>
 #include "RoadDef.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -20,14 +21,8 @@ struct Road {
   /// The road's path.
   Path2 &path;
   
-  /// The road mesh.
-  Ogre::MeshPtr mesh;
-  
-  /// The road entity.
-  Ogre::Entity *entity;
-  
-  /// The road scene node.
-  Ogre::SceneNode *node;
+  /// The road's mesh.
+  Mesh mesh;
   
   
   
@@ -40,7 +35,7 @@ struct Road {
   ///   Should be a unique instance.
   /// \param scene
   ///   The scene manager.
-  Road(RoadDef *definition, Path2 &path, Ogre::SceneManager *scene);
+  Road(RoadDef *definition, Path2 &path);
   
   // We will never need to be transferring the road around.
   Road(const Road &other) = delete;

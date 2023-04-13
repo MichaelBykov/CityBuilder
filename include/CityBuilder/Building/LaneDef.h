@@ -9,7 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/Map.h>
-#include "Profile.h"
+#include <CityBuilder/Geometry/Profile.h>
 
 NS_CITY_BUILDER_BEGIN
 
@@ -48,7 +48,7 @@ struct LaneDef {
   };
   
   /// The profile of the lane.
-  Building::ProfileMesh profile;
+  ProfileMesh profile;
   
   /// The traffic patterns of the lane.
   List<Traffic> traffic;

@@ -4,28 +4,28 @@ allow-buildings none
 
 [decorations]
 # Left road falloff
-M 0  ,0    uv 0   normal -1,0
-C 0.3,0.07 uv 0.5 normal -1,1
-M 1  ,0.1  uv 1   normal  0,1
+M 0   ,0    uv 0   normal -1,0.66
+C 0.66,0.07 uv 0.5 normal -1,1
+M 2   ,0.1  uv 1   normal  0,1
 
 # Right road falloff
-M 29  ,0.1  uv 1   normal  0,1
-C 29.7,0.07 uv 0.5 normal  1,1
-M 30  ,0    uv 0   normal  1,0
+M 30   ,0.1  uv 1   normal  0,1
+C 31.33,0.07 uv 0.5 normal  1,1
+M 32   ,0    uv 0   normal  1,0.66
 
 [lanes]
-L "roadway"  1,0 speed 65mph #interchange next
-L "roadway"  8,0 speed 65mph #interchange prev
-R "roadway" 15,0 speed 65mph #interchange next
-R "roadway" 22,0 speed 65mph #interchange prev
+L "roadway"  2,0 speed 65mph #interchange next
+L "roadway"  9,0 speed 65mph #interchange prev
+R "roadway" 16,0 speed 65mph #interchange next
+R "roadway" 23,0 speed 65mph #interchange prev
 
 [dividers]
-edge 1,0.1
-lane 8,0.1
-cross-edge 14.8,0.1
-cross-edge 15.2,0.1
-lane 22,0.1
-edge 29,0.1
+edge 2,0.1
+lane 9,0.1
+cross-edge 15.8,0.1
+cross-edge 16.2,0.1
+lane 23,0.1
+edge 30,0.1
 
 [texture]
 decorations "falloff.png"

@@ -20,7 +20,7 @@ bool RoadDef::load(const String &path) {
   
   RoadDef road { };
   
-  List<Building::ProfilePoint> decorations { };
+  List<ProfilePoint> decorations { };
   bool success = parseMarkup(path, road)
     .section("road")
       .field("name", road.name)

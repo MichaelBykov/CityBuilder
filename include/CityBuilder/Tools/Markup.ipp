@@ -738,12 +738,12 @@ Markup<T>::records(const List<String> &names, List<U> &values) {
 }
 
 template<typename T>
-Markup<T> &Markup<T>::profilePoints(List<Building::ProfilePoint> &points) {
+Markup<T> &Markup<T>::profilePoints(List<ProfilePoint> &points) {
   if (_sections.isEmpty())
     // No section
     throw nullptr;
   
-  typedef Building::ProfilePoint Point;
+  typedef ProfilePoint Point;
   
   // Add the definition
   return
