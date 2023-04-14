@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include <Ogre.h>
-#include <OgreApplicationContext.h>
+#include <bgfx/bgfx.h>
+#include <SIMD/SIMD++>
 
 
 
@@ -23,6 +23,9 @@
 #define USING_NS_CITY_BUILDER \
   using namespace CityBuilder;
 
+#define NS_CITY_BUILDER \
+  CityBuilder::
+
 
 
 NS_CITY_BUILDER_BEGIN
@@ -30,15 +33,15 @@ NS_CITY_BUILDER_BEGIN
 // Base type aliases
 
 /// A base floating-point unit in the game.
-typedef Ogre::Real Real;
+typedef SIMD::Float32 Real;
 
 /// A pack of two base floating-point units in the game.
-typedef Ogre::Vector2 Real2;
+typedef SIMD::Float32x2 Real2;
 
 /// A pack of three base floating-point units in the game.
-typedef Ogre::Vector3 Real3;
+typedef SIMD::Float32x3 Real3;
 
 /// A pack of four base floating-point units in the game.
-typedef Ogre::Vector4 Real4;
+typedef SIMD::Float32x4 Real4;
 
 NS_CITY_BUILDER_END

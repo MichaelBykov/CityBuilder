@@ -5,12 +5,9 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <CityBuilder/Game.h>
-USING_NS_CITY_BUILDER
+#include "Driver.h"
 
 int main(int argc, char** argv) {
-  Game game { };
-  game.run();
-  game.close();
+  NS_CITY_BUILDER Driver::main();
   return 0;
 }

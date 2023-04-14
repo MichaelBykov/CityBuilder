@@ -5,32 +5,55 @@ set(CMAKE_CXX_STANDARD 17)
 include(CTest)
 enable_testing()
 
-find_package(SDL2 REQUIRED)
-find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
+find_package(bgfx REQUIRED)
 
-include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(include ${BGFX_INCLUDE_PATH})
 
-include_directories(include)
+find_library(BGFX NAMES bgfx)
+find_library(BIMG NAMES bimg)
+find_library(BX NAMES bx)
 
-add_executable(CityBuilder
+add_library(CityBuilder
   "source/Storage/Check.cpp"
   "source/Storage/String.cpp"
-  "source/Geometry/Path2.cpp"
-  "source/Geometry/Internal.cpp"
-  "source/Geometry/Profile.cpp"
-  "source/Geometry/Mesh.cpp"
-  "source/Geometry/SharedMesh.cpp"
-  "source/Tools/Markup.cpp"
-  "source/Building/LaneDef.cpp"
-  "source/Building/RoadDef.cpp"
-  "source/Building/Road.cpp"
-  "Source/Camera.cpp"
-  "Source/Game.cpp"
-  "Source/Input.cpp"
-  main.cpp
+  # "source/Geometry/Path2.cpp"
+  # "source/Geometry/Internal.cpp"
+  # "source/Geometry/Profile.cpp"
+  # "source/Geometry/Mesh.cpp"
+  # "source/Geometry/SharedMesh.cpp"
+  # "source/Tools/Markup.cpp"
+  # "source/Building/LaneDef.cpp"
+  # "source/Building/RoadDef.cpp"
+  # "source/Building/Road.cpp"
+  # "Source/Camera.cpp"
+  # "Source/Game.cpp"
+  # "Source/Input.cpp"
+  source/Events.cpp
 )
-target_link_libraries(CityBuilder OgreBites ${SDL2_LIBRARIES})
-target_precompile_headers(CityBuilder PRIVATE include/CityBuilder/Common.h)
+
+if(APPLE)
+  # MacOS
+  
+  set(CMAKE_CXX_FLAGS "-ObjC++")
+  
+  add_executable(CityBuilderDriver MACOSX_BUNDLE
+    driver/MacOS.mm
+    driver/main.cpp
+  )
+  
+  # MacOS runtimes
+  target_link_libraries(CityBuilderDriver
+    "-framework ServiceManagement"
+    "-framework Foundation"
+    "-framework Cocoa"
+    "-framework Metal"
+    "-framework IOKit"
+    "-framework QuartzCore"
+  )
+
+  target_link_libraries(CityBuilderDriver CityBuilder ${BGFX} ${BIMG} ${BX})
+  target_precompile_headers(CityBuilder PRIVATE "$<$<COMPILE_LANGUAGE:OBJCXX>:include/CityBuilder/Common.h>")
+endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
