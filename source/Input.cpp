@@ -162,6 +162,46 @@ void Input::setMouseOrbitSpeed(Real2 speed) {
 |                                                                              |
 \* -------------------------------------------------------------------------- */
 
+void Events::inputStart(Input &input) {
+  /*switch (input.type) {
+  case Input::Type::keyboard:
+    if (input.keyboard.keyCode == Input::keyboard.)
+      Input::_controlDown = true;
+    else if (input.keyCode == KeyCode::option)
+      Input::_optionDown = true;
+    break;
+  }*/
+}
+
+void Events::inputStop(Input &input) {
+  
+}
+
+void Events::inputChange(Input &input) {
+  switch (input.type) {
+  case Input::Type::keyboard:
+  case Input::Type::mouseDrag:
+    break;
+  
+  case Input::Type::mouseScroll: {
+    // There are two times when scrolling is used: UI and to operate the scene
+    // camera
+    
+    // Check if the camera can be zoomed
+    if (true) {
+      // Zoom the camera
+      Game::instance().mainCamera().zoom(
+        -input.mouseScroll * NS_CITY_BUILDER Input::_scrollSensitivity
+      );
+    }
+  } break;
+  
+  case Input::Type::mousePinch:
+    break;
+  }
+}
+
+/*
 bool InputDelegate::axisMoved(const OgreBites::AxisEvent &event) {
   std::cout << "Axis moved: " << event.axis << " by " << event.value << std::endl;
   return false;
@@ -266,20 +306,4 @@ bool InputDelegate::mouseReleased(const OgreBites::MouseButtonEvent &event) {
   }
   return false;
 }
-
-bool InputDelegate::mouseWheelRolled(const OgreBites::MouseWheelEvent &event) {
-  // There are two times when scrolling is used: UI and to operate the scene
-  // camera
-  
-  // Check if the camera can be zoomed
-  if (true) {
-    // Zoom the camera
-    Game::instance().mainCamera().zoom(-event.y * Input::_scrollSensitivity);
-    return true;
-  }
-  return false;
-}
-
-void InputDelegate::frameRendered(const Ogre::FrameEvent &event) {
-  Game::instance().update(event.timeSinceLastFrame);
-}
+*/

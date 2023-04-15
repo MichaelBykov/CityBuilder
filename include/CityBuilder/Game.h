@@ -7,7 +7,8 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
-#include "Camera.h"
+#include "Rendering/OrbitalCamera.h"
+#include "Rendering/DistanceLight.h"
 #include "Input.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -18,8 +19,13 @@ struct Game {
   Game();
   
   /// The current main camera.
-  inline Camera &mainCamera() {
-    return *_mainCamera;
+  inline OrbitalCamera &mainCamera() {
+    return _mainCamera;
+  }
+  
+  /// The sun.
+  inline DistanceLight &sun() {
+    return _sun;
   }
   
   /// The current game instance.
@@ -39,19 +45,11 @@ struct Game {
   void update(Real elapsed);
   
 private:
-  // Ogre3D
-  OgreBites::ApplicationContext _ctx;
-  Ogre::Root *_root;
-  Ogre::SceneManager *_scene;
-  
   /// The scene's sun.
-  Ogre::Light *_sun;
+  DistanceLight _sun;
   
   /// The main camera.
-  Camera *_mainCamera;
-  
-  /// The central input delegate.
-  InputDelegate _input;
+  OrbitalCamera _mainCamera;
   
   /// The main game instance.
   static Game *_instance;

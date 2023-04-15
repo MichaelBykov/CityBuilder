@@ -25,8 +25,9 @@ add_library(CityBuilder
   # "source/Building/LaneDef.cpp"
   # "source/Building/RoadDef.cpp"
   # "source/Building/Road.cpp"
-  # "Source/Camera.cpp"
-  # "Source/Game.cpp"
+  "Source/Rendering/Camera.cpp"
+  "Source/Rendering/OrbitalCamera.cpp"
+  "Source/Game.cpp"
   # "Source/Input.cpp"
   source/Events.cpp
 )
@@ -34,11 +35,52 @@ add_library(CityBuilder
 if(APPLE)
   # MacOS
   
+  function(compile_shader output)
+    cmake_parse_arguments(PARSE_ARGV 1 COMPILE_SHADER "VERTEX;FRAGMENT" "" "")
+    
+    if(COMPILE_SHADER_VERTEX)
+      add_custom_command(
+        OUTPUT ${output}
+        COMMAND shaderc
+          -f "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_SHADER_UNPARSED_ARGUMENTS}"
+          -o ${output}
+          --type v
+          --platform osx
+          --profile metal
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_SHADER_UNPARSED_ARGUMENTS}"
+        VERBATIM
+      )
+    elseif(COMPILE_SHADER_FRAGMENT)
+      add_custom_command(
+        OUTPUT ${output}
+        COMMAND shaderc
+          -f "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_SHADER_UNPARSED_ARGUMENTS}"
+          -o ${output}
+          --type f
+          --platform osx
+          --profile metal
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_SHADER_UNPARSED_ARGUMENTS}"
+        VERBATIM
+      )
+    endif()
+  endfunction()
+  
   set(CMAKE_CXX_FLAGS "-ObjC++")
+  
+  compile_shader(vertex.shader VERTEX shaders/vertex.sc)
+  compile_shader(fragment.shader FRAGMENT shaders/fragment.sc)
+  set(RESOURCE_FILES
+    vertex.shader
+    fragment.shader
+  )
   
   add_executable(CityBuilderDriver MACOSX_BUNDLE
     driver/MacOS.mm
     driver/main.cpp
+    ${RESOURCE_FILES}
+  )
+  set_target_properties(CityBuilderDriver PROPERTIES
+    RESOURCE "${RESOURCE_FILES}"
   )
   
   # MacOS runtimes

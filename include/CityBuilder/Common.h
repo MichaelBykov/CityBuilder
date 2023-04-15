@@ -10,6 +10,9 @@
 
 #pragma once
 
+// Include utilities to visualize SIMD types with Natvis
+#define SIMD_NATVIS
+
 #include <bgfx/bgfx.h>
 #include <SIMD/SIMD++>
 
@@ -43,5 +46,41 @@ typedef SIMD::Float32x3 Real3;
 
 /// A pack of four base floating-point units in the game.
 typedef SIMD::Float32x4 Real4;
+
+/// A pack of two by two base floating-point units in the game.
+typedef SIMD::Float32x2x2 Real2x2;
+
+/// A pack of two by three base floating-point units in the game.
+typedef SIMD::Float32x2x3 Real2x3;
+
+/// A pack of two by four base floating-point units in the game.
+typedef SIMD::Float32x2x4 Real2x4;
+
+/// A pack of three by two base floating-point units in the game.
+typedef SIMD::Float32x3x2 Real3x2;
+
+/// A pack of three by three base floating-point units in the game.
+typedef SIMD::Float32x3x3 Real3x3;
+
+/// A pack of three by four base floating-point units in the game.
+typedef SIMD::Float32x3x4 Real3x4;
+
+/// A pack of four by two base floating-point units in the game.
+typedef SIMD::Float32x4x2 Real4x2;
+
+/// A pack of four by three base floating-point units in the game.
+typedef SIMD::Float32x4x3 Real4x3;
+
+/// A pack of four by four base floating-point units in the game.
+typedef SIMD::Float32x4x4 Real4x4;
+
+/// A grayscale color value.
+typedef SIMD::UInt8 Color1;
+
+/// A red-green-blue color value.
+typedef SIMD::UInt8x3 Color3;
+
+/// A red-green-blue-alpha color value.
+typedef SIMD::UInt8x4 Color4;
 
 NS_CITY_BUILDER_END

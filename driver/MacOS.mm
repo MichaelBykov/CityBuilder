@@ -86,8 +86,9 @@ namespace {
   void render_pause() {
     // Signal the pause
     Events::pause();
-    
-    bgfx::frame(); // Flush out the last frame
+    bgfx::frame();
+    // Flush out the back buffer
+    Events::pause();
     bgfx::frame();
   }
   

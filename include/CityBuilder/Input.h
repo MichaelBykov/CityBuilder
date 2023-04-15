@@ -7,13 +7,12 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
+#include <CityBuilder/Events.h>
 #include <CityBuilder/Storage/List.h>
 #include <CityBuilder/Storage/String.h>
 #include <functional>
 
 NS_CITY_BUILDER_BEGIN
-
-struct InputDelegate;
 
 /// A set of common key codes for use in with the input manager.
 enum class KeyCode : int {
@@ -88,7 +87,9 @@ struct Input {
   static void setMouseOrbitSpeed(Real2 speed);
   
 private:
-  friend InputDelegate;
+  friend void Events::inputStart (Events::Input &input);
+  friend void Events::inputStop  (Events::Input &input);
+  friend void Events::inputChange(Events::Input &input);
   
   /// The set of keys used to move the camera in the following order:
   /// forward, backward, left, right.
@@ -133,30 +134,6 @@ private:
   
   /// Whether or not the option key is currently pressed.
   static bool _optionDown;
-};
-
-
-
-
-
-/// The central input delegate for the input handler.
-struct InputDelegate : OgreBites::InputListener {
-  
-  bool axisMoved(const OgreBites::AxisEvent &event) override;
-  
-  bool keyPressed(const OgreBites::KeyboardEvent &event) override;
-  
-  bool keyReleased(const OgreBites::KeyboardEvent &event) override;
-  
-  bool mouseMoved(const OgreBites::MouseMotionEvent &event) override;
-  
-  bool mousePressed(const OgreBites::MouseButtonEvent &event) override;
-  
-  bool mouseReleased(const OgreBites::MouseButtonEvent &event) override;
-  
-  bool mouseWheelRolled(const OgreBites::MouseWheelEvent &event) override;
-  
-  void frameRendered(const Ogre::FrameEvent &event) override;
 };
 
 NS_CITY_BUILDER_END
