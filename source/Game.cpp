@@ -66,9 +66,9 @@ Game::Game() {
   // _scene->getRootSceneNode()->createChildSceneNode()->attachObject(plane);
   
   // Handle input
-  // Input::setMoveKeys(KeyCode::w, KeyCode::s, KeyCode::a, KeyCode::d);
-  // Input::setOrbitKeys(KeyCode::up, KeyCode::down, KeyCode::left, KeyCode::right);
-  // Input::listenForAxes();
+  Input::setMoveKeys(KeyCode::w, KeyCode::s, KeyCode::a, KeyCode::d);
+  Input::setOrbitKeys(KeyCode::up, KeyCode::down, KeyCode::left, KeyCode::right);
+  Input::listenForAxes();
   
   // Set as the main game instance
   _instance = this;

@@ -84,10 +84,10 @@ void OrbitalCamera::orbit(Real2 delta, Angle yaw, Angle pitch) {
   // Rotate
   _yaw += yaw;
   
-  // Make sure that the pitch is in the range [10°, 90°]
+  // Make sure that the pitch is in the range [10°, 80°]
   _pitch += pitch;
-  if (_pitch.radians > 90_deg)
-    _pitch = 90_deg;
+  if (_pitch.radians > 80_deg)
+    _pitch = 80_deg;
   else if (_pitch.radians < 10_deg)
     _pitch = 10_deg;
   
@@ -101,22 +101,18 @@ void OrbitalCamera::setViewport(Real4 rect) {
   _updateOrbit();
 }
 
-Real OrbitalCamera::distance() const {
-  return _distance;
-}
-
 void OrbitalCamera::_updateOrbit() {
   Real2 forwardSinCos = Angle::sinCos(_yaw);
   Real2   pitchSinCos = Angle::sinCos(_pitch);
   
   // Calculate the offset from the pivot point
-  Real3 forward = { forwardSinCos.x * pitchSinCos.y, -pitchSinCos.x, forwardSinCos.y * pitchSinCos.y };
+  Real3 forward = { -forwardSinCos.x * pitchSinCos.y, -pitchSinCos.x, -forwardSinCos.y * pitchSinCos.y };
   Real3 offset = {
     forwardSinCos.x * pitchSinCos.y, pitchSinCos.x,
     forwardSinCos.y * pitchSinCos.y
   };
   
-  _camera.position = {5, 0, 0};
-  _camera.viewDirection = {-5, 0, 0};
+  _camera.position = _pivot + offset * Real3(_distance);
+  _camera.viewDirection = forward;
   _camera.setViewProjection();
 }

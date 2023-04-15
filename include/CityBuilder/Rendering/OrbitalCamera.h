@@ -62,11 +62,18 @@ struct OrbitalCamera {
   void setViewport(Real4 rect);
   
   /// The distance of the camera from its pivot point.
-  Real distance() const;
+  inline Real distance() const { return _distance; }
   
+  /// The pivot point of the camera in the world.
   inline Real3 pivot() const { return _pivot; }
+  
+  /// The yaw of the camera.
   inline Angle yaw() const { return _yaw; }
+  
+  /// The pitch of the camera.
   inline Angle pitch() const { return _pitch; }
+  
+  /// The underlying camera.
   inline Camera &camera() { return _camera; }
   
 private:

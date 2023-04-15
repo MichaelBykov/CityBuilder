@@ -226,7 +226,7 @@ void Driver::main() {
           
           case NSEventTypeScrollWheel:
             input = {
-              { .mouseScroll = (Real)event.scrollingDeltaY },
+              { .mouseScroll = Real2(event.scrollingDeltaX, event.scrollingDeltaY) },
               Events::Input::Type::mouseScroll
             };
             Events::inputChange(input);

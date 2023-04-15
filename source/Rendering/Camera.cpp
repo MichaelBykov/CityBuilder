@@ -6,9 +6,6 @@
  */
 
 #include <CityBuilder/Rendering/Camera.h>
-#include <bgfx/bgfx.h>
-#define BX_CONFIG_DEBUG 0
-#include <bx/math.h>
 USING_NS_CITY_BUILDER
 
 void Camera::setViewProjection() {

@@ -14,6 +14,8 @@
 #define SIMD_NATVIS
 
 #include <bgfx/bgfx.h>
+#define BX_CONFIG_DEBUG 0
+#include <bx/math.h>
 #include <SIMD/SIMD++>
 
 
@@ -82,5 +84,8 @@ typedef SIMD::UInt8x3 Color3;
 
 /// A red-green-blue-alpha color value.
 typedef SIMD::UInt8x4 Color4;
+
+/// A quaternion.
+typedef bx::Quaternion Quaternion;
 
 NS_CITY_BUILDER_END

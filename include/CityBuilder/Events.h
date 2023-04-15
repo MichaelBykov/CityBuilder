@@ -59,7 +59,7 @@ struct Input {
     /// The amount the mouse wheel moved.
     /// \remarks
     ///   Should only be accessed when `type` is `Type::mouseScroll`.
-    Real mouseScroll;
+    Real2 mouseScroll;
     /// The amount that the trackpad was pinched in (positive) or out
     /// (negative).
     /// \remarks

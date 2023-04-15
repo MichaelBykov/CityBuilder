@@ -27,8 +27,12 @@ add_library(CityBuilder
   # "source/Building/Road.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
+  "Source/Rendering/Mesh.cpp"
+  "Source/Rendering/Program.cpp"
+  "Source/Rendering/Texture.cpp"
+  "Source/Rendering/Object.cpp"
   "Source/Game.cpp"
-  # "Source/Input.cpp"
+  "Source/Input.cpp"
   source/Events.cpp
 )
 
