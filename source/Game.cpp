@@ -6,6 +6,7 @@
  */
 
 #include <CityBuilder/Game.h>
+#include <CityBuilder/Rendering/Object.h>
 // #include <CityBuilder/Building/Road.h>
 // #include <CityBuilder/Geometry/Internal.h>
 USING_NS_CITY_BUILDER
@@ -14,7 +15,7 @@ Game *Game::_instance = nullptr;
 
 Game::Game() {
   // Setup the scene
-  _sun = DistanceLight({ -0.2, -1, -0.2 }, 1, { 255, 255, 104 }, { 150 });
+  _sun = DistanceLight({ -0.2, -1, -0.2 }, 1, { 255, 255, 200 }, { 150 });
   _mainCamera = OrbitalCamera();
   
   // Load the roads
@@ -41,6 +42,28 @@ Game::Game() {
   // new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 }));
   
   // Add the ground plane
+  {
+    Resource<Mesh> mesh = new Mesh();
+    mesh->add({ // Vertices
+      { {  1000, 0,  1000 }, { 0, 1, 0 }, { 0, 0 } },
+      { { -1000, 0,  1000 }, { 0, 1, 0 }, { 0, 1 } },
+      { { -1000, 0, -1000 }, { 0, 1, 0 }, { 1, 1 } },
+      { {  1000, 0, -1000 }, { 0, 1, 0 }, { 1, 0 } },
+    }, { // Triangles
+      0, 1, 2,
+      2, 3, 0,
+    }).load();
+    
+    Resource<Program> shader = new Program("vertex", "fragment");
+    
+    Resource<Material> material = new Material(shader);
+    material->texture = new Texture("grass", 256);
+    material->textureTile = { 200, 200 };
+    
+    _ground = new Object(mesh, material);
+  }
+  
+  
   // Ogre::MaterialPtr planeMaterial = Ogre::MaterialManager::getSingleton().create(
   //   "Ground Plane Material", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
   

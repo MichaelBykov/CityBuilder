@@ -26,9 +26,9 @@ bool Input::_usedKeys[256] { false };
 
 bool Input::_keysDown[256] { false };
 
-Real2 Input::_scrollSensitivity = { 0.015, 0.013 };
+Real2 Input::_scrollSensitivity = { 0.005, 0.003 };
 
-Real Input::_pinchSensitivity = 5;
+Real Input::_pinchSensitivity = 15;
 
 Real2 Input::_keyMoveSpeed = { 2.5, 2.5 };
 

@@ -30,6 +30,7 @@ add_library(CityBuilder
   "Source/Rendering/Mesh.cpp"
   "Source/Rendering/Program.cpp"
   "Source/Rendering/Texture.cpp"
+  "Source/Rendering/Uniforms.cpp"
   "Source/Rendering/Object.cpp"
   "Source/Game.cpp"
   "Source/Input.cpp"
@@ -69,13 +70,32 @@ if(APPLE)
     endif()
   endfunction()
   
+  function(compile_texture output)
+    cmake_parse_arguments(PARSE_ARGV 1 COMPILE_TEXTURE "" "" "")
+    add_custom_command(
+      OUTPUT ${output}
+      COMMAND texturec
+        -f "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_TEXTURE_UNPARSED_ARGUMENTS}"
+        -o ${output}
+        -t RGBA8
+        --as dds
+        -m
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_TEXTURE_UNPARSED_ARGUMENTS}"
+      VERBATIM
+    )
+  endfunction()
+  
   set(CMAKE_CXX_FLAGS "-ObjC++")
   
   compile_shader(vertex.shader VERTEX shaders/vertex.sc)
   compile_shader(fragment.shader FRAGMENT shaders/fragment.sc)
+  compile_texture(grass.texture media/grass-tmp.jpg)
+  compile_texture(pavement.texture media/pavement.png)
   set(RESOURCE_FILES
     vertex.shader
     fragment.shader
+    grass.texture
+    pavement.texture
   )
   
   add_executable(CityBuilderDriver MACOSX_BUNDLE

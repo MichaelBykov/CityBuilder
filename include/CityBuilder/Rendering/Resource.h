@@ -87,6 +87,10 @@ public:
   T &operator *() {
     return *_data->data;
   }
+  
+  operator bool() const {
+    return _data != nullptr;
+  }
 };
 
 NS_CITY_BUILDER_END

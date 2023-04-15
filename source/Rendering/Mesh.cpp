@@ -6,6 +6,7 @@
  */
 
 #include <CityBuilder/Rendering/Mesh.h>
+#include <CityBuilder/Rendering/Uniforms.h>
 USING_NS_CITY_BUILDER
 
 Mesh::~Mesh() {
@@ -41,9 +42,9 @@ void Mesh::load() {
   // Create the vertex buffer
   bgfx::VertexLayout layout;
   layout.begin()
-      .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-      .add(bgfx::Attrib::Normal  , 3, bgfx::AttribType::Float)
-      .add(bgfx::Attrib::Color0  , 4, bgfx::AttribType::Uint8, true)
+      .add(bgfx::Attrib::Position , 3, bgfx::AttribType::Float)
+      .add(bgfx::Attrib::Normal   , 3, bgfx::AttribType::Float)
+      .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
   .end();
   _vertexBuffer = bgfx::createVertexBuffer(
     bgfx::copy(&_vertices[0], sizeof(Vertex) * _vertices.count()), layout);
@@ -65,6 +66,9 @@ void Mesh::draw(Resource<Material> material) const {
     return;
   
   // Submit the material
+  bgfx::setUniform(Uniforms::u_textureTile, { material->textureTile });
+  if (material->texture)
+    material->texture->load(Uniforms::s_albedo);
   // TODO
   
   // Submit the mesh to the GPU for rendering

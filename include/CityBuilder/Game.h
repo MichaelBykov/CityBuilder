@@ -9,6 +9,7 @@
 #include <CityBuilder/Common.h>
 #include "Rendering/OrbitalCamera.h"
 #include "Rendering/DistanceLight.h"
+#include "Rendering/Object.h"
 #include "Input.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -26,6 +27,11 @@ struct Game {
   /// The sun.
   inline DistanceLight &sun() {
     return _sun;
+  }
+  
+  /// The ground plane.
+  inline Object &ground() {
+    return *_ground;
   }
   
   /// The current game instance.
@@ -50,6 +56,9 @@ private:
   
   /// The main camera.
   OrbitalCamera _mainCamera;
+  
+  /// The ground plane.
+  Object *_ground;
   
   /// The main game instance.
   static Game *_instance;

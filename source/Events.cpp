@@ -8,6 +8,7 @@
 #include <CityBuilder/Events.h>
 #include <CityBuilder/Game.h>
 #include <CityBuilder/Rendering/Object.h>
+#include <CityBuilder/Rendering/Uniforms.h>
 USING_NS_CITY_BUILDER
 
 namespace {
@@ -28,19 +29,6 @@ namespace {
   
   /// The current global frame number.
   uint64_t frame = 0;
-  
-  
-  
-  // Global shader uniforms
-  
-  /// The global ambient light color.
-  bgfx::UniformHandle u_ambient;
-  
-  /// The global sun color.
-  bgfx::UniformHandle u_sunColor;
-  
-  /// The global sun direction.
-  bgfx::UniformHandle u_sunDirection;
 }
 
 void Events::start() {
@@ -49,40 +37,40 @@ void Events::start() {
   mesh = new Mesh();
   mesh->add({ // Vertices
     // +X face
-    { {  1,  1,  1 }, { 1,  0,  0 }, {   0,   0, 255 , 255,} },
-    { {  1,  1, -1 }, { 1,  0,  0 }, { 255,   0, 255 , 255,} },
-    { {  1, -1, -1 }, { 1,  0,  0 }, { 255, 255, 255 , 255,} },
-    { {  1, -1,  1 }, { 1,  0,  0 }, {   0, 255, 255 , 255,} },
+    { {  1,  1,  1 }, {  1,  0,  0 }, { 0, 0 } },
+    { {  1,  1, -1 }, {  1,  0,  0 }, { 0, 1 } },
+    { {  1, -1, -1 }, {  1,  0,  0 }, { 1, 1 } },
+    { {  1, -1,  1 }, {  1,  0,  0 }, { 1, 0 } },
     
     // -X face
-    { { -1, -1,  1 }, { -1,  0,  0 }, {   0, 255,   0,  255 } },
-    { { -1, -1, -1 }, { -1,  0,  0 }, { 255, 255,   0,  255 } },
-    { { -1,  1, -1 }, { -1,  0,  0 }, { 255,   0,   0,  255 } },
-    { { -1,  1,  1 }, { -1,  0,  0 }, {   0,   0,   0,  255 } },
+    { { -1, -1,  1 }, { -1,  0,  0 }, { 0, 0 } },
+    { { -1, -1, -1 }, { -1,  0,  0 }, { 0, 1 } },
+    { { -1,  1, -1 }, { -1,  0,  0 }, { 1, 1 } },
+    { { -1,  1,  1 }, { -1,  0,  0 }, { 1, 0 } },
     
     // +Y face
-    { {  1,  1,  1 }, {  0,  1,  0 }, {   0,   0, 255,  255 } },
-    { { -1,  1,  1 }, {  0,  1,  0 }, {   0,   0,   0,  255 } },
-    { { -1,  1, -1 }, {  0,  1,  0 }, { 255,   0,   0,  255 } },
-    { {  1,  1, -1 }, {  0,  1,  0 }, { 255,   0, 255,  255 } },
+    { {  1,  1,  1 }, {  0,  1,  0 }, { 0, 0 } },
+    { { -1,  1,  1 }, {  0,  1,  0 }, { 0, 1 } },
+    { { -1,  1, -1 }, {  0,  1,  0 }, { 1, 1 } },
+    { {  1,  1, -1 }, {  0,  1,  0 }, { 1, 0 } },
     
     // -Y face
-    { {  1, -1,  1 }, {  0, -1,  0 }, {   0, 255, 255,  255 } },
-    { {  1, -1, -1 }, {  0, -1,  0 }, { 255, 255, 255,  255 } },
-    { { -1, -1, -1 }, {  0, -1,  0 }, { 255, 255,   0,  255 } },
-    { { -1, -1,  1 }, {  0, -1,  0 }, {   0, 255,   0,  255 } },
+    { {  1, -1,  1 }, {  0, -1,  0 }, { 0, 0 } },
+    { {  1, -1, -1 }, {  0, -1,  0 }, { 0, 1 } },
+    { { -1, -1, -1 }, {  0, -1,  0 }, { 1, 1 } },
+    { { -1, -1,  1 }, {  0, -1,  0 }, { 1, 0 } },
     
     // +Z face
-    { {  1,  1,  1 }, {  0,  0,  1 }, {   0,   0, 255,  255 } },
-    { {  1, -1,  1 }, {  0,  0,  1 }, {   0, 255, 255,  255 } },
-    { { -1, -1,  1 }, {  0,  0,  1 }, {   0, 255,   0,  255 } },
-    { { -1,  1,  1 }, {  0,  0,  1 }, {   0,   0,   0,  255 } },
+    { {  1,  1,  1 }, {  0,  0,  1 }, { 0, 0 } },
+    { {  1, -1,  1 }, {  0,  0,  1 }, { 0, 1 } },
+    { { -1, -1,  1 }, {  0,  0,  1 }, { 1, 1 } },
+    { { -1,  1,  1 }, {  0,  0,  1 }, { 1, 0 } },
     
     // -Z face
-    { {  1,  1, -1 }, {  0,  0, -1 }, { 255,   0, 255,  255 } },
-    { { -1,  1, -1 }, {  0,  0, -1 }, { 255,   0,   0,  255 } },
-    { { -1, -1, -1 }, {  0,  0, -1 }, { 255, 255,   0,  255 } },
-    { {  1, -1, -1 }, {  0,  0, -1 }, { 255, 255, 255,  255 } },
+    { {  1,  1, -1 }, {  0,  0, -1 }, { 0, 0 } },
+    { { -1,  1, -1 }, {  0,  0, -1 }, { 0, 1 } },
+    { { -1, -1, -1 }, {  0,  0, -1 }, { 1, 1 } },
+    { {  1, -1, -1 }, {  0,  0, -1 }, { 1, 0 } },
   }, { // Triangles
     // +X face
     0,  1,  2,
@@ -114,6 +102,7 @@ void Events::start() {
   
   // Create the material
   material = new Material(shader);
+  material->texture = new Texture("pavement");
   
   // Create the object
   cube = new Object(mesh, material);
@@ -121,9 +110,7 @@ void Events::start() {
   
   
   // Create the shader uniforms
-  u_ambient      = bgfx::createUniform("u_ambient"     , bgfx::UniformType::Vec4);
-  u_sunColor     = bgfx::createUniform("u_sunColor"    , bgfx::UniformType::Vec4);
-  u_sunDirection = bgfx::createUniform("u_sunDirection", bgfx::UniformType::Vec4);
+  Uniforms::create();
 }
 
 void Events::stop() {
@@ -156,7 +143,7 @@ void Events::update() {
       Real(game->sun().ambient.z) / Real(255),
       1, // Unused
     };
-    bgfx::setUniform(u_ambient, ambient);
+    bgfx::setUniform(Uniforms::u_ambient, ambient);
     
     Real4 sun = {
       Real(game->sun().color.x) / Real(255),
@@ -164,10 +151,13 @@ void Events::update() {
       Real(game->sun().color.z) / Real(255),
       1, // Unused
     };
-    bgfx::setUniform(u_sunColor, sun);
+    bgfx::setUniform(Uniforms::u_sunColor, sun - ambient * Real4(0.8));
     
-    bgfx::setUniform(u_sunDirection, game->sun().direction);
+    bgfx::setUniform(Uniforms::u_sunDirection, game->sun().direction);
   }
+  
+  // Draw the scene
+  game->ground().draw();
   
   cube->draw();
   

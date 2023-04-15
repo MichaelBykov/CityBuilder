@@ -20,8 +20,8 @@ struct Mesh {
     Real3 position;
     /// The normal of the vertex.
     Real3 normal;
-    /// The alpha-blue-green-red color of the vertex.
-    Color4 color;
+    /// The texture coordinates of the vertex.
+    Real2 uv;
   };
   
   /// Create a new mesh.
