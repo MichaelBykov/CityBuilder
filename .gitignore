@@ -4,3 +4,4 @@ build/
 Ogre.log
 plugins.cfg
 resources.cfg
+.DS_Store
