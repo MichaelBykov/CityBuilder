@@ -22,17 +22,17 @@ Game::Game() {
   Road *road1 = _roads.add(new Road(highway, *new Line2({ 0, 0 }, { 10, 10 })));
   Road *road2 = _roads.add(new Road(highway, *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 })));
   _roads.connect(road1, road2);
-  _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -5 }, { 10, -5 })));
+  _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -10 }, { 10, -10 })));
   _roads.update();
   
   // Add the ground plane
   {
     Resource<Mesh> mesh = new Mesh();
     mesh->add({ // Vertices
-      { {  1000, 0,  1000 }, { 0, 1, 0 }, { 0, 0 } },
-      { { -1000, 0,  1000 }, { 0, 1, 0 }, { 0, 1 } },
-      { { -1000, 0, -1000 }, { 0, 1, 0 }, { 1, 1 } },
-      { {  1000, 0, -1000 }, { 0, 1, 0 }, { 1, 0 } },
+      { {  200, 0,  200 }, { 0, 1, 0 }, { 0, 0 } },
+      { { -200, 0,  200 }, { 0, 1, 0 }, { 0, 1 } },
+      { { -200, 0, -200 }, { 0, 1, 0 }, { 1, 1 } },
+      { {  200, 0, -200 }, { 0, 1, 0 }, { 1, 0 } },
     }, { // Triangles
       0, 1, 2,
       2, 3, 0,

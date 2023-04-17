@@ -15,18 +15,6 @@ namespace {
   /// The main game instance.
   Game *game;
   
-  /// The cube mesh.
-  Resource<Mesh> mesh;
-  
-  /// The cube shader.
-  Resource<Material> material;
-  
-  /// The cube shader.
-  Resource<Program> shader;
-  
-  /// The cube.
-  Object *cube;
-  
   /// The current global frame number.
   uint64_t frame = 0;
 }
@@ -34,81 +22,8 @@ namespace {
 void Events::start() {
   game = new Game();
   
-  mesh = new Mesh();
-  mesh->add({ // Vertices
-    // +X face
-    { {  1,  1,  1 }, {  1,  0,  0 }, { 0, 0 } },
-    { {  1,  1, -1 }, {  1,  0,  0 }, { 0, 1 } },
-    { {  1, -1, -1 }, {  1,  0,  0 }, { 1, 1 } },
-    { {  1, -1,  1 }, {  1,  0,  0 }, { 1, 0 } },
-    
-    // -X face
-    { { -1, -1,  1 }, { -1,  0,  0 }, { 0, 0 } },
-    { { -1, -1, -1 }, { -1,  0,  0 }, { 0, 1 } },
-    { { -1,  1, -1 }, { -1,  0,  0 }, { 1, 1 } },
-    { { -1,  1,  1 }, { -1,  0,  0 }, { 1, 0 } },
-    
-    // +Y face
-    { {  1,  1,  1 }, {  0,  1,  0 }, { 0, 0 } },
-    { { -1,  1,  1 }, {  0,  1,  0 }, { 0, 1 } },
-    { { -1,  1, -1 }, {  0,  1,  0 }, { 1, 1 } },
-    { {  1,  1, -1 }, {  0,  1,  0 }, { 1, 0 } },
-    
-    // -Y face
-    { {  1, -1,  1 }, {  0, -1,  0 }, { 0, 0 } },
-    { {  1, -1, -1 }, {  0, -1,  0 }, { 0, 1 } },
-    { { -1, -1, -1 }, {  0, -1,  0 }, { 1, 1 } },
-    { { -1, -1,  1 }, {  0, -1,  0 }, { 1, 0 } },
-    
-    // +Z face
-    { {  1,  1,  1 }, {  0,  0,  1 }, { 0, 0 } },
-    { {  1, -1,  1 }, {  0,  0,  1 }, { 0, 1 } },
-    { { -1, -1,  1 }, {  0,  0,  1 }, { 1, 1 } },
-    { { -1,  1,  1 }, {  0,  0,  1 }, { 1, 0 } },
-    
-    // -Z face
-    { {  1,  1, -1 }, {  0,  0, -1 }, { 0, 0 } },
-    { { -1,  1, -1 }, {  0,  0, -1 }, { 0, 1 } },
-    { { -1, -1, -1 }, {  0,  0, -1 }, { 1, 1 } },
-    { {  1, -1, -1 }, {  0,  0, -1 }, { 1, 0 } },
-  }, { // Triangles
-    // +X face
-    0,  1,  2,
-    2,  3,  0,
-    
-    // -X face
-    4,  5,  6,
-    6,  7,  4,
-    
-    // +Y face
-    8,  9, 10,
-    10, 11,  8,
-    
-    // -Y face
-    12, 13, 14,
-    14, 15, 12,
-    
-    // +Z face
-    16, 17, 18,
-    18, 19, 16,
-    
-    // -Z face
-    20, 21, 22,
-    22, 23, 20,
-  }).load();
-  
-  // Load the shader
-  shader = new Program("vertex", "fragment");
-  Program::pbr = shader;
-  
-  // Create the material
-  material = new Material(shader);
-  material->texture = new Texture("textures/pavement");
-  
-  // Create the object
-  cube = new Object(mesh, material);
-  
-  
+  // Load the default shader
+  Program::pbr = new Program("vertex", "fragment");
   
   // Create the shader uniforms
   Uniforms::create();
@@ -162,8 +77,6 @@ void Events::update() {
   game->ground().draw();
   
   game->roads().draw();
-  
-  cube->draw();
   
   // Debug info
   // bgfx::dbgTextClear();

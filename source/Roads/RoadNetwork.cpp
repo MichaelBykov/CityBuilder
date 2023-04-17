@@ -159,7 +159,7 @@ void RoadNetwork::update() {
       } else {
         // Create a new mesh
         BSTree<LaneDef *, int> lanes;
-        bool create;
+        const Real scale = 0.333333333333;
         
         Real2 half = { -road->definition->dimensions.x * Real(0.5), 0 };
         
@@ -170,18 +170,18 @@ void RoadNetwork::update() {
           
           Resource<Mesh> mesh = new Mesh();
           road->_meshes.append(mesh);
-          mesh->extrude(road->definition->decorations, road->path, half, 0.2);
+          mesh->extrude(road->definition->decorations, road->path, half, scale);
           _meshes[road->definition->decorationsTexture.address()]
             .append({ mesh, { 1, road->path.length() } });
           
           // Extrude
-          mesh->extrude(road->definition->decorations, road->path, half, 0.2);
+          mesh->extrude(road->definition->decorations, road->path, half, scale);
         }
         
         // Add the lanes
         for (const RoadDef::Lane &lane : road->definition->lanes) {
           Resource<Mesh> mesh = _addMesh(road, lane.definition, lanes);
-          mesh->extrude(lane.definition->profile, road->path, lane.position + half, 0.2);
+          mesh->extrude(lane.definition->profile, road->path, lane.position + half, scale);
         }
         
         // Add any markings
@@ -199,7 +199,7 @@ void RoadNetwork::update() {
           for (const RoadDef::Divider &divider : road->definition->dividers)
             dividers->extrude(
               *dividerMeshes[(int)divider.type],
-              road->path, divider.position + half, 0.2
+              road->path, divider.position + half, scale
             );
         }
         
