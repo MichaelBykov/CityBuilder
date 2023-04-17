@@ -31,8 +31,18 @@ struct Program {
     bgfx::submit(0, _program);
   }
   
+  /// Submit the program to the GPU.
+  /// \param[in] view
+  ///   The view to submit the program to.
+  inline void submit(bgfx::ViewId view) {
+    bgfx::submit(view, _program);
+  }
+  
   /// The standard PBR shader.
   static Resource<Program> pbr;
+  
+  /// The standard UI shader.
+  static Resource<Program> ui;
   
 private:
   /// The loaded program handle.

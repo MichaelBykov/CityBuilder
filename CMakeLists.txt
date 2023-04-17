@@ -28,6 +28,7 @@ add_library(CityBuilder
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
+  "Source/Rendering/UIMesh.cpp"
   "Source/Rendering/Program.cpp"
   "Source/Rendering/Texture.cpp"
   "Source/Rendering/Uniforms.cpp"
@@ -85,14 +86,32 @@ if(APPLE)
     )
   endfunction()
   
+  function(compile_ui_texture output)
+    cmake_parse_arguments(PARSE_ARGV 1 COMPILE_TEXTURE "" "" "")
+    add_custom_command(
+      OUTPUT ${output}
+      COMMAND texturec
+        -f "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_TEXTURE_UNPARSED_ARGUMENTS}"
+        -o ${output}
+        -t RGBA8
+        --as dds
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${COMPILE_TEXTURE_UNPARSED_ARGUMENTS}"
+      VERBATIM
+    )
+  endfunction()
+  
   set(CMAKE_CXX_FLAGS "-ObjC++")
   
   compile_shader(vertex.shader VERTEX shaders/vertex.sc)
   compile_shader(fragment.shader FRAGMENT shaders/fragment.sc)
+  compile_shader(ui.vertex.shader VERTEX shaders/ui.vertex.sc)
+  compile_shader(ui.fragment.shader FRAGMENT shaders/ui.fragment.sc)
   compile_texture(grass.texture media/grass-tmp.jpg)
   set(RESOURCE_FILES
     vertex.shader
     fragment.shader
+    ui.vertex.shader
+    ui.fragment.shader
     grass.texture
   )
   
@@ -116,12 +135,20 @@ if(APPLE)
   )
   set_source_files_properties(${RESOURCES_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/textures)
   
+  # UI textures
+  compile_ui_texture(round.texture textures/ui/round.png)
+  set(RESOURCES_UI_TEXTURES
+    round.texture
+  )
+  set_source_files_properties(${RESOURCES_UI_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/ui)
+  
   add_executable(CityBuilderDriver MACOSX_BUNDLE
     driver/MacOS.mm
     driver/main.cpp
     ${RESOURCE_FILES}
     ${RESOURCES_ROADS}
     ${RESOURCES_TEXTURES}
+    ${RESOURCES_UI_TEXTURES}
   )
   set_target_properties(CityBuilderDriver PROPERTIES
     RESOURCE "${RESOURCE_FILES}"

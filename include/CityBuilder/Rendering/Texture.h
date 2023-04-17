@@ -38,6 +38,13 @@ struct Texture {
     bgfx::setTexture(0, uniform, _handle);
   }
   
+  /// Submit the texture to the GPU.
+  /// \param[in] uniform
+  ///   The uniform to write the texture to.
+  inline void load(uint8_t stage, bgfx::UniformHandle uniform) {
+    bgfx::setTexture(stage, uniform, _handle);
+  }
+  
 private:
   /// The internal texture handle.
   bgfx::TextureHandle _handle;
