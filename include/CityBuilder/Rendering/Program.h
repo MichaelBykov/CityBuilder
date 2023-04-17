@@ -8,6 +8,7 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
+#include "Resource.h"
 
 NS_CITY_BUILDER_BEGIN
 
@@ -29,6 +30,9 @@ struct Program {
   inline void submit() {
     bgfx::submit(0, _program);
   }
+  
+  /// The standard PBR shader.
+  static Resource<Program> pbr;
   
 private:
   /// The loaded program handle.

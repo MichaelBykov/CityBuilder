@@ -854,7 +854,7 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
       if (token.type != Internal::Markup::Token::Type::number) {
         error("Expected a real number.", token.line, token.column);
         return false;
-      } else if (!token.content.tryParseReal(&real)) {
+      } else if (!token.content.tryParseReal(&real.scalar)) {
         error("Unable to parse a real number.", token.line, token.column);
         return false;
       } else {
@@ -877,7 +877,7 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
       if (xToken.type != Internal::Markup::Token::Type::number) {
         error("Expected a real number for the x-coordinate.", xToken.line, xToken.column);
         return false;
-      } else if (!xToken.content.tryParseReal(&x)) {
+      } else if (!xToken.content.tryParseReal(&x.scalar)) {
         error("Unable to parse a real number.", xToken.line, xToken.column);
         return false;
       } else if (comma.type != Internal::Markup::Token::Type::comma) {
@@ -886,7 +886,7 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
       } else if (yToken.type != Internal::Markup::Token::Type::number) {
         error("Expected a real number for the y-coordinate.", yToken.line, yToken.column);
         return false;
-      } else if (!yToken.content.tryParseReal(&y)) {
+      } else if (!yToken.content.tryParseReal(&y.scalar)) {
         error("Unable to parse a real number.", yToken.line, yToken.column);
         return false;
       } else {
@@ -926,7 +926,7 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
       if (xToken.type != Internal::Markup::Token::Type::number) {
         error("Expected a real number for the x-coordinate.", xToken.line, xToken.column);
         return false;
-      } else if (!xToken.content.tryParseReal(&x)) {
+      } else if (!xToken.content.tryParseReal(&x.scalar)) {
         error("Unable to parse a real number.", xToken.line, xToken.column);
         return false;
       } else if (comma.type != Internal::Markup::Token::Type::comma) {
@@ -935,7 +935,7 @@ _parse(const String &file, const List<Internal::Markup::Token> &tokens, List<_ma
       } else if (yToken.type != Internal::Markup::Token::Type::number) {
         error("Expected a real number for the y-coordinate.", yToken.line, yToken.column);
         return false;
-      } else if (!yToken.content.tryParseReal(&y)) {
+      } else if (!yToken.content.tryParseReal(&y.scalar)) {
         error("Unable to parse a real number.", yToken.line, yToken.column);
         return false;
       } else {

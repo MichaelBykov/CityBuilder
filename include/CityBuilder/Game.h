@@ -10,6 +10,7 @@
 #include "Rendering/OrbitalCamera.h"
 #include "Rendering/DistanceLight.h"
 #include "Rendering/Object.h"
+#include "Roads/RoadNetwork.h"
 #include "Input.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -32,6 +33,11 @@ struct Game {
   /// The ground plane.
   inline Object &ground() {
     return *_ground;
+  }
+  
+  /// The road network.
+  inline RoadNetwork &roads() {
+    return _roads;
   }
   
   /// The current game instance.
@@ -59,6 +65,9 @@ private:
   
   /// The ground plane.
   Object *_ground;
+  
+  /// The road network.
+  RoadNetwork _roads;
   
   /// The main game instance.
   static Game *_instance;

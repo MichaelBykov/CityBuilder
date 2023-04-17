@@ -63,6 +63,9 @@ public:
   /// Create a string from a null-terminated C string.
   String(const char *string);
   
+  /// Create a string from a null-terminated C string of a given length.
+  String(const char *string, size_t length);
+  
   /// Create a string from an integer.
   /// \param[in] integer
   ///   The integer to parse.

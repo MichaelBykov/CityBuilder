@@ -205,6 +205,35 @@ String::String(const char *string) {
 #endif
 }
 
+String::String(const char *string, size_t length) {
+  if (*string == 0) {
+    // Empty string
+    _data = nullptr;
+    return;
+  }
+  
+  size_t capacity = 8;
+  while (capacity < length + 1)
+    capacity *= 2;
+  
+  _data = (Data *)malloc(sizeof(String::Data) + capacity);
+  _data->references = 1;
+  _data->capacity = capacity;
+  _data->bytes = length;
+  _data->length = length;
+  _data->isAscii = true;
+#ifdef TRACK_DOUBLE_FREE
+  _data->freed = false;
+#endif
+  memcpy(_data->contents, string, length);
+  _data->contents[length] = 0;
+#ifdef TRACK_MANAGED_OBJECT_TYPES
+  trackManagedObject(typeid(String));
+#elif defined(TRACK_MANAGED_OBJECTS)
+  trackManagedObject();
+#endif
+}
+
 String::String(int integer) : _data(nullptr) {
   if (integer < 0) {
     append('-');

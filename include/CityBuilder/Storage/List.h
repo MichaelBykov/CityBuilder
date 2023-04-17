@@ -304,7 +304,7 @@ public:
   /// Append the contents of a list to the list.
   /// \param[in] elements
   ///   The elements to append.
-  List &append(const List<T> &elements) {
+  List &appendList(const List<T> &elements) {
     _expand(elements.count());
     for (const T &element : elements)
       new (&_data->contents[_data->count++]) T(element);

@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <CityBuilder/Building/LaneDef.h>
+#include <CityBuilder/Roads/LaneDef.h>
 #include <CityBuilder/Tools/Markup.h>
 #include <iostream>
 USING_NS_CITY_BUILDER
@@ -19,11 +19,12 @@ bool LaneDef::load(const String &path) {
   LaneDef lane { };
   
   List<ProfilePoint> profile { };
+  String texture;
   bool success = parseMarkup(path, lane)
     .section("lane")
       .field("name", lane.name)
     .section("texture")
-      .field("main", lane.mainTexture)
+      .field("main", texture)
     .section("profile")
       .profilePoints(profile)
     .section("traffic")
@@ -48,6 +49,10 @@ bool LaneDef::load(const String &path) {
   
   // Compute the profile mesh
   lane.profile = profile;
+  
+  // Load the texture
+  if (!texture.isEmpty())
+    lane.mainTexture = new Texture("textures/" + texture);
   
   // Save
   LaneDef::lanes.set(lane.name, lane);

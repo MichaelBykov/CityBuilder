@@ -91,6 +91,14 @@ public:
   operator bool() const {
     return _data != nullptr;
   }
+  
+  const T *address() const {
+    return _data->data;
+  }
+  
+  T *address() {
+    return _data->data;
+  }
 };
 
 NS_CITY_BUILDER_END

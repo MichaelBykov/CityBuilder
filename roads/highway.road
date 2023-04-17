@@ -28,4 +28,4 @@ lane 23,0.1
 edge 30,0.1
 
 [texture]
-decorations "falloff.png"
+decorations "falloff"

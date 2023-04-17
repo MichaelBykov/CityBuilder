@@ -8,7 +8,8 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Geometry/Path2.h>
-#include <CityBuilder/Geometry/Mesh.h>
+#include <CityBuilder/Rendering/Mesh.h>
+#include "Connection.h"
 #include "RoadDef.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -21,8 +22,11 @@ struct Road {
   /// The road's path.
   Path2 &path;
   
-  /// The road's mesh.
-  Mesh mesh;
+  /// The road's start connection.
+  Connection start;
+  
+  /// The road's end connection.
+  Connection end;
   
   
   
@@ -41,6 +45,15 @@ struct Road {
   Road(const Road &other) = delete;
   
   ~Road();
+  
+private:
+  friend struct RoadNetwork;
+  
+  /// Whether or not the road needs to be redrawn.
+  bool _dirty = true;
+  
+  /// The road's meshes.
+  List<Resource<Mesh>> _meshes { };
 };
 
 NS_CITY_BUILDER_END

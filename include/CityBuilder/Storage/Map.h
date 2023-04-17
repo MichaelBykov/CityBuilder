@@ -32,6 +32,12 @@ private:
     /// The number of references to the map data.
     size_t references = 1;
     
+    /// The total number of buckets in the map.
+    int buckets;
+    
+    /// The beginning of the buckets.
+    List<Pair> *begin;
+    
 #ifdef TRACK_DOUBLE_FREE
     /// A tracker for if the map has already been freed.
     bool freed = false;
@@ -75,6 +81,11 @@ private:
   struct Data : DataBase {
     /// The map buckets.
     List<Pair> contents[bucketCount];
+    
+    Data() {
+      this->buckets = bucketCount;
+      this->begin = contents;
+    }
     
     DataBase *clone() override {
       Data *data = new Data();
@@ -198,6 +209,69 @@ public:
       _data->release();
       _data = nullptr;
     }
+  }
+  
+  
+  
+  struct Iterator {
+    /// The map being iterated over.
+    Map *map;
+    /// The current bucket.
+    int bucket;
+    /// The current bucket iterator.
+    typename List<Pair>::Iterator start;
+    /// The end iterator.
+    typename List<Pair>::Iterator end;
+    
+    Iterator(nullptr_t) : map(nullptr), bucket(0) { }
+    
+    Iterator(Map &map) : map(&map), bucket(0),
+      start(map._data->begin[0].begin()),
+        end(map._data->begin[0].end()) {
+      if (start == end)
+        while (bucket < map._data->buckets && start == end) {
+          bucket++;
+          start = map._data->begin[bucket].begin();
+          end   = map._data->begin[bucket].end();
+        }
+    }
+    
+    Iterator &operator ++() {
+      if (map == nullptr)
+        return *this;
+      
+      ++start;
+      if (start != end)
+        return *this;
+      bucket++;
+      if (bucket < map->_data->buckets) {
+        start = map->_data->begin[bucket].begin();
+        end   = map->_data->begin[bucket].end();
+      }
+      return *this;
+    }
+    
+    Pair &operator *() {
+      return *start;
+    }
+    
+    bool operator !=(const Iterator &other) {
+      if (map == nullptr)
+        return false;
+      return start != end;
+    }
+  };
+  
+  List<Pair> *begin() {
+    if (_data == nullptr)
+      return nullptr;
+    return _data->begin;
+  }
+  
+  List<Pair> *end() {
+    if (_data == nullptr)
+      return nullptr;
+    return _data->begin + _data->buckets;
   }
   
   

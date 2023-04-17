@@ -8,6 +8,7 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/List.h>
+#include <CityBuilder/Geometry/Profile.h>
 #include "Material.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -45,10 +46,31 @@ struct Mesh {
   
   
   
+  /// Extrude a cross-section along a path and add it as a sub-mesh.
+  /// \param profile
+  ///   The cross-section to extrude.
+  /// \param path
+  ///   The path to extrude the cross-section along.
+  /// \param offset
+  ///   The offset of the cross-section from the path.
+  /// \param scale
+  ///   The scale of the cross-section.
+  ///   Does not affect the path points.
+  Mesh &extrude(const ProfileMesh &profile, Path2 &path, Real2 offset = { 0, 0 }, Real scale = 1);
+  
+  
+  
   /// Load the mesh to the GPU.
   void load();
   
   
+  
+  /// Submit the mesh to the GPU for rendering.
+  /// \param[in] shader
+  ///   The shader to use for drawing the mesh.
+  /// \remarks
+  ///   A material should be set before calling this.
+  void draw(Resource<Program> shader) const;
   
   /// Submit the mesh to the GPU for rendering.
   /// \param[in] material

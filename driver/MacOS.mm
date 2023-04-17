@@ -292,7 +292,7 @@ bool Driver::loadResource(
     
     *contents = (char *)malloc(*length + 1);
     fread((void *)*contents, 1, *length, file);
-    (*contents)[*length - 1] = 0;
+    (*contents)[*length] = 0;
     fclose(file);
   }
   

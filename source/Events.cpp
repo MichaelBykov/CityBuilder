@@ -99,10 +99,11 @@ void Events::start() {
   
   // Load the shader
   shader = new Program("vertex", "fragment");
+  Program::pbr = shader;
   
   // Create the material
   material = new Material(shader);
-  material->texture = new Texture("pavement");
+  material->texture = new Texture("textures/pavement");
   
   // Create the object
   cube = new Object(mesh, material);
@@ -155,14 +156,17 @@ void Events::update() {
     
     bgfx::setUniform(Uniforms::u_sunDirection, game->sun().direction);
   }
+  bgfx::dbgTextClear();
   
   // Draw the scene
   game->ground().draw();
   
+  game->roads().draw();
+  
   cube->draw();
   
   // Debug info
-  bgfx::dbgTextClear();
+  // bgfx::dbgTextClear();
   bgfx::dbgTextPrintf(4, 2, 0x0f,
     "frame %d : %d ns (%d FPS)",
     frame++,

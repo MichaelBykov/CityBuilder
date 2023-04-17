@@ -16,15 +16,15 @@ find_library(BX NAMES bx)
 add_library(CityBuilder
   "source/Storage/Check.cpp"
   "source/Storage/String.cpp"
-  # "source/Geometry/Path2.cpp"
-  # "source/Geometry/Internal.cpp"
-  # "source/Geometry/Profile.cpp"
+  "source/Geometry/Path2.cpp"
+  "source/Geometry/Profile.cpp"
   # "source/Geometry/Mesh.cpp"
   # "source/Geometry/SharedMesh.cpp"
-  # "source/Tools/Markup.cpp"
-  # "source/Building/LaneDef.cpp"
-  # "source/Building/RoadDef.cpp"
-  # "source/Building/Road.cpp"
+  "source/Tools/Markup.cpp"
+  "source/Roads/LaneDef.cpp"
+  "source/Roads/RoadDef.cpp"
+  "source/Roads/Road.cpp"
+  "source/Roads/RoadNetwork.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
@@ -90,18 +90,38 @@ if(APPLE)
   compile_shader(vertex.shader VERTEX shaders/vertex.sc)
   compile_shader(fragment.shader FRAGMENT shaders/fragment.sc)
   compile_texture(grass.texture media/grass-tmp.jpg)
-  compile_texture(pavement.texture media/pavement.png)
   set(RESOURCE_FILES
     vertex.shader
     fragment.shader
     grass.texture
-    pavement.texture
   )
+  
+  set(RESOURCES_ROADS
+    "roads/roadway.lane"
+    "roads/sidewalk.lane"
+    "roads/single.road"
+    "roads/highway.road"
+  )
+  set_source_files_properties(${RESOURCES_ROADS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/roads)
+  
+  compile_texture(pavement.texture     media/pavement.png)
+  compile_texture(falloff.texture      media/falloff.png)
+  compile_texture(lane-markers.texture media/lane-markers.png)
+  compile_texture(sidewalk.texture     media/sidewalk.png)
+  set(RESOURCES_TEXTURES
+    pavement.texture
+    falloff.texture
+    lane-markers.texture
+    sidewalk.texture
+  )
+  set_source_files_properties(${RESOURCES_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/textures)
   
   add_executable(CityBuilderDriver MACOSX_BUNDLE
     driver/MacOS.mm
     driver/main.cpp
     ${RESOURCE_FILES}
+    ${RESOURCES_ROADS}
+    ${RESOURCES_TEXTURES}
   )
   set_target_properties(CityBuilderDriver PROPERTIES
     RESOURCE "${RESOURCE_FILES}"

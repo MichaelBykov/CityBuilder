@@ -45,7 +45,7 @@ ProfileMesh::ProfileMesh(const List<ProfilePoint> &points) {
   
   // Normalize all the vertices
   for (Vertex &vertex : vertices)
-    vertex.normal.normalise();
+    vertex.normal = vertex.normal.normalized();
   
   // Find the dimensions
   for (Vertex &vertex : vertices) {

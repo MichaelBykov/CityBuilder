@@ -6,15 +6,28 @@
  */
 
 #include <CityBuilder/Tools/Markup.h>
+#include <CityBuilder/../../driver/Driver.h>
 #include <iostream>
 
 bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Section> &sections) {
   // First, read the file
-  bool success;
-  String file = String::readFile((const char *)path, &success);
-  if (!success) {
-    std::cout << "Failed to load file '" << (const char *)path << "'." << std::endl;
-    return false;
+  String file;
+  {
+    char *contents;
+    size_t length;
+    size_t index = 0, i = 0;
+    for (wchar_t c : path) {
+      if (c == '.')
+        index = i;
+      i++;
+    }
+    String extension = path.substring(index + 1, path.length());
+    String _path = path.substring(0, index);
+    if (!Driver::loadResource((const char *)_path, (const char *)extension, &contents, &length)) {
+      std::cout << "Failed to load file '" << (const char *)path << "'." << std::endl;
+      return false;
+    }
+    file = String(contents, length);
   }
   
   // Tokenize
@@ -29,6 +42,9 @@ bool CityBuilder::Internal::Markup::tokenizeMarkup(const String &path, List<Sect
     comment,
   };
   In in = In::none;
+  
+  // Status
+  bool success = true;
   
   // Where we are in the file
   int line = 1, column = 1, startColumn = 1;

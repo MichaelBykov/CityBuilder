@@ -25,7 +25,7 @@ Mesh &Mesh::add(const List<Vertex> &vertices, const List<int> &indices) {
   uint16_t offset = _vertices.count();
   
   // Add the vertices
-  _vertices.append(vertices);
+  _vertices.appendList(vertices);
   
   // Add the offset indices
   for (int index : indices)
@@ -33,6 +33,62 @@ Mesh &Mesh::add(const List<Vertex> &vertices, const List<int> &indices) {
   
   return *this;
 }
+
+
+
+Mesh &Mesh::extrude(const ProfileMesh &profile, Path2 &path, Real2 offset, Real scale) {
+  uint16_t indexOffset = _vertices.count();
+  
+  // Get the path points
+  List<Real4> points = path.pointNormals();
+  
+  if (points.count() < 2)
+    // Nothing to extrude over
+    return *this;
+  
+  // Extrude the profile
+  for (int i = 0; i < points.count(); i++) {
+    // Get the current point data
+    const Real4 &pointNormal = points[i];
+    Real2 point  = { pointNormal.x, pointNormal.y };
+    Real2 normal = { pointNormal.z, pointNormal.w };
+    
+    // Add the vertices
+    for (const ProfileMesh::Vertex &vertex : profile.vertices) {
+      Real2 norm = normal * Real2(vertex.normal.x);
+      _vertices.append({
+        Real3(
+          point.x,
+          (offset.y + vertex.position.y) * scale,
+          point.y
+        ) +
+        Real3(normal.x, 0, normal.y) *
+        Real3((vertex.position.x + offset.x) * scale),
+        { norm.x, vertex.normal.y, norm.y },
+        { vertex.uv, Real(i) / Real((int)points.count() - 1) }
+      });
+    }
+    
+    if (i > 0) {
+      // Connect triangles with the previous extrusion
+      int prev = indexOffset + (i - 1) * profile.vertices.count();
+      int curr = prev + profile.vertices.count();
+      for (intptr_t j = 0; j < profile.triangles.count(); j += 2) {
+        _indices.append(prev + profile.triangles[j    ]);
+        _indices.append(prev + profile.triangles[j + 1]);
+        _indices.append(curr + profile.triangles[j    ]);
+        
+        _indices.append(curr + profile.triangles[j    ]);
+        _indices.append(prev + profile.triangles[j + 1]);
+        _indices.append(curr + profile.triangles[j + 1]);
+      }
+    }
+  }
+  
+  return *this;
+}
+
+
 
 void Mesh::load() {
   if (loaded)
@@ -60,11 +116,14 @@ void Mesh::load() {
   loaded = true;
 }
 
+void Mesh::draw(Resource<Program> shader) const {
+  // Submit the mesh to the GPU for rendering
+  bgfx::setVertexBuffer(0, _vertexBuffer);
+  bgfx::setIndexBuffer(_indexBuffer);
+  shader->submit();
+}
+
 void Mesh::draw(Resource<Material> material) const {
-  if (!loaded)
-    // Safety
-    return;
-  
   // Submit the material
   bgfx::setUniform(Uniforms::u_textureTile, { material->textureTile });
   if (material->texture)
