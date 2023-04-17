@@ -7,28 +7,32 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
+#include <CityBuilder/Events.h>
 #include <CityBuilder/Storage/List.h>
 #include <CityBuilder/Storage/String.h>
 #include <functional>
 
 NS_CITY_BUILDER_BEGIN
 
-struct InputDelegate;
-
 /// A set of common key codes for use in with the input manager.
 enum class KeyCode : int {
-  a = 0x61, b = 0x62, c = 0x63, d = 0x64, e = 0x65, f = 0x66,
-  g = 0x67, h = 0x68, i = 0x69, j = 0x6A, k = 0x6B, l = 0x6C,
-  m = 0x6D, n = 0x6E, o = 0x6F, p = 0x70, q = 0x71, r = 0x72,
-  s = 0x73, t = 0x74, u = 0x75, v = 0x76, w = 0x77, x = 0x78,
-  y = 0x79, z = 0x7A,
+#if (__APPLE__ && __MACH__) // MacOS QWERTY keyboard
   
-  _0 = 0x30, _1 = 0x31, _2 = 0x32, _3 = 0x33, _4 = 0x34,
-  _5 = 0x35, _6 = 0x36, _7 = 0x37, _8 = 0x38, _9 = 0x39,
+  q = 0x0C, w = 0x0D, e = 0x0E, r = 0x0F, t = 0x11, y = 0x10, u = 0x20, i = 0x22, o = 0x1F, p = 0x23,
+  a = 0x00, s = 0x01, d = 0x02, f = 0x03, g = 0x05, h = 0x04, j = 0x26, k = 0x28, l = 0x25,
+  z = 0x06, x = 0x07, c = 0x08, v = 0x09, b = 0x0B, n = 0x2D, m = 0x2E,
   
-  right = 0xA0, left = 0xA1, down = 0xA2, up = 0xA3,
+  _0 = 0x1D, _1 = 0x12, _2 = 0x13, _3 = 0x14, _4 = 0x15, _5 = 0x17, _6 = 0x16, _7 = 0x1A,
+  _8 = 0x1C, _9 = 0x19,
   
-  space = 0x20, escape = 0x1B, enter = 0x0D, tab = 0x09, backspace = 0x08,
+  space = 0x31, tab = 0x30, enter = 0x24, escape = 0x35, backspace = 0x33,
+  
+  leftShift = 0x38, rightShift = 0x3C, leftControl = 0x3B, rightControl = 0x3E,
+  leftOption = 0x3A, rightOption = 0x3D, leftCommand = 0x37, rightCommand = 0x36,
+  
+  left = 0x7B, right = 0x7C, up = 0x7E, down = 0x7D,
+  
+#endif
 };
 
 /// The central input handler for the game.
@@ -58,10 +62,16 @@ struct Input {
   
   
   /// The set scroll sensitivity.
-  static Real scrollSensitivity();
+  static Real2 scrollSensitivity();
   
   /// Set the scroll sensitivity.
-  static void setScrollSensitivity(Real sensitivity);
+  static void setScrollSensitivity(Real2 sensitivity);
+  
+  /// The set pinch sensitivity.
+  static Real pinchSensitivity();
+  
+  /// Set the pinch sensitivity.
+  static void setPinchSensitivity(Real sensitivity);
   
   /// The set keyboard movement speed.
   static Real2 keyboardMoveSpeed();
@@ -88,7 +98,9 @@ struct Input {
   static void setMouseOrbitSpeed(Real2 speed);
   
 private:
-  friend InputDelegate;
+  friend void Events::inputStart (Events::Input &input);
+  friend void Events::inputStop  (Events::Input &input);
+  friend void Events::inputChange(Events::Input &input);
   
   /// The set of keys used to move the camera in the following order:
   /// forward, backward, left, right.
@@ -108,7 +120,10 @@ private:
   static bool _keysDown[256];
   
   /// The scroll sensitivity.
-  static Real _scrollSensitivity;
+  static Real2 _scrollSensitivity;
+  
+  /// The pinch sensitivity.
+  static Real _pinchSensitivity;
   
   /// The keyboard movement speed.
   static Real2 _keyMoveSpeed;
@@ -128,35 +143,9 @@ private:
   /// Whether or not the right mouse button is currently down.
   static bool _rightMouseDown;
   
-  /// Whether or not the control key is currently pressed.
-  static bool _controlDown;
-  
-  /// Whether or not the option key is currently pressed.
-  static bool _optionDown;
-};
-
-
-
-
-
-/// The central input delegate for the input handler.
-struct InputDelegate : OgreBites::InputListener {
-  
-  bool axisMoved(const OgreBites::AxisEvent &event) override;
-  
-  bool keyPressed(const OgreBites::KeyboardEvent &event) override;
-  
-  bool keyReleased(const OgreBites::KeyboardEvent &event) override;
-  
-  bool mouseMoved(const OgreBites::MouseMotionEvent &event) override;
-  
-  bool mousePressed(const OgreBites::MouseButtonEvent &event) override;
-  
-  bool mouseReleased(const OgreBites::MouseButtonEvent &event) override;
-  
-  bool mouseWheelRolled(const OgreBites::MouseWheelEvent &event) override;
-  
-  void frameRendered(const Ogre::FrameEvent &event) override;
+  /// Whether or not the standard system keys (e.x. shift, alt, command, etc)
+  /// are currently pressed.
+  static bool _systemKeys[16];
 };
 
 NS_CITY_BUILDER_END

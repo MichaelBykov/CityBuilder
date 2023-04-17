@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <CityBuilder/Building/Road.h>
+#include <CityBuilder/Roads/Road.h>
 USING_NS_CITY_BUILDER
 
 namespace {
@@ -81,8 +81,9 @@ namespace {
 
 Road::Road(RoadDef *definition, Path2 &path)
   : definition(definition), path(path) {
+  /*
   // Extrude any decorations
-  Real2 half = { -definition->decorations.dimensions.x / 2, 0 };
+  Real2 half = { -definition->decorations.dimensions.x * Real(0.5), 0 };
   if (!definition->decorations.triangles.isEmpty())
     mesh.addExtrusion(
       { // Extrusion
@@ -147,6 +148,7 @@ Road::Road(RoadDef *definition, Path2 &path)
   
   // Done
   mesh.finish();
+  */
 }
 
 Road::~Road() {

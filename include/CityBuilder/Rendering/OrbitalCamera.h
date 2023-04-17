@@ -1,21 +1,29 @@
 /**
- * @file Camera.h
- * @brief A camera controller.
- * @version 1.0
- * @date April 10, 2023
+ * @file OrbitalCamera.h
+ * @brief An orbital camera controller.
+ * @date April 13, 2023
  * @copyright Copyright (c) 2023
  */
 
 #pragma once
 #include <CityBuilder/Common.h>
-#include "Units/Angle.h"
+#include <CityBuilder/Units/Angle.h>
+#include "Camera.h"
 
 NS_CITY_BUILDER_BEGIN
 
 /// A simple orbital camera.
-struct Camera {
+struct OrbitalCamera {
+  /// Create a new camera.
+  OrbitalCamera();
+  
   /// Create a new camera at the world origin.
-  Camera(OgreBites::ApplicationContext *ctx, Ogre::SceneManager *scene);
+  /// \param[in] rect
+  ///   The view rectangle of the camera where `x = left`, `y = top`,
+  ///   `z = right`, and `w = bottom`.
+  /// \param[in] viewID
+  ///   The identifier of the view that this camera renders to.
+  OrbitalCamera(Real4 rect, int viewID = 0);
   
   /// Slide the camera along the ground plane by the given absolute delta,
   /// relative to its yaw.
@@ -47,15 +55,30 @@ struct Camera {
   ///   The amount to rotate the camera in the pitch axes.
   void orbit(Real2 delta, Angle yaw, Angle pitch);
   
+  /// Set the viewport of the camera.
+  /// \param[in] rect
+  ///   The view rectangle of the camera where `x = left`, `y = top`,
+  ///   `z = right`, and `w = bottom`.
+  void setViewport(Real4 rect);
+  
   /// The distance of the camera from its pivot point.
-  Real distance() const;
+  inline Real distance() const { return _distance; }
+  
+  /// The pivot point of the camera in the world.
+  inline Real3 pivot() const { return _pivot; }
+  
+  /// The yaw of the camera.
+  inline Angle yaw() const { return _yaw; }
+  
+  /// The pitch of the camera.
+  inline Angle pitch() const { return _pitch; }
+  
+  /// The underlying camera.
+  inline Camera &camera() { return _camera; }
   
 private:
-  /// The underlying Ogre3D camera.
-  Ogre::Camera *_camera;
-  
-  /// The Ogre3D node that the camera is attached to.
-  Ogre::SceneNode *_node;
+  /// The underlying camera.
+  Camera _camera;
   
   /// The pivot point of the camera in the world.
   Real3 _pivot;

@@ -13,6 +13,12 @@ NS_CITY_BUILDER_BEGIN
 
 /// A 2-dimensional path.
 struct Path2 {
+  /// The start point of the path.
+  const Real2 start;
+  
+  /// The end point of the path.
+  const Real2 end;
+  
   virtual ~Path2() { }
   
   virtual Real length() = 0;
@@ -26,6 +32,10 @@ struct Path2 {
   }
   
 protected:
+  Path2() { }
+  
+  Path2(Real2 start, Real2 end) : start(start), end(end) { }
+  
   /// The computed bounds of the path.
   Real4 _bounds;
   /// A cache of the path points.
@@ -40,12 +50,9 @@ protected:
 
 /// A two-dimensional line.
 struct Line2 : Path2 {
-  /// An endpoint of the line.
-  const Real2 a, b;
-  
   Line2() { }
   
-  Line2(const Real2 &a, const Real2 &b);
+  Line2(const Real2 &start, const Real2 &end);
   
   Real length() override;
   
@@ -58,7 +65,7 @@ protected:
 /// A two-dimensional arc curve.
 struct Arc2 : Path2 {
   /// A control point of the curve.
-  const Real2 start, control, end;
+  const Real2 control;
   
   Arc2() { }
   

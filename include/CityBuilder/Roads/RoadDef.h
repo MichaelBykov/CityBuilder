@@ -9,7 +9,6 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/List.h>
-#include <CityBuilder/Geometry/SharedMesh.h>
 #include "LaneDef.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -81,8 +80,8 @@ struct RoadDef {
   /// Any dividers drawn on the road.
   List<Divider> dividers;
   
-  /// The name of the texture to use for road decorations.
-  String decorationsTexture;
+  /// The texture to use for road decorations.
+  Resource<Texture> decorationsTexture;
   
   /// The name of the road.
   String name;
@@ -94,7 +93,7 @@ struct RoadDef {
   Buildings allowBuildings = Buildings::all;
   
   /// The road end cap.
-  Ref<SharedMesh &> endCap;
+  // Ref<SharedMesh &> endCap;
   
   
   

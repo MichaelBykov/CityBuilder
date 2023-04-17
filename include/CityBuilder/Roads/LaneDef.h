@@ -10,6 +10,8 @@
 #include <CityBuilder/Storage/String.h>
 #include <CityBuilder/Storage/Map.h>
 #include <CityBuilder/Geometry/Profile.h>
+#include <CityBuilder/Rendering/Resource.h>
+#include <CityBuilder/Rendering/Texture.h>
 
 NS_CITY_BUILDER_BEGIN
 
@@ -53,8 +55,8 @@ struct LaneDef {
   /// The traffic patterns of the lane.
   List<Traffic> traffic;
   
-  /// The name of the main texture to use for the lane.
-  String mainTexture;
+  /// The main texture to use for the lane.
+  Resource<Texture> mainTexture;
   
   /// The name of the lane.
   String name;

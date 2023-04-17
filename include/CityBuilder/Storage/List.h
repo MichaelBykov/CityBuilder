@@ -301,6 +301,16 @@ public:
     return *this;
   }
   
+  /// Append the contents of a list to the list.
+  /// \param[in] elements
+  ///   The elements to append.
+  List &appendList(const List<T> &elements) {
+    _expand(elements.count());
+    for (const T &element : elements)
+      new (&_data->contents[_data->count++]) T(element);
+    return *this;
+  }
+  
   /// Insert an element into the list.
   /// \param[in] element
   ///   The element to insert.

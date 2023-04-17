@@ -18,17 +18,25 @@ struct Angle {
   
   Angle() : radians(0) { }
   
+  Angle(float radians) : radians(radians) { }
+  
+  Angle(int radians) : radians(radians) { }
+  
   Angle(Real radians) : radians(radians) { }
   
-  static constexpr const Real pi = 3.141592653589793238462643383279;
+  static constexpr const float pi = 3.141592653589793238462643383279;
   
-  static constexpr const Real pi2 = pi * 2;
+  static constexpr const float pi2 = pi * 2;
   
-  static constexpr const Real piHalf = pi / 2;
+  static constexpr const float piHalf = pi / 2;
   
-  static constexpr const Real rad2deg = 180 / pi;
+  static constexpr const float rad2deg = 180 / pi;
   
-  static constexpr const Real deg2rad = pi / 180;
+  static constexpr const float deg2rad = pi / 180;
+  
+  inline Real degrees() const {
+    return radians * Real(rad2deg);
+  }
   
   inline Real sin() const {
     return ::sin(radians);
@@ -55,17 +63,27 @@ struct Angle {
   }
   
   inline Real2 sinCos() const {
-    // TODO: Test for sincos support
-    Real sin, cos;
-    __sincosf(radians, &sin, &cos);
-    return { sin, cos };
+    Real2 sinCos;
+    radians.sinCos(&sinCos.x, &sinCos.y);
+    return sinCos;
+  }
+  
+  inline Real2 cosSin() const {
+    Real2 cosSin;
+    radians.sinCos(&cosSin.y, &cosSin.x);
+    return cosSin;
   }
   
   inline static Real2 sinCos(Real radians) {
-    // TODO: Test for sincos support
-    Real sin, cos;
-    __sincosf(radians, &sin, &cos);
-    return { sin, cos };
+    Real2 sinCos;
+    radians.sinCos(&sinCos.x, &sinCos.y);
+    return sinCos;
+  }
+  
+  inline static Real2 cosSin(Real radians) {
+    Real2 cosSin;
+    radians.sinCos(&cosSin.y, &cosSin.x);
+    return cosSin;
   }
   
   inline operator Real() const {
@@ -73,42 +91,42 @@ struct Angle {
   }
   
   inline Angle operator+(Angle other) const {
-    return fmodf(radians + other.radians, pi2);
+    return (radians + other.radians) % Real(pi2);
   }
   
   inline Angle operator-(Angle other) const {
-    return fmodf(radians - other.radians, pi2);
+    return (radians - other.radians) % Real(pi2);
   }
   
   inline Angle operator*(Real scalar) const {
-    return fmodf(radians * scalar, pi2);
+    return (radians * scalar) % Real(pi2);
   }
   
   inline Angle operator/(Real scalar) const {
-    return fmodf(radians / scalar, pi2);
+    return (radians / scalar) % Real(pi2);
   }
   
   inline Angle operator-() const {
-    return fmodf(-radians, pi2);
+    return (-radians) % Real(pi2);
   }
   
   inline Angle &operator+=(Angle other) {
-    radians = fmodf(radians + other.radians, pi2);
+    radians = (radians + other.radians) % Real(pi2);
     return *this;
   }
   
   inline Angle &operator-=(Angle other) {
-    radians = fmodf(radians - other.radians, pi2);
+    radians = (radians - other.radians) % Real(pi2);
     return *this;
   }
   
   inline Angle &operator*=(Real scalar) {
-    radians = fmodf(radians * scalar, pi2);
+    radians = (radians * scalar) % Real(pi2);
     return *this;
   }
   
   inline Angle &operator/=(Real scalar) {
-    radians = fmodf(radians / scalar, pi2);
+    radians = (radians / scalar) % Real(pi2);
     return *this;
   }
   
@@ -121,11 +139,11 @@ struct Angle {
   }
 };
 
-static inline constexpr Real operator""_deg(unsigned long long degrees) {
+static inline constexpr float operator""_deg(unsigned long long degrees) {
   return degrees * Angle::pi / 180;
 }
 
-static inline constexpr Real operator""_deg(long double degrees) {
+static inline constexpr float operator""_deg(long double degrees) {
   return degrees * Angle::pi / 180;
 }
 

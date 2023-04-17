@@ -18,85 +18,39 @@ List<Real4> Path2::_getPointNormals() {
 
 
 
-Line2::Line2(const Real2 &a, const Real2 &b) : a(a), b(b) {
+Line2::Line2(const Real2 &start, const Real2 &end) : Path2(start, end) {
   // Calculate the bounds
-  if (a.x < b.x) {
-    _bounds.x = a.x;
-    _bounds.z = b.x - a.x;
-  } else {
-    _bounds.x = b.x;
-    _bounds.z = a.x - b.x;
-  }
-  
-  if (a.y < b.y) {
-    _bounds.y = a.y;
-    _bounds.w = b.y - a.y;
-  } else {
-    _bounds.y = b.y;
-    _bounds.w = a.y - b.y;
-  }
+  Real2 min = start.min(end);
+  Real2 max = start.max(end);
+  _bounds = { min.x, min.y, max.x - min.x, max.y - min.y };
 }
 
 Real Line2::length() {
-  return (b - a).length();
+  return (end - start).magnitude();
 }
 
 Path2 *Line2::offset(Real distance) {
-  Real2 normal = b - a;
-  normal.normalise();
-  normal = { normal.y, -normal.x };
+  Real2 normal = (end - start).normalized().rightPerpendicular() * Real2(distance);
   
-  return new Line2(
-    a + normal * distance,
-    b + normal * distance
-  );
+  return new Line2(start + normal, end + normal);
 }
 
 List<Real4> Line2::_pointNormals() {
-  Real2 normal = b - a;
-  normal.normalise();
-  normal = { normal.y, -normal.x };
+  Real2 normal = (end - start).normalized().rightPerpendicular();
   return {
-    { a.x, a.y, normal.x, normal.y },
-    { b.x, b.y, normal.x, normal.y },
+    { start.x, start.y, normal.x, normal.y },
+    {   end.x,   end.y, normal.x, normal.y },
   };
 }
 
 
 
 Arc2::Arc2(const Real2 &start, const Real2 &control, const Real2 &end)
-  : start(start), control(control), end(end) {
+  : Path2(start, end), control(control) {
   // Calculate the bounds
-  if (start.x < end.x) {
-    _bounds.x = start.x;
-    _bounds.z = end.x - start.x;
-  } else {
-    _bounds.x = end.x;
-    _bounds.z = start.x - end.x;
-  }
-  
-  if (start.y < end.y) {
-    _bounds.y = start.y;
-    _bounds.w = end.y - start.y;
-  } else {
-    _bounds.y = end.y;
-    _bounds.w = start.y - end.y;
-  }
-  
-  // Expand the bounds to include the control point
-  if (control.x < _bounds.x) {
-    _bounds.z += _bounds.x - control.x;
-    _bounds.x = control.x;
-  } else if (control.x > _bounds.x + _bounds.z) {
-    _bounds.z = control.x - _bounds.x;
-  }
-  
-  if (control.y < _bounds.y) {
-    _bounds.w += _bounds.y - control.y;
-    _bounds.y = control.y;
-  } else if (control.y > _bounds.y + _bounds.w) {
-    _bounds.w = control.y - _bounds.y;
-  }
+  Real2 min = start.min(end).min(control);
+  Real2 max = start.max(end).max(control);
+  _bounds = { min.x, min.y, max.x - min.x, max.y - min.y };
 }
 
 Real Arc2::length() {
@@ -106,41 +60,41 @@ Real Arc2::length() {
 
 Path2 *Arc2::offset(Real distance) {
   _getPointNormals();
-  Real cs = (start - _center).length();
-  Real ce = (end   - _center).length();
+  Real cs = (start - _center).magnitude();
+  Real ce = (end   - _center).magnitude();
   
-  Real2 _start   = _center + (start   - _center) * ((cs + distance) / cs);
-  Real2 _end     = _center + (end     - _center) * ((ce + distance) / ce);
-  Real2 _control = _center + (control - _center) * ((cs + distance) / cs);
+  Real2 _start   = _center + (start   - _center) * Real2((cs + distance) / cs);
+  Real2 _end     = _center + (end     - _center) * Real2((ce + distance) / ce);
+  Real2 _control = _center + (control - _center) * Real2((cs + distance) / cs);
   
   return new Arc2(_start, _control, _end);
 }
 
 List<Real4> Arc2::_pointNormals() {
   // Determine the radius and center of the arc
-  Real2 middle = (start + end) / 2;
+  Real2 middle = (start + end) * Real2(0.5);
   Real2 cm = (middle - control);
-  Real controlMiddle = cm.length();
-  Real controlStart = (control - start).length();
+  Real controlMiddle = cm.magnitude();
+  Real controlStart = (control - start).magnitude();
   Real theta = acos(controlMiddle / controlStart);
-  _center = control + cm * (controlStart / (controlMiddle * sin(theta)));
-  Real radius = (_center - start).length();
-  Real angle = Angle::pi - theta * 2;
+  _center = control + cm * Real2(controlStart / (controlMiddle * theta.sin()));
+  Real radius = (_center - start).magnitude();
+  Real angle = Angle::pi - theta * Real(2);
   _length = radius * angle;
   Real startAngle = atan2(start.y - _center.y, start.x - _center.x);
   
   // Generate the equidistant points
-  Real2 normal = (start - _center).normalisedCopy();
+  Real2 normal = (start - _center).normalized();
   List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
   int pointCount = _length;
   for (int i = 1; i < pointCount; i++) {
-    Real2 sinCos = Angle::sinCos(startAngle + angle * i / pointCount) * radius;
+    Real2 sinCos = Angle::sinCos(startAngle + angle * Real(i) / Real(pointCount)) * Real2(radius);
     sinCos = { sinCos.y, sinCos.x };
     Real2 point = _center + sinCos;
-    normal = (point - _center).normalisedCopy();
+    normal = (point - _center).normalized();
     points.append({ point.x, point.y, normal.x, normal.y });
   }
-  normal = (end - _center).normalisedCopy();
+  normal = (end - _center).normalized();
   points.append({ end.x, end.y, normal.x, normal.y });
   
   return points;
