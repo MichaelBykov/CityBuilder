@@ -28,6 +28,9 @@ extern bgfx::UniformHandle u_textureTile;
 /// The albedo texture.
 extern bgfx::UniformHandle s_albedo;
 
+/// The UI texture.
+extern bgfx::UniformHandle s_ui;
+
 
 
 /// Create the global shader uniforms.

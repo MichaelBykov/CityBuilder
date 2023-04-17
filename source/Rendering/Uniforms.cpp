@@ -16,6 +16,7 @@ namespace Uniforms {
   bgfx::UniformHandle u_textureTile;
   
   bgfx::UniformHandle s_albedo;
+  bgfx::UniformHandle s_ui;
   
 } // namespace Uniforms
 NS_CITY_BUILDER_END
@@ -29,4 +30,5 @@ void Uniforms::create() {
   u_textureTile  = bgfx::createUniform("u_textureTile" , bgfx::UniformType::Vec4);
   
   s_albedo = bgfx::createUniform("s_albedo", bgfx::UniformType::Sampler);
+  s_ui     = bgfx::createUniform("s_ui"    , bgfx::UniformType::Sampler);
 }

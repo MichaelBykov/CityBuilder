@@ -9,6 +9,8 @@
 #include <CityBuilder/../../driver/Driver.h>
 USING_NS_CITY_BUILDER
 
+Resource<Program> Program::ui = nullptr;
+
 Resource<Program> Program::pbr = nullptr;
 
 bgfx::ShaderHandle loadShader(const char *name, const char *extension) {
