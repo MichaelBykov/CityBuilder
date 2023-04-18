@@ -24,6 +24,8 @@ struct Angle {
   
   Angle(Real radians) : radians(radians) { }
   
+  Angle(Real2 vector) : radians(atan2(vector.y, vector.x)) { }
+  
   static constexpr const float pi = 3.141592653589793238462643383279;
   
   static constexpr const float pi2 = pi * 2;
@@ -86,6 +88,15 @@ struct Angle {
     return cosSin;
   }
   
+  static Angle span(Angle start, Angle end) {
+    Real span = 0;
+    while (end.radians < start.radians) {
+      span += Real(pi2);
+      end.radians += Real(pi2);
+    }
+    return (span + (end.radians - start.radians)) % Real(pi2);
+  }
+  
   inline operator Real() const {
     return radians;
   }
@@ -107,7 +118,7 @@ struct Angle {
   }
   
   inline Angle operator-() const {
-    return (-radians) % Real(pi2);
+    return (radians + Real(pi)) % Real(pi2);
   }
   
   inline Angle &operator+=(Angle other) {

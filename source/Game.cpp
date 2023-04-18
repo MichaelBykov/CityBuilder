@@ -117,13 +117,16 @@ namespace {
     ///   2: Find an end point.
     int stage = 0;
     
+    /// The road being built.
+    RoadDef *road;
+    
     /// A display of the road being built.
     Resource<DynamicMesh> display;
     
     /// Whether or not the display is visible.
     bool displayVisible = false;
     
-    Road_Building() {
+    Road_Building(RoadDef *road) : road(road) {
       // Create the display
       display = new DynamicMesh();
     }
@@ -135,8 +138,9 @@ namespace {
       Color4 hoverColor { 100, 155, 255, 100 };
       
       List<DynamicMesh::Vertex> vertices { { origin, { 100, 155, 255, 0 } } };
+      Real2 radius = Real2(road->dimensions.x * Real(0.5 * 0.333333333333));
       for (int i = 0; i < 32; i++) {
-        Real2 xz = Angle::cosSin(i * Angle::pi2 / 32) * Real2(5);
+        Real2 xz = Angle::cosSin(i * Angle::pi2 / 32) * radius;
         vertices.append({ origin + Real3(xz.x, 0, xz.y), hoverColor });
       }
       List<int> indices { 0, 32, 1 };
@@ -221,7 +225,14 @@ void Game::drawHovers() {
   }
 }
 
-void Game::act(Action action) {
+void Game::buildRoad(RoadDef *road) {
+  _act(Action::road_building);
+  
+  // Create the road building state
+  _actionState = new Road_Building(road);
+}
+
+void Game::_act(Action action) {
   // Perform clean-up for the previous action, as necessary
   switch (_action) {
   case Action::road_building: {
@@ -237,17 +248,4 @@ void Game::act(Action action) {
   }
   
   _action = action;
-  
-  // Perform setup
-  switch (_action) {
-  case Action::road_building: {
-    // Create a new road building
-    Road_Building *state = new Road_Building();
-    _actionState = state;
-  } break;
-    
-  default:
-    // Nothing to set-up
-    break;
-  }
 }

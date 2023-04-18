@@ -70,8 +70,8 @@ struct Game {
     road_building,
   };
   
-  /// Change which action the user is currently performing.
-  void act(Action action);
+  /// Start building a road.
+  void buildRoad(RoadDef *road);
   
 private:
   /// The scene's sun.
@@ -88,6 +88,9 @@ private:
   
   /// The action the user is currently performing.
   Action _action = Action::none;
+  
+  /// Change which action the user is currently performing.
+  void _act(Action action);
   
   /// The current action state.
   void *_actionState = nullptr;

@@ -31,7 +31,7 @@ void Events::start() {
   Uniforms::create();
   
   // Start building roads for testing
-  game->act(Game::Action::road_building);
+  game->buildRoad(&RoadDef::roads["2-Lane Highway"]);
 }
 
 void Events::stop() {

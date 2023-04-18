@@ -9,6 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/List.h>
 #include <CityBuilder/Geometry/Profile.h>
+#include <CityBuilder/Units/Angle.h>
 #include "Material.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -57,6 +58,23 @@ struct Mesh {
   ///   The scale of the cross-section.
   ///   Does not affect the path points.
   Mesh &extrude(const ProfileMesh &profile, Path2 &path, Real2 offset = { 0, 0 }, Real scale = 1);
+  
+  /// Revolve half of a cross-section around a center point counter-clockwise and add it to the mesh.
+  /// \param[in] profile
+  ///   The cross-section to revolve.
+  ///   Only the vertices/triangles from the start up to the center point will be revolved.
+  /// \param[in] center
+  ///   The center point of the revolution.
+  /// \param[in] startAngle
+  ///   The start angle of the revolution.
+  /// \param[in] endAngle
+  ///   The end angle of the revolution.
+  /// \param[in] offset
+  ///   The offset of the cross-section from the center point.
+  /// \param[in] scale
+  ///   The scale of the cross-section.
+  ///   Does not affect the center point.
+  Mesh &halfRevolve(const ProfileMesh &profile, Real2 center, Angle startAngle, Angle endAngle, Real2 offset = { 0, 0 }, Real scale = 1);
   
   
   

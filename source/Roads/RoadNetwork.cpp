@@ -111,7 +111,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     return false;
   
   // Check which points are connected
-  if (a->path.start.approxEqual(b->path.end)) {
+  if (a->path.start.approxEqual(b->path.end).verticalAnd()) {
     if (a->start.type != Connection::none ||
         b->end  .type != Connection::none)
       // Already connected to something
@@ -120,7 +120,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->start = b;
     b->end = a;
-  } else if (a->path.start.approxEqual(b->path.start)) {
+  } else if (a->path.start.approxEqual(b->path.start).verticalAnd()) {
     if (a->start.type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
@@ -129,7 +129,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->start = b;
     b->start = a;
-  } else if (a->path.end.approxEqual(b->path.end)) {
+  } else if (a->path.end.approxEqual(b->path.end).verticalAnd()) {
     if (a->end.type != Connection::none ||
         b->end.type != Connection::none)
       // Already connected to something
@@ -138,7 +138,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->end = b;
     b->end = a;
-  } else if (a->path.end.approxEqual(b->path.start)) {
+  } else if (a->path.end.approxEqual(b->path.start).verticalAnd()) {
     if (a->end  .type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
@@ -189,6 +189,31 @@ void RoadNetwork::update() {
         
         Real2 half = { -road->definition->dimensions.x * Real(0.5), 0 };
         
+        // Add caps as appropriate
+        Angle startStart, startEnd;
+        bool startCap = false;
+        if (road->start.type == Connection::none) {
+          // Add an end cap
+          Real4 pointNormal = road->path.pointNormals().first();
+          Real2 point = { pointNormal.z, pointNormal.w };
+          startStart =  Angle(point);
+          startEnd   = -Angle(point);
+          startCap = true;
+        }
+        
+        Angle endStart, endEnd;
+        bool endCap = false;
+        if (road->end.type == Connection::none) {
+          // Add an end cap
+          Real4 pointNormal = road->path.pointNormals().last();
+          Real2 point = { pointNormal.z, pointNormal.w };
+          endStart = -Angle(point);
+          endEnd   =  Angle(point);
+          endCap = true;
+        }
+        
+        
+        
         // Add a decorator if one exists
         if (!road->definition->decorations.triangles.isEmpty()) {
           if (!_meshes.has(road->definition->decorationsTexture.address()))
@@ -196,18 +221,32 @@ void RoadNetwork::update() {
           
           Resource<Mesh> mesh = new Mesh();
           road->_meshes.append(mesh);
-          mesh->extrude(road->definition->decorations, road->path, half, scale);
           _meshes[road->definition->decorationsTexture.address()]
             .append({ mesh, { 1, road->path.length() } });
           
           // Extrude
           mesh->extrude(road->definition->decorations, road->path, half, scale);
+          
+          // Add caps as appropriate
+          if (startCap)
+            mesh->halfRevolve(road->definition->decorations,
+              road->path.start, startStart, startEnd, half, scale);
+          if (endCap)
+            mesh->halfRevolve(road->definition->decorations,
+              road->path.end, endStart, endEnd, half, scale);
         }
         
         // Add the lanes
         for (const RoadDef::Lane &lane : road->definition->lanes) {
           Resource<Mesh> mesh = _addMesh(road, lane.definition, lanes);
           mesh->extrude(lane.definition->profile, road->path, lane.position + half, scale);
+          
+          if (startCap)
+            mesh->halfRevolve(lane.definition->profile,
+              road->path.start, startStart, startEnd, lane.position + half, scale);
+          if (endCap)
+            mesh->halfRevolve(lane.definition->profile,
+              road->path.end, endStart, endEnd, lane.position + half, scale);
         }
         
         // Add any markings
@@ -222,17 +261,27 @@ void RoadNetwork::update() {
           road->_meshes.append(dividers);
           
           // Extrude the dividers
-          for (const RoadDef::Divider &divider : road->definition->dividers)
+          for (const RoadDef::Divider &divider : road->definition->dividers) {
             dividers->extrude(
               *dividerMeshes[(int)divider.type],
               road->path, divider.position + half, scale
             );
+            
+            // Add caps as appropriate
+            if (startCap)
+              dividers->halfRevolve(*dividerMeshes[(int)divider.type],
+                road->path.start, startStart, startEnd, divider.position + half, scale);
+            if (endCap)
+              dividers->halfRevolve(*dividerMeshes[(int)divider.type],
+                road->path.end, endStart, endEnd, divider.position + half, scale);
+          }
         }
         
         // Push all the created meshes to the GPU
         for (Resource<Mesh> &mesh : road->_meshes)
           mesh->load();
       }
+      
       road->_dirty = false;
     }
 }

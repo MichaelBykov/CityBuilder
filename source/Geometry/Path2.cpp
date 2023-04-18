@@ -101,8 +101,8 @@ Real2 Arc2::project(Real2 point) {
   Real2 projectionVector = projection - _center;
   
   // Determine if the orientation is correct
-  bool lhs = Real2x2::columnMajor(startVector, projectionVector).determinant() >= 0;
-  bool rhs = Real2x2::columnMajor(  endVector, projectionVector).determinant() <= 0;
+  bool lhs = Real2x2::rowMajor(startVector, projectionVector).determinant() >= 0;
+  bool rhs = Real2x2::rowMajor(  endVector, projectionVector).determinant() <= 0;
   if (lhs && rhs) {
     // The projection is within the arc
     return projection;
