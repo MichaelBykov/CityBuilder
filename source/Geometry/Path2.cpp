@@ -35,6 +35,16 @@ Path2 *Line2::offset(Real distance) {
   return new Line2(start + normal, end + normal);
 }
 
+Real2 Line2::project(Real2 point) {
+  Real2 projection = (point - start).project(end - start) + start;
+  return
+    (end - start).dot(projection - start).isPositive() &&
+    (start - end).dot(projection -   end).isPositive() ?
+    projection :
+    point.squareDistance(start).exactlyLess(point.squareDistance(end)) ?
+      start : end;
+}
+
 List<Real4> Line2::_pointNormals() {
   Real2 normal = (end - start).normalized().rightPerpendicular();
   return {
@@ -70,6 +80,41 @@ Path2 *Arc2::offset(Real distance) {
   return new Arc2(_start, _control, _end);
 }
 
+namespace {
+  Real2 axisPoints[4] {
+    {  1,  0 },
+    {  0,  1 },
+    { -1,  0 },
+    {  0, -1 },
+  };
+}
+
+Real2 Arc2::project(Real2 point) {
+  _getPointNormals();
+  
+  // Project onto the circle
+  Real2 projection = (point - _center).normalized() * Real2(_radius) + _center;
+  
+  // Check if the projection is within the arc
+  Real2 startVector = start - _center;
+  Real2 endVector = end - _center;
+  Real2 projectionVector = projection - _center;
+  
+  // Determine if the orientation is correct
+  bool lhs = Real2x2::columnMajor(startVector, projectionVector).determinant() >= 0;
+  bool rhs = Real2x2::columnMajor(  endVector, projectionVector).determinant() <= 0;
+  if (lhs && rhs) {
+    // The projection is within the arc
+    return projection;
+  }
+  
+  // The projection is outside the arc
+  if (startVector.squareMagnitude().exactlyLess(endVector.squareMagnitude()))
+    return start;
+  else
+    return end;
+}
+
 List<Real4> Arc2::_pointNormals() {
   // Determine the radius and center of the arc
   Real2 middle = (start + end) * Real2(0.5);
@@ -78,9 +123,9 @@ List<Real4> Arc2::_pointNormals() {
   Real controlStart = (control - start).magnitude();
   Real theta = acos(controlMiddle / controlStart);
   _center = control + cm * Real2(controlStart / (controlMiddle * theta.sin()));
-  Real radius = (_center - start).magnitude();
+  _radius = (_center - start).magnitude();
   Real angle = Angle::pi - theta * Real(2);
-  _length = radius * angle;
+  _length = _radius * angle;
   Real startAngle = atan2(start.y - _center.y, start.x - _center.x);
   
   // Generate the equidistant points
@@ -88,7 +133,7 @@ List<Real4> Arc2::_pointNormals() {
   List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
   int pointCount = _length;
   for (int i = 1; i < pointCount; i++) {
-    Real2 sinCos = Angle::sinCos(startAngle + angle * Real(i) / Real(pointCount)) * Real2(radius);
+    Real2 sinCos = Angle::sinCos(startAngle + angle * Real(i) / Real(pointCount)) * Real2(_radius);
     sinCos = { sinCos.y, sinCos.x };
     Real2 point = _center + sinCos;
     normal = (point - _center).normalized();

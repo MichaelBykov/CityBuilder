@@ -55,6 +55,12 @@ struct Camera {
   /// Set the view projection for the camera's view.
   void setViewProjection();
   
+  /// Get the view matrix for the camera.
+  Real4x4 viewMatrix() const;
+  
+  /// Get the view-projection matrix for the camera.
+  Real4x4 viewProjection() const;
+  
   
   
   /// Create a perspective projection matrix.

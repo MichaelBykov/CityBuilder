@@ -224,6 +224,32 @@ void Driver::main() {
             Events::inputChange(input);
             break;
           
+          case NSEventTypeMouseMoved:
+            // Make sure we're only capturing in-window mouse movement
+            if (event.window != Nil) {
+              // Normalize the mouse position
+              Real2 location = { event.locationInWindow.x, event.locationInWindow.y };
+              NSRect frame = event.window.frame;
+              if (location.x < 0 || location.y < 0 ||
+                location.x > frame.size.width ||
+                location.y > frame.size.height
+              ) // Oustide the window
+                break;
+              
+              // Inverse the mouse y because we want 0 to be at the top
+              location.y = frame.size.height - location.y;
+              
+              // Adjust for pixel density
+              location *= Real2(event.window.backingScaleFactor);
+              
+              input = {
+                { .mousePosition = location },
+                Events::Input::Type::mouseMove
+              };
+              Events::inputChange(input);
+            }
+            break;
+          
           case NSEventTypeScrollWheel:
             input = {
               { .mouseScroll = Real2(event.scrollingDeltaX, event.scrollingDeltaY) },

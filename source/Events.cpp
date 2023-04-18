@@ -9,7 +9,6 @@
 #include <CityBuilder/Game.h>
 #include <CityBuilder/Rendering/Object.h>
 #include <CityBuilder/Rendering/Uniforms.h>
-#include <CityBuilder/Rendering/UIMesh.h>
 USING_NS_CITY_BUILDER
 
 namespace {
@@ -18,64 +17,21 @@ namespace {
   
   /// The current global frame number.
   uint64_t frame = 0;
-  
-  
-  // For UI testing
-  Resource<Texture> uiTexture;
-  Resource<UIMesh> uiMesh;
 }
 
 void Events::start() {
   game = new Game();
   
-  // Load the default shader
-  Program::pbr = new Program("vertex", "fragment");
-  
-  Program::ui = new Program("ui.vertex", "ui.fragment");
+  // Load the default shaders
+  Program::pbr   = new Program(      "vertex",       "fragment");
+  Program::hover = new Program("hover.vertex", "hover.fragment");
+  Program::ui    = new Program(   "ui.vertex",    "ui.fragment");
   
   // Create the shader uniforms
   Uniforms::create();
   
-  
-  
-  // UI testing
-  uiTexture = new Texture("ui/round", 128, false);
-  uiMesh = new UIMesh();
-  uiMesh->add({ // Vertices
-    { Real3(30 +   0, 120 +  0, 1), Real2(0, 0) },
-    { Real3(30 +  30, 120 +  0, 1), Real2(0, 0.33) },
-    { Real3(30 + 100, 120 +  0, 1), Real2(0, 0.67) },
-    { Real3(30 + 130, 120 +  0, 1), Real2(0, 1) },
-    
-    { Real3(30 +   0, 120 + 30, 1), Real2(0.33, 0) },
-    { Real3(30 +  30, 120 + 30, 1), Real2(0.33, 0.33) },
-    { Real3(30 + 100, 120 + 30, 1), Real2(0.33, 0.67) },
-    { Real3(30 + 130, 120 + 30, 1), Real2(0.33, 1) },
-    
-    { Real3(30 +   0, 120 + 60, 1), Real2(0.67, 0) },
-    { Real3(30 +  30, 120 + 60, 1), Real2(0.67, 0.33) },
-    { Real3(30 + 100, 120 + 60, 1), Real2(0.67, 0.67) },
-    { Real3(30 + 130, 120 + 60, 1), Real2(0.67, 1) },
-    
-    { Real3(30 +   0, 120 + 90, 1), Real2(1, 0) },
-    { Real3(30 +  30, 120 + 90, 1), Real2(1, 0.33) },
-    { Real3(30 + 100, 120 + 90, 1), Real2(1, 0.67) },
-    { Real3(30 + 130, 120 + 90, 1), Real2(1, 1) },
-  }, { // Triangles
-    
-    4, 0, 1, 4, 1, 5,
-    5, 1, 2, 5, 2, 6,
-    6, 2, 3, 6, 3, 7,
-    
-    8, 4, 5, 8, 5, 9,
-    9, 6, 5, 9, 6, 10,
-    10, 6, 7, 10, 7, 11,
-    
-    12, 8, 9, 12, 9, 13,
-    13, 9, 10, 13, 10, 14,
-    14, 10, 11, 14, 11, 15,
-  });
-  uiMesh->load();
+  // Start building roads for testing
+  game->act(Game::Action::road_building);
 }
 
 void Events::stop() {
@@ -121,8 +77,12 @@ void Events::update() {
     bgfx::setUniform(Uniforms::u_sunDirection, game->sun().direction);
   }
   
-  // Setup
+  // Update the scene
   bgfx::dbgTextClear();
+  game->update(dt);
+  
+  // Setup
+  // bgfx::dbgTextClear();
   bgfx::setState(BGFX_STATE_DEFAULT);
   Real2 screen;
   {
@@ -132,9 +92,16 @@ void Events::update() {
   }
   
   // Draw the scene
-  game->ground().draw();
+  game->draw();
   
-  game->roads().draw();
+  // Draw any hover components
+  bgfx::setState(
+    BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+    BGFX_STATE_MSAA |
+    BGFX_STATE_BLEND_FUNC(
+      BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+  );
+  game->drawHovers();
   
   // Draw the UI
   {
@@ -159,8 +126,6 @@ void Events::update() {
     );
     
     // Draw all the UI components
-    uiTexture->load(1, Uniforms::s_ui);
-    uiMesh->draw(Program::ui);
   }
   
   // Debug info

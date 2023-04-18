@@ -34,6 +34,14 @@ struct RoadNetwork {
   ///   Whether or not the two roads could be connected.
   bool connect(Road *a, Road *b);
   
+  /// Snap a point to the nearest road.
+  /// \param[in] point
+  ///   The point to snap.
+  /// \returns
+  ///   The snapped point or the point untouched if there are no nearby roads
+  ///   to snap to.
+  Real3 snap(const Real3 &point);
+  
   
   
   /// Update any roads in the network.

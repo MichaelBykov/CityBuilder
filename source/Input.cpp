@@ -42,6 +42,8 @@ bool Input::_leftMouseDown = false;
 
 bool Input::_rightMouseDown = false;
 
+Real2 Input::_mousePos = { };
+
 bool Input::_systemKeys[16] { false };
 
 
@@ -162,6 +164,10 @@ void Input::setMouseOrbitSpeed(Real2 speed) {
   _mouseOrbitSpeed = speed;
 }
 
+Real2 Input::mousePosition() {
+  return _mousePos;
+}
+
 
 
 
@@ -243,6 +249,11 @@ void Events::inputChange(Input &input) {
   case Input::Type::keyboard:
   case Input::Type::mouseDrag:
     break;
+  
+  case Input::Type::mouseMove: {
+    // update the current mouse position.
+    NS_CITY_BUILDER Input::_mousePos = input.mousePosition;
+  } break;
   
   case Input::Type::mouseScroll: {
     // There are two times when scrolling is used: UI and to operate the scene

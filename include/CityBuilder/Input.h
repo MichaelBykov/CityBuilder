@@ -97,6 +97,9 @@ struct Input {
   /// Set the mouse orbit speed.
   static void setMouseOrbitSpeed(Real2 speed);
   
+  /// Get the current position of the mouse on the screen, in pixels.
+  static Real2 mousePosition();
+  
 private:
   friend void Events::inputStart (Events::Input &input);
   friend void Events::inputStop  (Events::Input &input);
@@ -142,6 +145,9 @@ private:
   
   /// Whether or not the right mouse button is currently down.
   static bool _rightMouseDown;
+  
+  /// The current mouse position, in pixels.
+  static Real2 _mousePos;
   
   /// Whether or not the standard system keys (e.x. shift, alt, command, etc)
   /// are currently pressed.

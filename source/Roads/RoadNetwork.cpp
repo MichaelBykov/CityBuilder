@@ -76,6 +76,11 @@ namespace {
     &dividerCrossTrafficMesh,
     &dividerCrossEdgeMesh,
   };
+  
+  
+  
+  /// The scale of road cross sections.
+  const Real scale = 0.333333333333;
 }
 
 RoadNetwork::RoadNetwork() {
@@ -150,6 +155,28 @@ bool RoadNetwork::connect(Road *a, Road *b) {
   return true;
 }
 
+Real3 RoadNetwork::snap(const Real3 &point) {
+  bool snapped = false;
+  Real2 p = { point.x, point.z };
+  Real2 closest;
+  Real distance;
+  
+  for (Road *road : _roads) {
+    Real2 projection = road->path.project(p);
+    Real dist = p.squareDistance(projection);
+    if (dist < (road->definition->dimensions.x * Real(0.5 * scale)).square()) {
+      // Check if the point is closest
+      if (!snapped || dist < distance) {
+        snapped = true;
+        closest = projection;
+        distance = dist;
+      }
+    }
+  }
+  
+  return snapped ? Real3 { closest.x, point.y, closest.y } : point;
+}
+
 void RoadNetwork::update() {
   for (Road *road : _roads)
     if (road->_dirty) {
@@ -159,7 +186,6 @@ void RoadNetwork::update() {
       } else {
         // Create a new mesh
         BSTree<LaneDef *, int> lanes;
-        const Real scale = 0.333333333333;
         
         Real2 half = { -road->definition->dimensions.x * Real(0.5), 0 };
         

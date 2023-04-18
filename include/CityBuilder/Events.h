@@ -40,6 +40,7 @@ struct Input {
   enum class Type : uint8_t {
     keyboard, //< A keyboard pressed/released event.
     mouseDrag, //< Fired when the mouse moves while holding the primary button.
+    mouseMove, //< Fired when the mouse moves.
     mouseScroll, //< Fired when the mouse wheel moves.
     mousePinch, //< Fired when the trackpad is pinched in or out.
   };
@@ -56,6 +57,10 @@ struct Input {
     /// \remarks
     ///   Should only be accessed when `type` is `Type::mouseDrag`.
     Real2 mouseDrag;
+    /// The current position of the mouse.
+    /// \remarks
+    ///   Should only be accessed when `type` is `Type::mouseMove`.
+    Real2 mousePosition;
     /// The amount the mouse wheel moved.
     /// \remarks
     ///   Should only be accessed when `type` is `Type::mouseScroll`.

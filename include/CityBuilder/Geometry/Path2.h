@@ -25,6 +25,13 @@ struct Path2 {
   
   virtual Path2 *offset(Real distance) = 0;
   
+  /// Project a point onto the path.
+  /// \param[in] point
+  ///   The point to project.
+  /// \return
+  ///   The projected point.
+  virtual Real2 project(Real2 point) = 0;
+  
   /// Generate a list of equally-spaced points that define the path along with
   /// their normals.
   inline List<Real4> pointNormals() {
@@ -58,6 +65,8 @@ struct Line2 : Path2 {
   
   Path2 *offset(Real distance) override;
   
+  Real2 project(Real2 point) override;
+  
 protected:
   List<Real4> _pointNormals() override;
 };
@@ -75,9 +84,12 @@ struct Arc2 : Path2 {
   
   Path2 *offset(Real distance) override;
   
+  Real2 project(Real2 point) override;
+  
 protected:
   Real2 _center;
   Real _length;
+  Real _radius;
   
   List<Real4> _pointNormals() override;
 };

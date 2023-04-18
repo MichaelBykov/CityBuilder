@@ -9,6 +9,10 @@
 USING_NS_CITY_BUILDER
 
 void Camera::setViewProjection() {
+  bgfx::setViewTransform(viewID, viewMatrix(), projectionMatrix);
+}
+
+Real4x4 Camera::viewMatrix() const {
   Real3 forward = viewDirection.normalized();
   Real3 right   = Real3(0, 1, 0).cross(forward).normalized();
   Real3 up      = forward.cross(right); 
@@ -21,7 +25,11 @@ void Camera::setViewProjection() {
     { 0, 0, 0, 1 }
   ).transpose();
   
-  bgfx::setViewTransform(viewID, viewMatrix, projectionMatrix);
+  return viewMatrix;
+}
+
+Real4x4 Camera::viewProjection() const {
+  return projectionMatrix.transpose() * viewMatrix();
 }
 
 
