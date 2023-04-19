@@ -92,6 +92,31 @@ namespace {
     bgfx::frame();
   }
   
+  bool mousePosition(NSEvent *event, Real2 &position) {
+    // Make sure we're only capturing in-window mouse movement
+    if (event.window == Nil)
+      return false;
+    
+    // Normalize the mouse position
+    Real2 location = { event.locationInWindow.x, event.locationInWindow.y };
+    NSRect frame = event.window.frame;
+    if (location.x < 0 || location.y < 0 ||
+      location.x > frame.size.width ||
+      location.y > frame.size.height
+    ) // Oustide the window
+      return false;
+    
+    // Inverse the mouse y because we want 0 to be at the top
+    location.y = frame.size.height - location.y;
+    
+    // Adjust for pixel density
+    location *= Real2(event.window.backingScaleFactor);
+    
+    // Done
+    position = location;
+    return true;
+  }
+  
 }
 
 
@@ -186,6 +211,7 @@ void Driver::main() {
     
     // Main event loop
     Events::Input input = {};
+    Real2 mouse;
     for (;;) {
       @autoreleasepool {
         for (;;) {
@@ -217,33 +243,67 @@ void Driver::main() {
             break;
           
           case NSEventTypeLeftMouseDragged:
+            if (mousePosition(event, mouse)) {
+              input = {
+                { .mouseDrag = {
+                  .position = mouse,
+                  .button = 0
+                } },
+                Events::Input::Type::mouseDrag
+              };
+              Events::inputChange(input);
+            }
+            break;
+          
+          case NSEventTypeRightMouseDragged:
+            if (mousePosition(event, mouse)) {
+              input = {
+                { .mouseDrag = {
+                  .position = mouse,
+                  .button = 1
+                } },
+                Events::Input::Type::mouseDrag
+              };
+              Events::inputChange(input);
+            }
+            break;
+          
+          case NSEventTypeLeftMouseDown:
             input = {
-              { .mouseDrag = Real2(event.deltaX, event.deltaY) },
-              Events::Input::Type::mouseDrag
+              { .mouseButton = 0 },
+              Events::Input::Type::mouseButton
             };
-            Events::inputChange(input);
+            Events::inputStart(input);
+            break;
+          
+          case NSEventTypeRightMouseDown:
+            input = {
+              { .mouseButton = 1 },
+              Events::Input::Type::mouseButton
+            };
+            Events::inputStart(input);
+            break;
+          
+          case NSEventTypeLeftMouseUp:
+            input = {
+              { .mouseButton = 0 },
+              Events::Input::Type::mouseButton
+            };
+            Events::inputStop(input);
+            break;
+          
+          case NSEventTypeRightMouseUp:
+            input = {
+              { .mouseButton = 1 },
+              Events::Input::Type::mouseButton
+            };
+            Events::inputStop(input);
             break;
           
           case NSEventTypeMouseMoved:
-            // Make sure we're only capturing in-window mouse movement
-            if (event.window != Nil) {
-              // Normalize the mouse position
-              Real2 location = { event.locationInWindow.x, event.locationInWindow.y };
-              NSRect frame = event.window.frame;
-              if (location.x < 0 || location.y < 0 ||
-                location.x > frame.size.width ||
-                location.y > frame.size.height
-              ) // Oustide the window
-                break;
-              
-              // Inverse the mouse y because we want 0 to be at the top
-              location.y = frame.size.height - location.y;
-              
-              // Adjust for pixel density
-              location *= Real2(event.window.backingScaleFactor);
-              
+            if (mousePosition(event, mouse)) {
               input = {
-                { .mousePosition = location },
+                { .mousePosition = mouse },
                 Events::Input::Type::mouseMove
               };
               Events::inputChange(input);

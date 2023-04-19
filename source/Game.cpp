@@ -117,6 +117,9 @@ namespace {
     ///   2: Find an end point.
     int stage = 0;
     
+    /// The ID of the listener for mouse clicks.
+    int clickListener;
+    
     /// The road being built.
     RoadDef *road;
     
@@ -129,29 +132,111 @@ namespace {
     Road_Building(RoadDef *road) : road(road) {
       // Create the display
       display = new DynamicMesh();
+      
+      // Listen for mouse clicks
+      clickListener = Input::onPrimaryMouseDown += [this]() {
+        switch (stage) {
+        case 0:
+          // Set the start point
+          if (displayVisible) {
+            start = point;
+            stage = 1;
+          }
+          break;
+        
+        default:
+          break;
+        }
+      };
+    }
+    
+    ~Road_Building() {
+      Input::onPrimaryMouseDown -= clickListener;
     }
     
     /// Move the display to the given point.
     /// \param[in] origin
     ///   The point to move the display to.
     void move(Real3 origin) {
-      Color4 hoverColor { 100, 155, 255, 100 };
+      const Color4 hoverColor  { 100, 155, 255, 100 };
+      const Color4 hoverColor0 { 100, 155, 255, 0 };
+      const Real scale = 0.333333333333;
+      Real2 radius = Real2(road->dimensions.x * Real(0.5 * scale));
+      point = origin;
       
-      List<DynamicMesh::Vertex> vertices { { origin, { 100, 155, 255, 0 } } };
-      Real2 radius = Real2(road->dimensions.x * Real(0.5 * 0.333333333333));
-      for (int i = 0; i < 32; i++) {
-        Real2 xz = Angle::cosSin(i * Angle::pi2 / 32) * radius;
-        vertices.append({ origin + Real3(xz.x, 0, xz.y), hoverColor });
-      }
-      List<int> indices { 0, 32, 1 };
-      for (int i = 0; i < 31; i++) {
+      List<DynamicMesh::Vertex> vertices { };
+        List<int> indices { };
+      
+      // Update the mesh
+      switch (stage) {
+      case 0: {
+        // Selection point
+        vertices.append({ origin, hoverColor0 });
+        for (int i = 0; i < 32; i++) {
+          Real2 xz = Angle::cosSin(i * Angle::pi2 / 32) * radius;
+          vertices.append({ origin + Real3(xz.x, 0, xz.y), hoverColor });
+        }
         indices.append(0);
-        indices.append(i + 1);
-        indices.append(i + 2);
+        indices.append(32);
+        indices.append(1);
+        for (int i = 0; i < 31; i++) {
+          indices.append(0);
+          indices.append(i + 1);
+          indices.append(i + 2);
+        }
+      } break;
+      
+      case 1: {
+        // Straight line
+        Line2 line { { start.x, start.z }, { origin.x, origin.z } };
+        
+        // Start end cap
+        Real4 pointNormal = line.pointNormals().first();
+        Angle angle = -Angle({ pointNormal.z, pointNormal.w });
+        vertices.append({ start, hoverColor0 });
+        for (int i = 0; i < 17; i++) {
+          Real2 xz = Angle::cosSin(angle + i * Angle::pi2 / 32) * radius;
+          vertices.append({ start + Real3(xz.x, 0, xz.y), hoverColor });
+        }
+        for (int i = 0; i < 16; i++) {
+          indices.append(0);
+          indices.append(i + 1);
+          indices.append(i + 2);
+        }
+        
+        // End end cap
+        pointNormal = line.pointNormals().last();
+        angle = Angle({ pointNormal.z, pointNormal.w });
+        vertices.append({ point, hoverColor0 });
+        for (int i = 0; i < 17; i++) {
+          Real2 xz = Angle::cosSin(angle + i * Angle::pi2 / 32) * radius;
+          vertices.append({ point + Real3(xz.x, 0, xz.y), hoverColor });
+        }
+        for (int i = 0; i < 16; i++) {
+          indices.append(18);
+          indices.append(i + 19);
+          indices.append(i + 20);
+        }
+        
+        // Connect the two lines
+        indices.append(0);
+        indices.append(1);
+        indices.append(35);
+        indices.append(35);
+        indices.append(18);
+        indices.append(0);
+        
+        indices.append(18);
+        indices.append(19);
+        indices.append(0);
+        indices.append(19);
+        indices.append(17);
+        indices.append(0);
+      } break;
       }
       
+      // Load the mesh
       display->add(vertices, indices);
-      
       display->load();
     }
   };
@@ -178,7 +263,7 @@ void Game::update(Real elapsed) {
       
       // Update the road display
       state->move(snap);
-      state->displayVisible = false;
+      state->displayVisible = true;
     } else {
       // Hide the road display
       state->displayVisible = false;
@@ -216,7 +301,8 @@ void Game::drawHovers() {
     // Draw the road being built
     Road_Building *state = (Road_Building *)_actionState;
     
-    state->display->draw(Program::hover);
+    if (state->displayVisible)
+      state->display->draw(Program::hover);
   } break;
   
   default:

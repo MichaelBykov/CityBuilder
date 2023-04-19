@@ -12,6 +12,16 @@ USING_NS_CITY_BUILDER
 
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
+| Events                                                                       |
+|                                                                              |
+\* -------------------------------------------------------------------------- */
+
+Event<> Input::onPrimaryMouseDown { };
+
+
+
+/* -------------------------------------------------------------------------- *\
+|                                                                              |
 | Default values                                                               |
 |                                                                              |
 \* -------------------------------------------------------------------------- */
@@ -38,9 +48,9 @@ Real2 Input::_mouseMoveSpeed = { 0.001, 0.001 };
 
 Real2 Input::_mouseOrbitSpeed = { 0.0033, 0.0033 };
 
-bool Input::_leftMouseDown = false;
+bool Input::_primaryMouseDown = false;
 
-bool Input::_rightMouseDown = false;
+bool Input::_secondaryMouseDown = false;
 
 Real2 Input::_mousePos = { };
 
@@ -206,6 +216,19 @@ void Events::inputStart(Input &input) {
 #endif
   } break;
   
+  case Input::Type::mouseButton:
+    switch (input.mouseButton.button) {
+    case 0:
+      NS_CITY_BUILDER Input::_primaryMouseDown = true;
+      NS_CITY_BUILDER Input::onPrimaryMouseDown();
+      break;
+    
+    case 1:
+      NS_CITY_BUILDER Input::_secondaryMouseDown = true;
+      break;
+    }
+    break;
+  
   default:
     break;
   }
@@ -239,6 +262,13 @@ void Events::inputStop(Input &input) {
 #endif
   } break;
   
+  case Input::Type::mouseButton:
+    switch (input.mouseButton.button) {
+    case 0: NS_CITY_BUILDER Input::_primaryMouseDown   = false; break;
+    case 1: NS_CITY_BUILDER Input::_secondaryMouseDown = false; break;
+    }
+    break;
+  
   default:
     break;
   }
@@ -247,11 +277,16 @@ void Events::inputStop(Input &input) {
 void Events::inputChange(Input &input) {
   switch (input.type) {
   case Input::Type::keyboard:
-  case Input::Type::mouseDrag:
+  case Input::Type::mouseButton:
     break;
   
+  case Input::Type::mouseDrag: {
+    // Update the current mouse position
+    NS_CITY_BUILDER Input::_mousePos = input.mouseDrag.position;
+  } break;
+  
   case Input::Type::mouseMove: {
-    // update the current mouse position.
+    // Update the current mouse position
     NS_CITY_BUILDER Input::_mousePos = input.mousePosition;
   } break;
   

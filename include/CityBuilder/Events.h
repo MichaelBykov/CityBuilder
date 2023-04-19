@@ -39,10 +39,11 @@ struct Input {
   /// The types of events that can occur.
   enum class Type : uint8_t {
     keyboard, //< A keyboard pressed/released event.
-    mouseDrag, //< Fired when the mouse moves while holding the primary button.
+    mouseDrag, //< Fired when the mouse moves holding a button.
     mouseMove, //< Fired when the mouse moves.
     mouseScroll, //< Fired when the mouse wheel moves.
     mousePinch, //< Fired when the trackpad is pinched in or out.
+    mouseButton, //< Fired when a mouse button is pressed or released.
   };
   
   union {
@@ -53,10 +54,23 @@ struct Input {
       /// The pressed/released key's unique code.
       unsigned short keyCode;
     } keyboard;
-    /// The amount the mouse was moved while holding the primary mouse button.
+    /// The data for a mouse button event.
+    /// \remarks
+    ///   Should only be accessed when `type` is `Type::mouseButton`.
+    struct {
+      /// The pressed/released mouse button index.
+      int button;
+    } mouseButton;
+    /// The data for a mouse drag event.
     /// \remarks
     ///   Should only be accessed when `type` is `Type::mouseDrag`.
-    Real2 mouseDrag;
+    struct {
+      /// The current position of the mouse.
+      Real2 position;
+      
+      /// The mouse button that was held down.
+      int button;
+    } mouseDrag;
     /// The current position of the mouse.
     /// \remarks
     ///   Should only be accessed when `type` is `Type::mouseMove`.

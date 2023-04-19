@@ -95,10 +95,28 @@ void DynamicMesh::load() {
     if (_vertices.count() == _vertexCount)
       bgfx::update(_vertexBuffer, 0,
         bgfx::copy(&_vertices[0], sizeof(Vertex) * _vertices.count()));
+    else {
+      // Recreate the vertex buffer
+      bgfx::destroy(_vertexBuffer);
+      
+      bgfx::VertexLayout layout;
+      layout.begin()
+          .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+          .add(bgfx::Attrib::Color0  , 4, bgfx::AttribType::Uint8, true)
+      .end();
+      _vertexBuffer = bgfx::createDynamicVertexBuffer(
+        bgfx::copy(&_vertices[0], sizeof(Vertex) * _vertices.count()), layout);
+    }
     
     if (_indices.count() == _indexCount)
       bgfx::update(_indexBuffer, 0,
         bgfx::copy(&_indices[0], sizeof(uint16_t) * _indices.count()));
+    else {
+      // Recreate the index buffer
+      bgfx::destroy(_indexBuffer);
+      _indexBuffer = bgfx::createDynamicIndexBuffer(
+        bgfx::copy(&_indices[0], sizeof(uint16_t) * _indices.count()));
+    }
   } else {
     // Create the vertex buffer
     bgfx::VertexLayout layout;

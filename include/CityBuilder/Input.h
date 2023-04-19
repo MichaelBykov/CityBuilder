@@ -10,6 +10,7 @@
 #include <CityBuilder/Events.h>
 #include <CityBuilder/Storage/List.h>
 #include <CityBuilder/Storage/String.h>
+#include <CityBuilder/Storage/Event.h>
 #include <functional>
 
 NS_CITY_BUILDER_BEGIN
@@ -100,6 +101,15 @@ struct Input {
   /// Get the current position of the mouse on the screen, in pixels.
   static Real2 mousePosition();
   
+  /// Whether the primary mouse button is currently down.
+  static bool primaryMouseDown();
+  
+  /// Whether the secondary mouse button is currently down.
+  static bool secondaryMouseDown();
+  
+  /// An event fired when the primary mouse button is pressed.
+  static Event<> onPrimaryMouseDown;
+  
 private:
   friend void Events::inputStart (Events::Input &input);
   friend void Events::inputStop  (Events::Input &input);
@@ -140,11 +150,11 @@ private:
   /// The mouse orbit speed.
   static Real2 _mouseOrbitSpeed;
   
-  /// Whether or not the left mouse button is currently down.
-  static bool _leftMouseDown;
+  /// Whether or not the primary mouse button is currently down.
+  static bool _primaryMouseDown;
   
-  /// Whether or not the right mouse button is currently down.
-  static bool _rightMouseDown;
+  /// Whether or not the secondary mouse button is currently down.
+  static bool _secondaryMouseDown;
   
   /// The current mouse position, in pixels.
   static Real2 _mousePos;
