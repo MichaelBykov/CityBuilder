@@ -7,7 +7,7 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
-#include <CityBuilder/Geometry/Path2.h>
+#include <CityBuilder/Geometry/RadiusPath2.h>
 #include <CityBuilder/Rendering/Mesh.h>
 #include "Connection.h"
 #include "RoadDef.h"
@@ -20,7 +20,7 @@ struct Road {
   RoadDef *definition;
   
   /// The road's path.
-  Path2 &path;
+  RadiusPath2 path;
   
   /// The road's start connection.
   Connection start;

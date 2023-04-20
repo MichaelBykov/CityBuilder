@@ -9,6 +9,45 @@
 #include <CityBuilder/Units/Angle.h>
 USING_NS_CITY_BUILDER
 
+#include "Intersection Table.ipp"
+
+List<Real2> Path2::intersections(Path2 &other) {
+  // The intersection table
+  switch (_type) {
+  case Type::line:
+    switch (other._type) {
+    case Type::line:
+      return _Internal_Intersection_Table_::
+        line_line(
+          static_cast<Line2 &>(*this),
+          static_cast<Line2 &>(other)
+        );
+    case Type::arc:
+      return _Internal_Intersection_Table_::
+        line_arc(
+          static_cast<Line2 &>(*this),
+          static_cast<Arc2 &>(other)
+        );
+    }
+  
+  case Type::arc:
+    switch (other._type) {
+    case Type::line:
+      return _Internal_Intersection_Table_::
+        line_arc(
+          static_cast<Line2 &>(other),
+          static_cast<Arc2 &>(*this)
+        );
+    case Type::arc:
+      return _Internal_Intersection_Table_::
+        arc_arc(
+          static_cast<Arc2 &>(*this),
+          static_cast<Arc2 &>(other)
+        );
+    }
+  }
+}
+
 List<Real4> Path2::_getPointNormals() {
   if (_pointCache.isEmpty())
     return _pointCache = _pointNormals();
@@ -18,11 +57,12 @@ List<Real4> Path2::_getPointNormals() {
 
 
 
-Line2::Line2(const Real2 &start, const Real2 &end) : Path2(start, end) {
+Line2::Line2(const Real2 &start, const Real2 &end)
+  : Path2(Type::line, start, end) {
   // Calculate the bounds
   Real2 min = start.min(end);
   Real2 max = start.max(end);
-  _bounds = { min.x, min.y, max.x - min.x, max.y - min.y };
+  _bounds = { min, max - min };
 }
 
 Real Line2::length() {
@@ -45,6 +85,18 @@ Real2 Line2::project(Real2 point) {
       start : end;
 }
 
+Real2 Line2::point(Real t) {
+  return start + (end - start) * Real2(t);
+}
+
+Real2 Line2::normal(Real t) {
+  return (end - start).normalized().rightPerpendicular();
+}
+
+Real Line2::inverse(Real2 point) {
+  return (point - start).dot(end - start) / (end - start).squareMagnitude();
+}
+
 List<Real4> Line2::_pointNormals() {
   Real2 normal = (end - start).normalized().rightPerpendicular();
   return {
@@ -56,16 +108,26 @@ List<Real4> Line2::_pointNormals() {
 
 
 Arc2::Arc2(const Real2 &start, const Real2 &control, const Real2 &end)
-  : Path2(start, end), control(control) {
+  : Path2(Type::arc, start, end), control(control) {
   // Calculate the bounds
   Real2 min = start.min(end).min(control);
   Real2 max = start.max(end).max(control);
-  _bounds = { min.x, min.y, max.x - min.x, max.y - min.y };
+  _bounds = { min, max - min };
 }
 
 Real Arc2::length() {
   _getPointNormals();
   return _length;
+}
+
+Real2 Arc2::center() {
+  _getPointNormals();
+  return _center;
+}
+
+Real Arc2::radius() {
+  _getPointNormals();
+  return _radius;
 }
 
 Path2 *Arc2::offset(Real distance) {
@@ -113,6 +175,32 @@ Real2 Arc2::project(Real2 point) {
     return start;
   else
     return end;
+}
+
+Real2 Arc2::point(Real t) {
+  _getPointNormals();
+  Angle startAngle = start - _center;
+  Angle   endAngle =   end - _center;
+  Angle angle = Angle::span(startAngle, endAngle);
+  return _center +
+    Angle::cosSin(angle.radians * t + startAngle.radians) * Real2(_radius);
+}
+
+Real2 Arc2::normal(Real t) {
+  _getPointNormals();
+  Angle startAngle = start - _center;
+  Angle   endAngle =   end - _center;
+  Angle angle = Angle::span(startAngle, endAngle);
+  return Angle::cosSin(angle.radians * t + startAngle.radians);
+}
+
+Real Arc2::inverse(Real2 point) {
+  _getPointNormals();
+  Angle startAngle = start - _center;
+  Angle   endAngle =   end - _center;
+  Angle angle = Angle::span(startAngle, endAngle);
+  Angle pointAngle = Angle::span(startAngle, point - _center);
+  return pointAngle.radians / angle.radians;
 }
 
 List<Real4> Arc2::_pointNormals() {

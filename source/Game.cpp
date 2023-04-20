@@ -21,7 +21,7 @@ Game::Game() {
   // Create some initial roads
   RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
   Road *road1 = _roads.add(new Road(highway, *new Line2({ 0, 0 }, { 10, 10 })));
-  Road *road2 = _roads.add(new Road(highway, *new Arc2({ 10, 10 }, { 15, 15 }, { 10, 20 })));
+  Road *road2 = _roads.add(new Road(highway, *new Arc2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
   _roads.connect(road1, road2);
   _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -10 }, { 10, -10 })));
   _roads.update();
@@ -120,6 +120,9 @@ namespace {
     /// The ID of the listener for mouse clicks.
     int clickListener;
     
+    /// The ID of the listener for cancel events.
+    int cancelListener;
+    
     /// The road being built.
     RoadDef *road;
     
@@ -128,6 +131,9 @@ namespace {
     
     /// Whether or not the display is visible.
     bool displayVisible = false;
+    
+    /// Whether or not the road being built is valid.
+    bool roadValid = false;
     
     Road_Building(RoadDef *road) : road(road) {
       // Create the display
@@ -138,11 +144,31 @@ namespace {
         switch (stage) {
         case 0:
           // Set the start point
-          if (displayVisible) {
+          if (displayVisible && roadValid) {
             start = point;
             stage = 1;
+            
+            cancelListener = Input::onCancel += [this]() {
+              stage = 0;
+              move(point);
+              Input::onCancel -= cancelListener;
+            };
           }
           break;
+        
+        case 1:
+          // Attempt to build the road
+          if (displayVisible && roadValid) {
+            Line2 *line = new Line2({ start.x, start.z }, { point.x, point.z });
+            if (Game::instance().roads().build(this->road, *line)) {
+              Game::instance().roads().update();
+              stage = 0;
+              start = point;
+              stage = 1;
+              move(point);
+            } else
+              delete line;
+          }
         
         default:
           break;
@@ -158,9 +184,28 @@ namespace {
     /// \param[in] origin
     ///   The point to move the display to.
     void move(Real3 origin) {
-      const Color4 hoverColor  { 100, 155, 255, 100 };
-      const Color4 hoverColor0 { 100, 155, 255, 0 };
       const Real scale = 0.333333333333;
+      
+      // Check for validity
+      switch (stage) {
+      case 0:
+        // Check for a valid start point
+        roadValid = Game::instance().roads().validate(road, { origin.x, origin.z });
+        break;
+      
+      case 1:
+        // Check for a valid line
+        if (start.squareDistance(origin) < scale)
+          roadValid = false;
+        else {
+          Line2 line { { start.x, start.z }, { origin.x, origin.z } };
+          roadValid = Game::instance().roads().validate(road, line);
+        }
+        break;
+      }
+      
+      const Color4 hoverColor  = roadValid ? Color4(100, 155, 255, 100) : Color4(255, 120, 100, 100);
+      const Color4 hoverColor0 = roadValid ? Color4(100, 155, 255,   0) : Color4(255, 120, 100,   0);
       Real2 radius = Real2(road->dimensions.x * Real(0.5 * scale));
       point = origin;
       
@@ -187,6 +232,24 @@ namespace {
       } break;
       
       case 1: {
+        if (start.squareDistance(origin) < scale) {
+          // Single selection point
+          vertices.append({ start, hoverColor0 });
+          for (int i = 0; i < 32; i++) {
+            Real2 xz = Angle::cosSin(i * Angle::pi2 / 32) * radius;
+            vertices.append({ start + Real3(xz.x, 0, xz.y), hoverColor });
+          }
+          indices.append(0);
+          indices.append(32);
+          indices.append(1);
+          for (int i = 0; i < 31; i++) {
+            indices.append(0);
+            indices.append(i + 1);
+            indices.append(i + 2);
+          }
+          break;
+        }
+        
         // Straight line
         Line2 line { { start.x, start.z }, { origin.x, origin.z } };
         

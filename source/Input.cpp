@@ -18,6 +18,8 @@ USING_NS_CITY_BUILDER
 
 Event<> Input::onPrimaryMouseDown { };
 
+Event<> Input::onCancel { };
+
 
 
 /* -------------------------------------------------------------------------- *\
@@ -211,6 +213,9 @@ void Events::inputStart(Input &input) {
     case (int)KeyCode::rightCommand: NS_CITY_BUILDER Input::_systemKeys[5] = true; break;
     case (int)KeyCode::rightControl: NS_CITY_BUILDER Input::_systemKeys[6] = true; break;
     case (int)KeyCode::rightOption : NS_CITY_BUILDER Input::_systemKeys[7] = true; break;
+    
+    case (int)KeyCode::escape   : NS_CITY_BUILDER Input::onCancel(); break;
+    case (int)KeyCode::backspace: NS_CITY_BUILDER Input::onCancel(); break;
     }
       
 #endif

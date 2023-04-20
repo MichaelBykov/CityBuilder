@@ -37,10 +37,56 @@ struct RoadNetwork {
   /// Snap a point to the nearest road.
   /// \param[in] point
   ///   The point to snap.
+  /// \param[out] snapped
+  ///   The road that was snapped to.
   /// \returns
   ///   The snapped point or the point untouched if there are no nearby roads
   ///   to snap to.
-  Real3 snap(const Real3 &point);
+  Real3 snap(const Real3 &point, Road *&snapped);
+  
+  /// Snap a point to the nearest road.
+  /// \param[in] point
+  ///   The point to snap.
+  /// \param[out] snapped
+  ///   The road that was snapped to.
+  /// \returns
+  ///   The snapped point or the point untouched if there are no nearby roads
+  ///   to snap to.
+  inline Real3 snap(const Real3 &point) {
+    Road *snapped;
+    return snap(point, snapped);
+  }
+  
+  
+  
+  /// Validate if a point can start a road.
+  /// \param[in] road
+  ///   The road definition that will be built at the point.
+  /// \param[in] point
+  ///   The point to validate.
+  /// \returns
+  ///   Whether or not the point can serve as a start point for a road.
+  bool validate(RoadDef *road, Real3 point);
+  
+  /// Validate if a road can follow a given path.
+  /// \param[in] road
+  ///   The road definition that will be built along the path.
+  /// \param[in] path
+  ///   The path to validate.
+  /// \returns
+  ///   Whether or not the given road can be built along the given path.
+  bool validate(RoadDef *road, Path2 &path);
+  
+  
+  
+  /// Build a road along a given path.
+  /// \param[in] road
+  ///   The road to build.
+  /// \param[in] path
+  ///   The path to build the road along.
+  /// \returns
+  ///   Whether or not the road was built.
+  bool build(RoadDef *road, Path2 &path);
   
   
   

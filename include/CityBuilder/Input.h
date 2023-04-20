@@ -110,6 +110,9 @@ struct Input {
   /// An event fired when the primary mouse button is pressed.
   static Event<> onPrimaryMouseDown;
   
+  /// An event fired when a "cancel" key (e.x. escape, backspace) is pressed.
+  static Event<> onCancel;
+  
 private:
   friend void Events::inputStart (Events::Input &input);
   friend void Events::inputStop  (Events::Input &input);
