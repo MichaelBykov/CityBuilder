@@ -75,6 +75,18 @@ Path2 *Line2::offset(Real distance) {
   return new Line2(start + normal, end + normal);
 }
 
+Path2 *Line2::split(Real tStart, Real tEnd) {
+  Real2 pointStart = start + (end - start) * Real2(tStart);
+  Real2 pointEnd   = start + (end - start) * Real2(tEnd);
+  return new Line2(pointStart, pointEnd);
+}
+
+void Line2::split(Real t, Path2 *&lhs, Path2 *&rhs) {
+  Real2 point = start + (end - start) * Real2(t);
+  lhs = new Line2(start, point);
+  rhs = new Line2(point, end);
+}
+
 Real2 Line2::project(Real2 point) {
   Real2 projection = (point - start).project(end - start) + start;
   return
@@ -140,6 +152,38 @@ Path2 *Arc2::offset(Real distance) {
   Real2 _control = _center + (control - _center) * Real2((cs + distance) / cs);
   
   return new Arc2(_start, _control, _end);
+}
+
+Path2 *Arc2::split(Real tStart, Real tEnd) {
+  _getPointNormals();
+  
+  // Calculate the split points and their normals
+  Real2 pStart = point(tStart);
+  Real2 pEnd   = point(tEnd);
+  Real2 normalStart = pStart - _center;
+  Real2 normalEnd   = pEnd   - _center;
+  
+  // Calculate the new control point
+  Real2 control = normalStart.rightPerpendicular().project(normalEnd - pStart) + pStart;
+  
+  // Split the arc
+  return new Arc2(pStart, control, pEnd);
+}
+
+void Arc2::split(Real t, Path2 *&lhs, Path2 *&rhs) {
+  _getPointNormals();
+  
+  // Calculate the split point and its normal
+  Real2 p = point(t);
+  Real2 normal = p - _center;
+  
+  // Calculate the new control points
+  Real2 startControl = normal.rightPerpendicular().project(start - p) + p;
+  Real2   endControl = normal. leftPerpendicular().project(end   - p) + p;
+  
+  // Split the arc into two arcs
+  lhs = new Arc2(start, startControl, p);
+  rhs = new Arc2(p, endControl, end);
 }
 
 namespace {

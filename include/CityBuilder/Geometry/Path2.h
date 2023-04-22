@@ -26,6 +26,10 @@ struct Path2 {
   
   virtual Path2 *offset(Real distance) = 0;
   
+  virtual Path2 *split(Real tStart, Real tEnd) = 0;
+  
+  virtual void split(Real t, Path2 *&lhs, Path2 *&rhs) = 0;
+  
   /// Project a point onto the path.
   /// \param[in] point
   ///   The point to project.
@@ -105,6 +109,10 @@ struct Line2 : Path2 {
   
   Path2 *offset(Real distance) override;
   
+  Path2 *split(Real tStart, Real tEnd) override;
+  
+  void split(Real t, Path2 *&lhs, Path2 *&rhs) override;
+  
   Real2 project(Real2 point) override;
   
   Real2 point(Real t) override;
@@ -133,6 +141,10 @@ struct Arc2 : Path2 {
   Real radius();
   
   Path2 *offset(Real distance) override;
+  
+  Path2 *split(Real tStart, Real tEnd) override;
+  
+  void split(Real t, Path2 *&lhs, Path2 *&rhs) override;
   
   Real2 project(Real2 point) override;
   

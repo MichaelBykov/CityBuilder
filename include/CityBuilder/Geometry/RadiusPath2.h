@@ -63,7 +63,25 @@ struct RadiusPath2 {
   ///   The other radius path to intersect this path with.
   /// \returns
   ///   A list of the found intersections or an empty list if none were found.
-  List<Intersection> intersections(const RadiusPath2 &other);
+  // List<Intersection> intersections(const RadiusPath2 &other);
+  
+  
+  
+  /// Check if this radius path intersects another radius path in a valid way.
+  /// \param[in] other
+  ///   The other radius path to check for intersection with.
+  /// \returns
+  ///   Whether or not the other path crosses this path in such a way that the
+  ///   other path only either ends or fully crosses at all intersection points
+  ///   (the path does not brush up against this path without crossing it).
+  bool intersectionTest(const RadiusPath2 &other);
+  
+  /// Check if this radius path intersects a circle.
+  /// \param[in] center
+  ///   The center of the circle.
+  /// \param[in] radius
+  ///   The radius of the circle.
+  bool circleTest(Real2 center, Real radius);
   
 private:
   Bounds2 _bounds;

@@ -227,6 +227,85 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
     return false;
   
   // Check if the road would interfere with any other roads
+  RadiusPath2 _path { path, roadDef->dimensions.x * Real(0.5 * scale) };
+  for (Road *road : _roads) {
+    Real2 start = road->path.path.project(path.start);
+    Real2   end = road->path.path.project(path.end  );
+    bool _start = start.approxEqual(path.start).verticalAnd();
+    bool _end   =   end.approxEqual(path.end  ).verticalAnd();
+    if (_start || _end) {
+      // Adding to the existing road: skip
+      if (_start && _end) {
+        // Can't add to the same road
+        return false;
+      }
+      
+      // Check for valid angle first
+      Real2 forward = path.normal(_start ? 0 : 1);
+      if (_start)
+        forward = forward.leftPerpendicular();
+      else
+        forward = forward.rightPerpendicular();
+      
+      Real t = road->path.path.inverse(_start ? path.start : path.end);
+      if (t.approxZero()) {
+        // Check with the start of the road
+        Real2 _forward = road->path.path.normal(0).rightPerpendicular();
+        Real angle = _forward.dot(forward);
+        if (angle < -44_deg)
+          // Too sharp of an angle
+          return false;
+      } else if ((t - Real(1)).approxZero()) {
+        // Check with the end of the road
+        Real2 _forward = road->path.path.normal(1).leftPerpendicular();
+        Real angle = _forward.dot(forward);
+        if (angle < -44_deg)
+          // Too sharp of an angle
+          return false;
+      } else {
+        // Check that the intersection is not within a radius of the road end
+        if (road->start.type != Connection::road &&
+            _path.circleTest(road->path.path.start, road->path.radius))
+          return false;
+        if (road->end.type != Connection::road &&
+            _path.circleTest(road->path.path.end, road->path.radius))
+          return false;
+        
+        // Check with the middle of the road
+        Real2 normal = road->path.path.normal(t);
+        Real angle = normal.dot(forward).abs();
+        if (angle < 29_deg)
+          // Too sharp of an angle
+          return false;
+      }
+      
+      continue;
+    }
+    
+    if (!road->path.intersectionTest(_path))
+      // New road would overlap with the existing road
+      return false;
+    if (road->start.type != Connection::road &&
+        _path.circleTest(road->path.path.start, road->path.radius))
+      return false;
+    if (road->end.type != Connection::road &&
+        _path.circleTest(road->path.path.end, road->path.radius))
+      return false;
+    
+    // Check that the intersection is at a valid angle
+    List<Real2> intersections = road->path.path.intersections(path);
+    for (Real2 intersection : intersections) {
+      Real2 forward = path.normal(path.inverse(intersection)).leftPerpendicular();
+      Real2 normal = road->path.path.normal(road->path.path.inverse(intersection));
+      Real angle = normal.dot(forward).abs();
+      if (angle < 29_deg)
+        // Too sharp of an angle
+        return false;
+    }
+  }
+  
+  return true;
+  
   /*List<Real2> points { };
   int pointCount = (path.length() / scale).ceil().max(2);
   for (int i = 0; i < pointCount; i++)

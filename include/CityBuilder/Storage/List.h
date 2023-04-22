@@ -357,4 +357,51 @@ public:
       _data = nullptr;
     }
   }
+  
+  
+  
+  /// Sort the list using the default comparison operator.
+  template<typename = T>
+  void sort() {
+    if (count() < 2)
+      // Nothing to sort
+      return;
+    _sort(_data->contents, _data->count);
+  }
+  
+private:
+  template<typename = T>
+  void _sort(T *list, size_t count) {
+    // Merge sort
+    if (count < 2)
+      // Nothing to sort
+      return;
+    else if (count == 2) {
+      // Check if the first two terms need to be swapped
+      if (list[1] < list[0]) {
+        T t = std::move(list[0]);
+        new (&list[0]) T(std::move(list[1]));
+        new (&list[1]) T(std::move(t));
+      }
+    } else {
+      // Divide
+      size_t mid = count / 2;
+      _sort(list, mid);
+      _sort(list + mid, count - mid);
+      
+      // Merge
+      size_t i = 0, j = mid;
+      while (i < j && j < count) {
+        if (list[j] < list[i]) {
+          // Rotate
+          T t = std::move(list[j]);
+          for (size_t k = j; k > i; k--)
+            new (&list[k]) T(std::move(list[k - 1]));
+          new (&list[i]) T(std::move(t));
+          j++;
+        }
+        i++;
+      }
+    }
+  }
 };
