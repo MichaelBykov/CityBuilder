@@ -111,7 +111,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     return false;
   
   // Check which points are connected
-  if (a->path.path.start.approxEqual(b->path.path.end).verticalAnd()) {
+  if (a->path.path.start.squareDistance(b->path.path.end) < 0.1) {
     if (a->start.type != Connection::none ||
         b->end  .type != Connection::none)
       // Already connected to something
@@ -120,7 +120,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->start = b;
     b->end = a;
-  } else if (a->path.path.start.approxEqual(b->path.path.start).verticalAnd()) {
+  } else if (a->path.path.start.squareDistance(b->path.path.start) < 0.1) {
     if (a->start.type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
@@ -129,7 +129,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->start = b;
     b->start = a;
-  } else if (a->path.path.end.approxEqual(b->path.path.end).verticalAnd()) {
+  } else if (a->path.path.end.squareDistance(b->path.path.end) < 0.1) {
     if (a->end.type != Connection::none ||
         b->end.type != Connection::none)
       // Already connected to something
@@ -138,7 +138,7 @@ bool RoadNetwork::connect(Road *a, Road *b) {
     // Connect
     a->end = b;
     b->end = a;
-  } else if (a->path.path.end.approxEqual(b->path.path.start).verticalAnd()) {
+  } else if (a->path.path.end.squareDistance(b->path.path.start) < 0.1) {
     if (a->end  .type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
@@ -315,6 +315,19 @@ bool RoadNetwork::build(RoadDef *road, Path2 &path) {
   // Create the road
   Road *r = add(new Road(road, path));
   
+  // Attempt to attach to other roads
+  for (Road *_road : _roads) {
+    if (connect(_road, r)) {
+      // Make sure the connected road is redrawn too to remove the previous
+      // end cap
+      _road->_dirty = true;
+      
+      if (r->start.type != Connection::none &&
+          r->end.type   != Connection::none)
+        break;
+    }
+  }
+  
   return true;
 }
 
@@ -322,112 +335,132 @@ void RoadNetwork::update() {
   for (Road *road : _roads)
     if (road->_dirty) {
       if (!road->_meshes.isEmpty()) {
-        // Redraw the mesh
-        // TODO
-      } else {
-        // Create a new mesh
-        BSTree<LaneDef *, int> lanes;
+        // Remove all the previous meshes
+        for (Road::_mesh &mesh : road->_meshes) {
+          if (mesh.texture == nullptr) {
+            // Remove from the divider meshes
+            for (intptr_t i = 0; i < _markings.count(); i++)
+              if (_markings[i].mesh.address() == mesh.mesh.address()) {
+                _markings.remove(i);
+                break;
+              }
+          } else {
+            // Remove from the standard meshes
+            auto &meshes = _meshes[mesh.texture];
+            for (intptr_t i = 0; i < meshes.count(); i++)
+              if (meshes[i].mesh.address() == mesh.mesh.address()) {
+                meshes.remove(i);
+                break;
+              }
+          }
+        }
+        road->_meshes.removeAll();
+      }
+      
+      // Create a new mesh
+      BSTree<LaneDef *, int> lanes;
+      
+      Real2 half = { -road->definition->dimensions.x * Real(0.5), 0 };
+      
+      // Add caps as appropriate
+      Angle startStart, startEnd;
+      bool startCap = false;
+      if (road->start.type == Connection::none) {
+        // Add an end cap
+        Real4 pointNormal = road->path.path.pointNormals().first();
+        Real2 point = { pointNormal.z, pointNormal.w };
+        startStart =  Angle(point);
+        startEnd   = -Angle(point);
+        startCap = true;
+      }
+      
+      Angle endStart, endEnd;
+      bool endCap = false;
+      if (road->end.type == Connection::none) {
+        // Add an end cap
+        Real4 pointNormal = road->path.path.pointNormals().last();
+        Real2 point = { pointNormal.z, pointNormal.w };
+        endStart = -Angle(point);
+        endEnd   =  Angle(point);
+        endCap = true;
+      }
+      
+      
+      
+      // Add a decorator if one exists
+      if (!road->definition->decorations.triangles.isEmpty()) {
+        if (!_meshes.has(road->definition->decorationsTexture.address()))
+          _meshes.set(road->definition->decorationsTexture.address(), { });
         
-        Real2 half = { -road->definition->dimensions.x * Real(0.5), 0 };
+        Resource<Mesh> mesh = new Mesh();
+        road->_meshes.append({
+          road->definition->decorationsTexture.address(), mesh
+        });
+        _meshes[road->definition->decorationsTexture.address()]
+          .append({ mesh, { 1, road->path.path.length() } });
+        
+        // Extrude
+        mesh->extrude(road->definition->decorations,
+          road->path.path, half, scale);
         
         // Add caps as appropriate
-        Angle startStart, startEnd;
-        bool startCap = false;
-        if (road->start.type == Connection::none) {
-          // Add an end cap
-          Real4 pointNormal = road->path.path.pointNormals().first();
-          Real2 point = { pointNormal.z, pointNormal.w };
-          startStart =  Angle(point);
-          startEnd   = -Angle(point);
-          startCap = true;
-        }
+        if (startCap)
+          mesh->halfRevolve(road->definition->decorations,
+            road->path.path.start, startStart, startEnd, half, scale);
+        if (endCap)
+          mesh->halfRevolve(road->definition->decorations,
+            road->path.path.end, endStart, endEnd, half, scale);
+      }
+      
+      // Add the lanes
+      for (const RoadDef::Lane &lane : road->definition->lanes) {
+        Resource<Mesh> mesh = _addMesh(road, lane.definition, lanes);
+        mesh->extrude(lane.definition->profile,
+          road->path.path, lane.position + half, scale);
         
-        Angle endStart, endEnd;
-        bool endCap = false;
-        if (road->end.type == Connection::none) {
-          // Add an end cap
-          Real4 pointNormal = road->path.path.pointNormals().last();
-          Real2 point = { pointNormal.z, pointNormal.w };
-          endStart = -Angle(point);
-          endEnd   =  Angle(point);
-          endCap = true;
-        }
+        if (startCap)
+          mesh->halfRevolve(lane.definition->profile,
+            road->path.path.start, startStart, startEnd,
+            lane.position + half, scale);
+        if (endCap)
+          mesh->halfRevolve(lane.definition->profile,
+            road->path.path.end, endStart, endEnd,
+            lane.position + half, scale);
+      }
+      
+      // Add any markings
+      if (!road->definition->dividers.isEmpty()) {
+        // Update where the markings are drawn
+        half.y += 0.01;
+        half.x -= 0.1;
         
+        // Create the divider mesh
+        Resource<Mesh> dividers = new Mesh();
+        _markings.append({ dividers, { 1, road->path.path.length() } });
+        road->_meshes.append({ nullptr, dividers });
         
-        
-        // Add a decorator if one exists
-        if (!road->definition->decorations.triangles.isEmpty()) {
-          if (!_meshes.has(road->definition->decorationsTexture.address()))
-            _meshes.set(road->definition->decorationsTexture.address(), { });
-          
-          Resource<Mesh> mesh = new Mesh();
-          road->_meshes.append(mesh);
-          _meshes[road->definition->decorationsTexture.address()]
-            .append({ mesh, { 1, road->path.path.length() } });
-          
-          // Extrude
-          mesh->extrude(road->definition->decorations,
-            road->path.path, half, scale);
+        // Extrude the dividers
+        for (const RoadDef::Divider &divider : road->definition->dividers) {
+          dividers->extrude(
+            *dividerMeshes[(int)divider.type],
+            road->path.path, divider.position + half, scale
+          );
           
           // Add caps as appropriate
           if (startCap)
-            mesh->halfRevolve(road->definition->decorations,
-              road->path.path.start, startStart, startEnd, half, scale);
-          if (endCap)
-            mesh->halfRevolve(road->definition->decorations,
-              road->path.path.end, endStart, endEnd, half, scale);
-        }
-        
-        // Add the lanes
-        for (const RoadDef::Lane &lane : road->definition->lanes) {
-          Resource<Mesh> mesh = _addMesh(road, lane.definition, lanes);
-          mesh->extrude(lane.definition->profile,
-            road->path.path, lane.position + half, scale);
-          
-          if (startCap)
-            mesh->halfRevolve(lane.definition->profile,
+            dividers->halfRevolve(*dividerMeshes[(int)divider.type],
               road->path.path.start, startStart, startEnd,
-              lane.position + half, scale);
+              divider.position + half, scale);
           if (endCap)
-            mesh->halfRevolve(lane.definition->profile,
+            dividers->halfRevolve(*dividerMeshes[(int)divider.type],
               road->path.path.end, endStart, endEnd,
-              lane.position + half, scale);
+              divider.position + half, scale);
         }
-        
-        // Add any markings
-        if (!road->definition->dividers.isEmpty()) {
-          // Update where the markings are drawn
-          half.y += 0.01;
-          half.x -= 0.1;
-          
-          // Create the divider mesh
-          Resource<Mesh> dividers = new Mesh();
-          _markings.append({ dividers, { 1, road->path.path.length() } });
-          road->_meshes.append(dividers);
-          
-          // Extrude the dividers
-          for (const RoadDef::Divider &divider : road->definition->dividers) {
-            dividers->extrude(
-              *dividerMeshes[(int)divider.type],
-              road->path.path, divider.position + half, scale
-            );
-            
-            // Add caps as appropriate
-            if (startCap)
-              dividers->halfRevolve(*dividerMeshes[(int)divider.type],
-                road->path.path.start, startStart, startEnd,
-                divider.position + half, scale);
-            if (endCap)
-              dividers->halfRevolve(*dividerMeshes[(int)divider.type],
-                road->path.path.end, endStart, endEnd,
-                divider.position + half, scale);
-          }
-        }
-        
-        // Push all the created meshes to the GPU
-        for (Resource<Mesh> &mesh : road->_meshes)
-          mesh->load();
       }
+      
+      // Push all the created meshes to the GPU
+      for (Road::_mesh &mesh : road->_meshes)
+        mesh.mesh->load();
       
       road->_dirty = false;
     }
@@ -483,14 +516,14 @@ Resource<Mesh> RoadNetwork::_addMesh(Road *road, LaneDef *lane, BSTree<LaneDef *
     _meshes.set(lane->mainTexture.address(), { });
   } else if ((selected = lanes[lane])) {
     // Add to the lane
-    mesh = road->_meshes[*selected];
+    mesh = road->_meshes[*selected].mesh;
     return mesh;
   }
   
   // Create a new mesh
   mesh = new Mesh();
   lanes.insert(lane, road->_meshes.count());
-  road->_meshes.append(mesh);
+  road->_meshes.append({ lane->mainTexture.address(), mesh });
   _meshes[lane->mainTexture.address()]
     .append({ mesh, { 1, road->path.path.length() } });
   return mesh;

@@ -52,8 +52,13 @@ private:
   /// Whether or not the road needs to be redrawn.
   bool _dirty = true;
   
+  struct _mesh {
+    Texture *texture;
+    Resource<Mesh> mesh;
+  };
+  
   /// The road's meshes.
-  List<Resource<Mesh>> _meshes { };
+  List<_mesh> _meshes { };
 };
 
 NS_CITY_BUILDER_END
