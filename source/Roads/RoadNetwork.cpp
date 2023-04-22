@@ -106,47 +106,144 @@ Road *RoadNetwork::add(Road *road) {
   return road;
 }
 
+namespace {
+  void addJoint(Road *a, bool aStart, Road *b, bool bStart, RoadNetwork *roads) {
+    // Check if we need to add a connective joint
+    Real4 pointNormalA = aStart ? a->path.pointNormals().first() : a->path.pointNormals().last();
+    Real4 pointNormalB = bStart ? b->path.pointNormals().first() : b->path.pointNormals().last();
+    
+    Real2 normalA = { pointNormalA.z, pointNormalA.w };
+    if (aStart) normalA = normalA. leftPerpendicular();
+    else        normalA = normalA.rightPerpendicular();
+    
+    Real2 normalB = { pointNormalB.z, pointNormalB.w };
+    if (bStart) normalB = normalB. leftPerpendicular();
+    else        normalB = normalB.rightPerpendicular();
+    
+    Real dot = normalA.dot(normalB);
+    if (dot > -0.99) {
+      // Add a joint
+      
+      // Determine the amount to offset
+      Real2 intersection = aStart ? a->path.start() : a->path.end();
+      
+      Angle angle = acos(dot);
+      
+      Real offset =
+        (a->definition->dimensions.x * Real(0.5) * scale) /
+        (angle * 0.5).tan()
+        + Real(0.1);
+      
+      // Offset the original road
+      a->path = aStart ?
+        a->path.split(offset / a->path.length(), 1) :
+        a->path.split(0, 1 - offset / a->path.length()) ;
+      b->path = bStart ?
+        b->path.split(offset / b->path.length(), 1) :
+        b->path.split(0, 1 - offset / b->path.length()) ;
+      
+      // Find the intersection point
+      // {
+      //   Real2 _a = aStart ? a->path.start() : a->path.end();
+      //   Real2 _b = bStart ? b->path.start() : b->path.end();
+      //   Real4 _aPN = aStart ? a->path.pointNormals().first() : a->path.pointNormals().last();
+      //   Real4 _bPN = bStart ? b->path.pointNormals().first() : b->path.pointNormals().last();
+      //   Real2 _aV = { _aPN.z, _aPN.w };
+      //   Real2 _bV = { _bPN.z, _bPN.w };
+      //   if (aStart) _aV = _aV.rightPerpendicular();
+      //   else        _aV = _aV. leftPerpendicular();
+      //   if (bStart) _bV = _bV.rightPerpendicular();
+      //   else        _bV = _bV. leftPerpendicular();
+        
+      //   // Intersection of _a + _aV * s and _b + _bV * t
+      //   Real determinant = _aV.x * _bV.y - _aV.y * _bV.x;
+      //   Real2 diff = _b - _a;
+      //   Real s = (diff.x * _bV.y - diff.y * _bV.x) / determinant;
+      //   intersection = _a + _aV * Real2(s);
+      // }
+      
+      
+      // Add the joint
+      bool clockwise = normalA.rightPerpendicular().dot(normalB) > 0;
+      Road *joint;
+      
+      if (clockwise) {
+        joint = roads->add(new Road(a->definition, new Arc2(
+          aStart ? a->path.start() : a->path.end(),
+          intersection,
+          bStart ? b->path.start() : b->path.end()
+        )));
+        joint->start = a;
+        joint->end = b;
+      } else {
+        joint = roads->add(new Road(a->definition, new Arc2(
+          bStart ? b->path.start() : b->path.end(),
+          intersection,
+          aStart ? a->path.start() : a->path.end()
+        )));
+        joint->start = b;
+        joint->end = a;
+      }
+      
+      (aStart ? a->start : a->end) = joint;
+      (bStart ? b->start : b->end) = joint;
+    } else {
+      // Connect
+      (aStart ? a->start : a->end) = b;
+      (bStart ? b->start : b->end) = a;
+    }
+  }
+}
+
 bool RoadNetwork::connect(Road *a, Road *b) {
   if (a == b)
     return false;
   
   // Check which points are connected
-  if (a->path.path.start.squareDistance(b->path.path.end) < 0.1) {
+  if (a->path.start().squareDistance(b->path.end()) < 0.1) {
     if (a->start.type != Connection::none ||
         b->end  .type != Connection::none)
       // Already connected to something
       return false;
     
-    // Connect
-    a->start = b;
-    b->end = a;
-  } else if (a->path.path.start.squareDistance(b->path.path.start) < 0.1) {
+    if (a->definition != b->definition) {
+      // Intersection
+    } else
+      // Add a joint as appropriate
+      addJoint(a, true, b, false, this);
+  } else if (a->path.start().squareDistance(b->path.start()) < 0.1) {
     if (a->start.type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
       return false;
     
-    // Connect
-    a->start = b;
-    b->start = a;
-  } else if (a->path.path.end.squareDistance(b->path.path.end) < 0.1) {
+    if (a->definition != b->definition) {
+      // Intersection
+    } else
+      // Add a joint as appropriate
+      addJoint(a, true, b, true, this);
+  } else if (a->path.end().squareDistance(b->path.end()) < 0.1) {
     if (a->end.type != Connection::none ||
         b->end.type != Connection::none)
       // Already connected to something
       return false;
     
-    // Connect
-    a->end = b;
-    b->end = a;
-  } else if (a->path.path.end.squareDistance(b->path.path.start) < 0.1) {
+    if (a->definition != b->definition) {
+      // Intersection
+    } else
+      // Add a joint as appropriate
+      addJoint(a, false, b, false, this);
+  } else if (a->path.end().squareDistance(b->path.start()) < 0.1) {
     if (a->end  .type != Connection::none ||
         b->start.type != Connection::none)
       // Already connected to something
       return false;
     
-    // Connect
-    a->end = b;
-    b->start = a;
+    if (a->definition != b->definition) {
+      // Intersection
+    } else
+      // Add a joint as appropriate
+      addJoint(a, false, b, true, this);
   } else {
     // Not connected
     return false;
@@ -163,7 +260,7 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
   Real distance;
   
   for (Road *road : _roads) {
-    Real2 projection = road->path.path.project(p);
+    Real2 projection = road->path.path().project(p);
     Real dist = p.squareDistance(projection);
     if (dist < (road->definition->dimensions.x * Real(0.5 * scale)).square()) {
       // Check if the point is closest
@@ -178,17 +275,17 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
   
   if (snapped && snappedRoad->end.type != Connection::road) {
     // Snap to the end if within radius
-    if (p.squareDistance(snappedRoad->path.path.end) <
+    if (p.squareDistance(snappedRoad->path.end()) <
       (snappedRoad->definition->dimensions.x * Real(0.5 * scale)).square()) {
-      closest = snappedRoad->path.path.end;
+      closest = snappedRoad->path.end();
     }
   }
   
   if (snapped && snappedRoad->start.type != Connection::road) {
     // Snap to the start if within radius
-    if (p.squareDistance(snappedRoad->path.path.start) <
+    if (p.squareDistance(snappedRoad->path.start()) <
       (snappedRoad->definition->dimensions.x * Real(0.5 * scale)).square()) {
-      closest = snappedRoad->path.path.start;
+      closest = snappedRoad->path.start();
     }
   }
   
@@ -207,7 +304,7 @@ bool RoadNetwork::validate(RoadDef *roadDef, Real3 point) {
   // Check if the road would interfere with any other roads
   Real2 p = { point.x, point.z };
   for (Road *road : _roads) {
-    Real2 projection = road->path.path.project(p);
+    Real2 projection = road->path.path().project(p);
     Real dist = p.squareDistance(projection);
     if (dist < (
       (road->definition->dimensions.x + roadDef->dimensions.x) *
@@ -221,18 +318,18 @@ bool RoadNetwork::validate(RoadDef *roadDef, Real3 point) {
   return true;
 }
 
-bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
+bool RoadNetwork::validate(RoadDef *roadDef, Ref<Path2 &> path) {
   // A road must be at least square
-  if (path.length() < roadDef->dimensions.x * scale)
+  if (path->length() < roadDef->dimensions.x * scale)
     return false;
   
   // Check if the road would interfere with any other roads
-  RadiusPath2 _path { path, roadDef->dimensions.x * Real(0.5 * scale) };
+  RadiusPath2 _path { path->offset(0.0), roadDef->dimensions.x * Real(0.5 * scale) };
   for (Road *road : _roads) {
-    Real2 start = road->path.path.project(path.start);
-    Real2   end = road->path.path.project(path.end  );
-    bool _start = start.squareDistance(path.start) < 0.1;
-    bool _end   =   end.squareDistance(path.end  ) < 0.1;
+    Real2 start = road->path.path().project(path->start);
+    Real2   end = road->path.path().project(path->end  );
+    bool _start = start.squareDistance(path->start) < 0.1;
+    bool _end   =   end.squareDistance(path->end  ) < 0.1;
     if (_start || _end) {
       // Adding to the existing road: skip
       if (_start && _end) {
@@ -241,23 +338,23 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
       }
       
       // Check for valid angle first
-      Real2 forward = path.normal(_start ? 0 : 1);
+      Real2 forward = path->normal(_start ? 0 : 1);
       if (_start)
         forward = forward.leftPerpendicular();
       else
         forward = forward.rightPerpendicular();
       
-      Real t = road->path.path.inverse(_start ? path.start : path.end);
+      Real t = road->path.inverse(_start ? path->start : path->end);
       if (t.approxZero()) {
         // Check with the start of the road
-        Real2 _forward = road->path.path.normal(0).rightPerpendicular();
+        Real2 _forward = road->path.normal(0).rightPerpendicular();
         Real angle = _forward.dot(forward);
         if (angle < -44_deg)
           // Too sharp of an angle
           return false;
       } else if ((t - Real(1)).approxZero()) {
         // Check with the end of the road
-        Real2 _forward = road->path.path.normal(1).leftPerpendicular();
+        Real2 _forward = road->path.normal(1).leftPerpendicular();
         Real angle = _forward.dot(forward);
         if (angle < -44_deg)
           // Too sharp of an angle
@@ -265,14 +362,14 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
       } else {
         // Check that the intersection is not within a radius of the road end
         if (road->start.type != Connection::road &&
-            _path.circleTest(road->path.path.start, road->path.radius))
+            _path.circleTest(road->path.start(), road->path.radius()))
           return false;
         if (road->end.type != Connection::road &&
-            _path.circleTest(road->path.path.end, road->path.radius))
+            _path.circleTest(road->path.end(), road->path.radius()))
           return false;
         
         // Check with the middle of the road
-        Real2 normal = road->path.path.normal(t);
+        Real2 normal = road->path.normal(t);
         Real angle = normal.dot(forward).abs();
         if (angle < 29_deg)
           // Too sharp of an angle
@@ -286,17 +383,17 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
       // New road would overlap with the existing road
       return false;
     if (road->start.type != Connection::road &&
-        _path.circleTest(road->path.path.start, road->path.radius))
+        _path.circleTest(road->path.start(), road->path.radius()))
       return false;
     if (road->end.type != Connection::road &&
-        _path.circleTest(road->path.path.end, road->path.radius))
+        _path.circleTest(road->path.end(), road->path.radius()))
       return false;
     
     // Check that the intersection is at a valid angle
-    List<Real2> intersections = road->path.path.intersections(path);
+    List<Real2> intersections = road->path.path().intersections(*path);
     for (Real2 intersection : intersections) {
-      Real2 forward = path.normal(path.inverse(intersection)).leftPerpendicular();
-      Real2 normal = road->path.path.normal(road->path.path.inverse(intersection));
+      Real2 forward = path->normal(path->inverse(intersection)).leftPerpendicular();
+      Real2 normal = road->path.normal(road->path.inverse(intersection));
       Real angle = normal.dot(forward).abs();
       if (angle < 29_deg)
         // Too sharp of an angle
@@ -307,7 +404,7 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
   return true;
 }
 
-bool RoadNetwork::build(RoadDef *road, Path2 &path) {
+bool RoadNetwork::build(RoadDef *road, Ref<Path2 &> path) {
   // Check that the given path is valid
   if (!validate(road, path))
     return false;
@@ -316,7 +413,8 @@ bool RoadNetwork::build(RoadDef *road, Path2 &path) {
   Road *r = add(new Road(road, path));
   
   // Attempt to attach to other roads
-  for (Road *_road : _roads) {
+  for (intptr_t i = 0; i < _roads.count(); i++) {
+    Road *_road = _roads[i];
     if (connect(_road, r)) {
       // Make sure the connected road is redrawn too to remove the previous
       // end cap
@@ -367,7 +465,7 @@ void RoadNetwork::update() {
       bool startCap = false;
       if (road->start.type == Connection::none) {
         // Add an end cap
-        Real4 pointNormal = road->path.path.pointNormals().first();
+        Real4 pointNormal = road->path.pointNormals().first();
         Real2 point = { pointNormal.z, pointNormal.w };
         startStart =  Angle(point);
         startEnd   = -Angle(point);
@@ -378,7 +476,7 @@ void RoadNetwork::update() {
       bool endCap = false;
       if (road->end.type == Connection::none) {
         // Add an end cap
-        Real4 pointNormal = road->path.path.pointNormals().last();
+        Real4 pointNormal = road->path.pointNormals().last();
         Real2 point = { pointNormal.z, pointNormal.w };
         endStart = -Angle(point);
         endEnd   =  Angle(point);
@@ -397,34 +495,34 @@ void RoadNetwork::update() {
           road->definition->decorationsTexture.address(), mesh
         });
         _meshes[road->definition->decorationsTexture.address()]
-          .append({ mesh, { 1, road->path.path.length() } });
+          .append({ mesh, { 1, road->path.length() } });
         
         // Extrude
         mesh->extrude(road->definition->decorations,
-          road->path.path, half, scale);
+          road->path.path(), half, scale);
         
         // Add caps as appropriate
         if (startCap)
           mesh->halfRevolve(road->definition->decorations,
-            road->path.path.start, startStart, startEnd, half, scale);
+            road->path.start(), startStart, startEnd, half, scale);
         if (endCap)
           mesh->halfRevolve(road->definition->decorations,
-            road->path.path.end, endStart, endEnd, half, scale);
+            road->path.end(), endStart, endEnd, half, scale);
       }
       
       // Add the lanes
       for (const RoadDef::Lane &lane : road->definition->lanes) {
         Resource<Mesh> mesh = _addMesh(road, lane.definition, lanes);
         mesh->extrude(lane.definition->profile,
-          road->path.path, lane.position + half, scale);
+          road->path.path(), lane.position + half, scale);
         
         if (startCap)
           mesh->halfRevolve(lane.definition->profile,
-            road->path.path.start, startStart, startEnd,
+            road->path.start(), startStart, startEnd,
             lane.position + half, scale);
         if (endCap)
           mesh->halfRevolve(lane.definition->profile,
-            road->path.path.end, endStart, endEnd,
+            road->path.end(), endStart, endEnd,
             lane.position + half, scale);
       }
       
@@ -436,24 +534,24 @@ void RoadNetwork::update() {
         
         // Create the divider mesh
         Resource<Mesh> dividers = new Mesh();
-        _markings.append({ dividers, { 1, road->path.path.length() } });
+        _markings.append({ dividers, { 1, road->path.length() } });
         road->_meshes.append({ nullptr, dividers });
         
         // Extrude the dividers
         for (const RoadDef::Divider &divider : road->definition->dividers) {
           dividers->extrude(
             *dividerMeshes[(int)divider.type],
-            road->path.path, divider.position + half, scale
+            road->path.path(), divider.position + half, scale
           );
           
           // Add caps as appropriate
           if (startCap)
             dividers->halfRevolve(*dividerMeshes[(int)divider.type],
-              road->path.path.start, startStart, startEnd,
+              road->path.start(), startStart, startEnd,
               divider.position + half, scale);
           if (endCap)
             dividers->halfRevolve(*dividerMeshes[(int)divider.type],
-              road->path.path.end, endStart, endEnd,
+              road->path.end(), endStart, endEnd,
               divider.position + half, scale);
         }
       }
@@ -525,6 +623,6 @@ Resource<Mesh> RoadNetwork::_addMesh(Road *road, LaneDef *lane, BSTree<LaneDef *
   lanes.insert(lane, road->_meshes.count());
   road->_meshes.append({ lane->mainTexture.address(), mesh });
   _meshes[lane->mainTexture.address()]
-    .append({ mesh, { 1, road->path.path.length() } });
+    .append({ mesh, { 1, road->path.length() } });
   return mesh;
 }

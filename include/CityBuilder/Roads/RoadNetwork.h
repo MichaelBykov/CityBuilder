@@ -75,7 +75,7 @@ struct RoadNetwork {
   ///   The path to validate.
   /// \returns
   ///   Whether or not the given road can be built along the given path.
-  bool validate(RoadDef *road, Path2 &path);
+  bool validate(RoadDef *road, Ref<Path2 &> path);
   
   
   
@@ -86,7 +86,7 @@ struct RoadNetwork {
   ///   The path to build the road along.
   /// \returns
   ///   Whether or not the road was built.
-  bool build(RoadDef *road, Path2 &path);
+  bool build(RoadDef *road, Ref<Path2 &> path);
   
   
   

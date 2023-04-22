@@ -8,6 +8,7 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/List.h>
+#include <CityBuilder/Storage/Ref.h>
 #include "Bounds2.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -24,11 +25,11 @@ struct Path2 {
   
   virtual Real length() = 0;
   
-  virtual Path2 *offset(Real distance) = 0;
+  virtual Ref<Path2 &> offset(Real distance) = 0;
   
-  virtual Path2 *split(Real tStart, Real tEnd) = 0;
+  virtual Ref<Path2 &> split(Real tStart, Real tEnd) = 0;
   
-  virtual void split(Real t, Path2 *&lhs, Path2 *&rhs) = 0;
+  virtual void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) = 0;
   
   /// Project a point onto the path.
   /// \param[in] point
@@ -70,17 +71,23 @@ struct Path2 {
     return _bounds;
   }
   
+  /// A description of the path type.
+  enum class Type {
+    line,
+    arc
+  };
+  
+  /// Get the path type.
+  inline Type type() {
+    return _type;
+  }
+  
 protected:
   /// The computed bounds of the path.
   Bounds2 _bounds;
   /// A cache of the path points.
   List<Real4> _pointCache;
   
-  /// The path type.
-  enum class Type {
-    line,
-    arc
-  };
   /// The path type.
   Type _type;
   
@@ -107,11 +114,11 @@ struct Line2 : Path2 {
   
   Real length() override;
   
-  Path2 *offset(Real distance) override;
+  Ref<Path2 &> offset(Real distance) override;
   
-  Path2 *split(Real tStart, Real tEnd) override;
+  Ref<Path2 &> split(Real tStart, Real tEnd) override;
   
-  void split(Real t, Path2 *&lhs, Path2 *&rhs) override;
+  void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) override;
   
   Real2 project(Real2 point) override;
   
@@ -140,11 +147,11 @@ struct Arc2 : Path2 {
   
   Real radius();
   
-  Path2 *offset(Real distance) override;
+  Ref<Path2 &> offset(Real distance) override;
   
-  Path2 *split(Real tStart, Real tEnd) override;
+  Ref<Path2 &> split(Real tStart, Real tEnd) override;
   
-  void split(Real t, Path2 *&lhs, Path2 *&rhs) override;
+  void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) override;
   
   Real2 project(Real2 point) override;
   

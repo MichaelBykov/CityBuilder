@@ -9,28 +9,23 @@
 #include <CityBuilder/Storage/Ref.h>
 USING_NS_CITY_BUILDER
 
-bool RadiusPath2::intersectionTest(const RadiusPath2 &other) {
+bool RadiusPath2::intersectionTest(RadiusPath2 &other) {
   // Check bounds first
   if (!_bounds.intersects(other._bounds))
     return true;
   
   // Check for crossing validity
   {
-    Path2 *lhs = path.offset(-radius);
-    Path2 *rhs = path.offset( radius);
+    Ref<Path2 &> lhs = path().offset(-radius());
+    Ref<Path2 &> rhs = path().offset( radius());
     
-    Path2 *_lhs = other.path.offset(-other.radius);
-    Path2 *_rhs = other.path.offset( other.radius);
+    Ref<Path2 &> _lhs = other.path().offset(-other.radius());
+    Ref<Path2 &> _rhs = other.path().offset( other.radius());
     
     List<Real2> lhs_lhs = lhs->intersections(*_lhs);
     List<Real2> lhs_rhs = lhs->intersections(*_rhs);
     List<Real2> rhs_lhs = rhs->intersections(*_lhs);
     List<Real2> rhs_rhs = rhs->intersections(*_rhs);
-    
-    delete lhs;
-    delete rhs;
-    delete _lhs;
-    delete _rhs;
     
     int lhsCount;
     if (lhs_lhs.count() != rhs_lhs.count()) {
@@ -76,7 +71,7 @@ bool RadiusPath2::circleTest(Real2 center, Real radius) {
   
   // Check if the path has a point that is within
   // the radius of the circle + this path's radius
-  Real2 point = path.project(center);
+  Real2 point = path().project(center);
   Real distance = (point - center).magnitude();
-  return distance < radius + this->radius;
+  return distance < radius + this->radius();
 }

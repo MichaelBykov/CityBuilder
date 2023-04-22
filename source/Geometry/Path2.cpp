@@ -69,19 +69,19 @@ Real Line2::length() {
   return (end - start).magnitude();
 }
 
-Path2 *Line2::offset(Real distance) {
+Ref<Path2 &> Line2::offset(Real distance) {
   Real2 normal = (end - start).normalized().rightPerpendicular() * Real2(distance);
   
   return new Line2(start + normal, end + normal);
 }
 
-Path2 *Line2::split(Real tStart, Real tEnd) {
+Ref<Path2 &> Line2::split(Real tStart, Real tEnd) {
   Real2 pointStart = start + (end - start) * Real2(tStart);
   Real2 pointEnd   = start + (end - start) * Real2(tEnd);
   return new Line2(pointStart, pointEnd);
 }
 
-void Line2::split(Real t, Path2 *&lhs, Path2 *&rhs) {
+void Line2::split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) {
   Real2 point = start + (end - start) * Real2(t);
   lhs = new Line2(start, point);
   rhs = new Line2(point, end);
@@ -142,7 +142,7 @@ Real Arc2::radius() {
   return _radius;
 }
 
-Path2 *Arc2::offset(Real distance) {
+Ref<Path2 &> Arc2::offset(Real distance) {
   _getPointNormals();
   Real cs = (start - _center).magnitude();
   Real ce = (end   - _center).magnitude();
@@ -154,23 +154,24 @@ Path2 *Arc2::offset(Real distance) {
   return new Arc2(_start, _control, _end);
 }
 
-Path2 *Arc2::split(Real tStart, Real tEnd) {
+Ref<Path2 &> Arc2::split(Real tStart, Real tEnd) {
   _getPointNormals();
   
-  // Calculate the split points and their normals
+  // Calculate the split points and the angle between them
   Real2 pStart = point(tStart);
   Real2 pEnd   = point(tEnd);
-  Real2 normalStart = pStart - _center;
-  Real2 normalEnd   = pEnd   - _center;
   
-  // Calculate the new control point
-  Real2 control = (normalEnd - pStart).project(normalStart.rightPerpendicular()) + pStart;
+  Angle angle =
+    acos((pEnd - _center).normalized().dot((pStart - _center).normalized()));
+  
+  Real2 center = (pStart + pEnd) * Real2(0.5);
+  Real2 control = (center - _center).normalized() * Real2((pStart - _center).magnitude() / (angle * 0.5).cos()) + _center;
   
   // Split the arc
   return new Arc2(pStart, control, pEnd);
 }
 
-void Arc2::split(Real t, Path2 *&lhs, Path2 *&rhs) {
+void Arc2::split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) {
   _getPointNormals();
   
   // Calculate the split point and its normal

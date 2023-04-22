@@ -20,10 +20,10 @@ Game::Game() {
   
   // Create some initial roads
   RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
-  Road *road1 = _roads.add(new Road(highway, *new Line2({ 0, 0 }, { 10, 10 })));
-  Road *road2 = _roads.add(new Road(highway, *new Arc2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
+  Road *road1 = _roads.add(new Road(highway, new Line2({ 0, 0 }, { 10, 10 })));
+  Road *road2 = _roads.add(new Road(highway, new Arc2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
   _roads.connect(road1, road2);
-  _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], *new Line2({ 0, -10 }, { 10, -10 })));
+  _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], new Line2({ 0, -10 }, { 10, -10 })));
   _roads.update();
   
   // Add the ground plane
@@ -136,7 +136,7 @@ namespace {
     bool roadValid = false;
     
     /// The last shown path.
-    Path2 *path;
+    Ref<Path2 &> path;
     
     Road_Building(RoadDef *road) : road(road) {
       // Create the display
@@ -181,7 +181,7 @@ namespace {
           } else {
             // Attempt to build the road
             if (displayVisible && roadValid)
-              if (Game::instance().roads().build(this->road, *path)) {
+              if (Game::instance().roads().build(this->road, path)) {
                 Game::instance().roads().update();
                 start = point;
                 stage = 1;
@@ -194,7 +194,7 @@ namespace {
         case 2:
           // Attempt to build the road
             if (displayVisible && roadValid)
-              if (Game::instance().roads().build(this->road, *path)) {
+              if (Game::instance().roads().build(this->road, path)) {
                 Game::instance().roads().update();
                 start = point;
                 
@@ -223,8 +223,6 @@ namespace {
     ~Road_Building() {
       Input::onPrimaryMouseDown -= clickListener;
       Input::onCancel -= cancelListener;
-      if (path != nullptr)
-        delete path;
     }
     
     /// Move the display to the given point.
@@ -233,10 +231,7 @@ namespace {
     void move(Real3 origin) {
       const Real scale = 0.333333333333;
       
-      if (path != nullptr) {
-        delete path;
-        path = nullptr;
-      }
+      path = nullptr;
       
       // Check for validity
       bool arc = false;
@@ -253,7 +248,7 @@ namespace {
           roadValid = false;
         else {
           path = new Line2({ start.x, start.z }, { origin.x, origin.z });
-          roadValid = Game::instance().roads().validate(road, *path);
+          roadValid = Game::instance().roads().validate(road, path);
         }
         break;
       
@@ -320,12 +315,11 @@ namespace {
             
             if (arcPath->radius() < road->dimensions.x * scale + Real(0.1)) {
               // Turns in on itself
-              delete arcPath;
               path = new Line2({ start.x, start.z }, { origin.x, origin.z });
               roadValid = false;
               flipped = false;
             } else {
-              roadValid = Game::instance().roads().validate(road, *path);
+              roadValid = Game::instance().roads().validate(road, path);
               arc = true;
             }
           }
@@ -382,7 +376,7 @@ namespace {
         }
         
         // Straight line
-        Line2 &line = *(Line2 *)path;
+        Line2 &line = *(Line2 *)&*path;
         Real4 pointNormal = line.pointNormals().first();
         Angle angle = -Angle({ pointNormal.z, pointNormal.w });
         
@@ -559,7 +553,7 @@ namespace {
         
         // Show the curve point
         if (arc) {
-          Arc2 &arc = *(Arc2 *)path;
+          Arc2 &arc = *(Arc2 *)&*path;
           Real3 point = { arc.control.x, 0, arc.control.y };
           int start = vertices.count();
           vertices.append({ point, hoverColor0 });

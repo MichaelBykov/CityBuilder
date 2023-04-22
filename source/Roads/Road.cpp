@@ -79,7 +79,7 @@ namespace {
   };
 }
 
-Road::Road(RoadDef *definition, Path2 &path)
+Road::Road(RoadDef *definition, Ref<Path2 &> path)
   : definition(definition),
     path(path, definition->dimensions.x * Real(0.5 * 0.333333333333)) {
   
