@@ -164,7 +164,7 @@ Path2 *Arc2::split(Real tStart, Real tEnd) {
   Real2 normalEnd   = pEnd   - _center;
   
   // Calculate the new control point
-  Real2 control = normalStart.rightPerpendicular().project(normalEnd - pStart) + pStart;
+  Real2 control = (normalEnd - pStart).project(normalStart.rightPerpendicular()) + pStart;
   
   // Split the arc
   return new Arc2(pStart, control, pEnd);
@@ -178,8 +178,8 @@ void Arc2::split(Real t, Path2 *&lhs, Path2 *&rhs) {
   Real2 normal = p - _center;
   
   // Calculate the new control points
-  Real2 startControl = normal.rightPerpendicular().project(start - p) + p;
-  Real2   endControl = normal. leftPerpendicular().project(end   - p) + p;
+  Real2 startControl = (start - p).project(normal.rightPerpendicular()) + p;
+  Real2   endControl = (end   - p).project(normal. leftPerpendicular()) + p;
   
   // Split the arc into two arcs
   lhs = new Arc2(start, startControl, p);
@@ -215,7 +215,8 @@ Real2 Arc2::project(Real2 point) {
   }
   
   // The projection is outside the arc
-  if (startVector.squareMagnitude().exactlyLess(endVector.squareMagnitude()))
+  if ((projection - start).squareMagnitude() <
+      (projection -   end).squareMagnitude())
     return start;
   else
     return end;
@@ -249,21 +250,28 @@ Real Arc2::inverse(Real2 point) {
 
 List<Real4> Arc2::_pointNormals() {
   // Determine the radius and center of the arc
+  // Real2 middle = (start + end) * Real2(0.5);
+  // Real2 cm = (middle - control);
+  // Real controlMiddle = cm.magnitude();
+  // Real controlStart = (control - start).magnitude();
+  // Real theta = acos(controlMiddle / controlStart);
+  // _center = control + cm * Real2(controlStart / (controlMiddle * theta.sin()));
   Real2 middle = (start + end) * Real2(0.5);
   Real2 cm = (middle - control);
   Real controlMiddle = cm.magnitude();
-  Real controlStart = (control - start).magnitude();
-  Real theta = acos(controlMiddle / controlStart);
-  _center = control + cm * Real2(controlStart / (controlMiddle * theta.sin()));
+  Real controlStart = (middle - start).magnitude();
+  _center = middle + cm * Real2(controlStart.square() / controlMiddle.square());
+  
   _radius = (_center - start).magnitude();
-  Real angle = Angle::pi - theta * Real(2);
-  _length = _radius * angle;
   Real startAngle = atan2(start.y - _center.y, start.x - _center.x);
+  Real   endAngle = atan2(  end.y - _center.y,   end.x - _center.x);
+  Real angle = Angle::span(startAngle, endAngle);
+  _length = _radius * angle;
   
   // Generate the equidistant points
   Real2 normal = (start - _center).normalized();
   List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
-  int pointCount = _length;
+  int pointCount = _length.max(100);
   for (int i = 1; i < pointCount; i++) {
     Real2 sinCos = Angle::sinCos(startAngle + angle * Real(i) / Real(pointCount)) * Real2(_radius);
     sinCos = { sinCos.y, sinCos.x };

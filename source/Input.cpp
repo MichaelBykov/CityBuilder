@@ -180,6 +180,22 @@ Real2 Input::mousePosition() {
   return _mousePos;
 }
 
+bool Input::primaryMouseDown() {
+  return _primaryMouseDown;
+}
+
+bool Input::secondaryMouseDown() {
+  return _secondaryMouseDown;
+}
+
+bool Input::shiftDown() {
+#if (__APPLE__ && __MACH__) // MacOS
+  
+  return _systemKeys[0] || _systemKeys[4];
+  
+#endif
+}
+
 
 
 

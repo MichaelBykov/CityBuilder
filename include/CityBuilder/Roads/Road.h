@@ -23,10 +23,10 @@ struct Road {
   RadiusPath2 path;
   
   /// The road's start connection.
-  Connection start;
+  Connection start { };
   
   /// The road's end connection.
-  Connection end;
+  Connection end { };
   
   
   

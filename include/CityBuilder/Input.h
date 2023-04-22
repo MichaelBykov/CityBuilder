@@ -107,6 +107,9 @@ struct Input {
   /// Whether the secondary mouse button is currently down.
   static bool secondaryMouseDown();
   
+  /// Whether the shift key is currently down.
+  static bool shiftDown();
+  
   /// An event fired when the primary mouse button is pressed.
   static Event<> onPrimaryMouseDown;
   

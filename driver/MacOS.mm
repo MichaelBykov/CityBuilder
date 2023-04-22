@@ -212,6 +212,10 @@ void Driver::main() {
     // Main event loop
     Events::Input input = {};
     Real2 mouse;
+    
+    // Keyboard modifier flags
+    bool flags[4] { false };
+    
     for (;;) {
       @autoreleasepool {
         for (;;) {
@@ -226,6 +230,21 @@ void Driver::main() {
           
           // Pass on relevant events to the driver
           switch (event.type) {
+          case NSEventTypeFlagsChanged:
+            if ((bool)(event.modifierFlags & NSEventModifierFlagShift) != flags[0]) {
+              bool down = (bool)(event.modifierFlags & NSEventModifierFlagShift);
+              input = {
+                { .keyboard = { 0x38 } },
+                Events::Input::Type::keyboard
+              };
+              if (down)
+                Events::inputStart(input);
+              else
+                Events::inputStop(input);
+              flags[0] = down;
+            }
+            break;
+          
           case NSEventTypeKeyDown:
             input = {
               { .keyboard = { event.keyCode } },

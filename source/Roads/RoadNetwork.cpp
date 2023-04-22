@@ -231,8 +231,8 @@ bool RoadNetwork::validate(RoadDef *roadDef, Path2 &path) {
   for (Road *road : _roads) {
     Real2 start = road->path.path.project(path.start);
     Real2   end = road->path.path.project(path.end  );
-    bool _start = start.approxEqual(path.start).verticalAnd();
-    bool _end   =   end.approxEqual(path.end  ).verticalAnd();
+    bool _start = start.squareDistance(path.start) < 0.1;
+    bool _end   =   end.squareDistance(path.end  ) < 0.1;
     if (_start || _end) {
       // Adding to the existing road: skip
       if (_start && _end) {
