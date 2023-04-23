@@ -41,11 +41,6 @@ struct Road {
   ///   The scene manager.
   Road(RoadDef *definition, Ref<Path2 &> path);
   
-  // We will never need to be transferring the road around.
-  Road(const Road &other) = delete;
-  
-  ~Road();
-  
 private:
   friend struct RoadNetwork;
   

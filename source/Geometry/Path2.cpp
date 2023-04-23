@@ -22,27 +22,27 @@ List<Real2> Path2::intersections(Path2 &other) {
           static_cast<Line2 &>(*this),
           static_cast<Line2 &>(other)
         );
-    case Type::arc:
+    case Type::bezier:
       return _Internal_Intersection_Table_::
-        line_arc(
+        line_bezier(
           static_cast<Line2 &>(*this),
-          static_cast<Arc2 &>(other)
+          static_cast<Bezier2 &>(other)
         );
     }
   
-  case Type::arc:
+  case Type::bezier:
     switch (other._type) {
     case Type::line:
       return _Internal_Intersection_Table_::
-        line_arc(
+        line_bezier(
           static_cast<Line2 &>(other),
-          static_cast<Arc2 &>(*this)
+          static_cast<Bezier2 &>(*this)
         );
-    case Type::arc:
+    case Type::bezier:
       return _Internal_Intersection_Table_::
-        arc_arc(
-          static_cast<Arc2 &>(*this),
-          static_cast<Arc2 &>(other)
+        bezier_bezier(
+          static_cast<Bezier2 &>(*this),
+          static_cast<Bezier2 &>(other)
         );
     }
   }
@@ -57,7 +57,7 @@ List<Real4> Path2::_getPointNormals() {
 
 
 
-Line2::Line2(const Real2 &start, const Real2 &end)
+Line2::Line2(Real2 start, Real2 end)
   : Path2(Type::line, start, end) {
   // Calculate the bounds
   Real2 min = start.min(end);
@@ -106,7 +106,7 @@ Real2 Line2::normal(Real t) {
 }
 
 Real Line2::inverse(Real2 point) {
-  return (point - start).dot(end - start) / (end - start).squareMagnitude();
+  return ((point - start).dot(end - start) / (end - start).squareMagnitude()).min(1).max(0);
 }
 
 List<Real4> Line2::_pointNormals() {
@@ -119,169 +119,221 @@ List<Real4> Line2::_pointNormals() {
 
 
 
-Arc2::Arc2(const Real2 &start, const Real2 &control, const Real2 &end)
-  : Path2(Type::arc, start, end), control(control) {
+Bezier2::Bezier2(Real2 start, Real2 control, Real2 end)
+  : Path2(Type::bezier, start, end),
+    control1(start + Real2(0.55) * (control - start)),
+    control2(end   + Real2(0.55) * (control -   end)) {
   // Calculate the bounds
-  Real2 min = start.min(end).min(control);
-  Real2 max = start.max(end).max(control);
+  Real2 min = start.min(end).min(control1).min(control2);
+  Real2 max = start.max(end).max(control1).max(control2);
   _bounds = { min, max - min };
 }
 
-Real Arc2::length() {
-  _getPointNormals();
-  return _length;
+Bezier2::Bezier2(Real2 start, Real2 control1, Real2 control2, Real2 end)
+  : Path2(Type::bezier, start, end), control1(control1), control2(control2) {
+  // Calculate the bounds
+  Real2 min = start.min(end).min(control1).min(control2);
+  Real2 max = start.max(end).max(control1).max(control2);
+  _bounds = { min, max - min };
 }
 
-Real2 Arc2::center() {
+Real Bezier2::length() {
   _getPointNormals();
-  return _center;
+  return _lengths.last().z;
 }
 
-Real Arc2::radius() {
-  _getPointNormals();
-  return _radius;
-}
-
-Ref<Path2 &> Arc2::offset(Real distance) {
-  _getPointNormals();
-  Real cs = (start - _center).magnitude();
-  Real ce = (end   - _center).magnitude();
+Ref<Path2 &> Bezier2::offset(Real distance) {
   
-  Real2 _start   = _center + (start   - _center) * Real2((cs + distance) / cs);
-  Real2 _end     = _center + (end     - _center) * Real2((ce + distance) / ce);
-  Real2 _control = _center + (control - _center) * Real2((cs + distance) / cs);
   
-  return new Arc2(_start, _control, _end);
-}
-
-Ref<Path2 &> Arc2::split(Real tStart, Real tEnd) {
-  _getPointNormals();
+  return new Bezier2(start, control1, control2, end);
+  // _getPointNormals();
+  // Real cs = (start - _center).magnitude();
+  // Real ce = (end   - _center).magnitude();
   
-  // Calculate the split points and the angle between them
-  Real2 pStart = point(tStart);
-  Real2 pEnd   = point(tEnd);
+  // Real2 _start   = _center + (start   - _center) * Real2((cs + distance) / cs);
+  // Real2 _end     = _center + (end     - _center) * Real2((ce + distance) / ce);
+  // Real2 _control = _center + (control - _center) * Real2((cs + distance) / cs);
   
-  Angle angle =
-    acos((pEnd - _center).normalized().dot((pStart - _center).normalized()));
-  
-  Real2 center = (pStart + pEnd) * Real2(0.5);
-  Real2 control = (center - _center).normalized() * Real2((pStart - _center).magnitude() / (angle * 0.5).cos()) + _center;
-  
-  // Split the arc
-  return new Arc2(pStart, control, pEnd);
-}
-
-void Arc2::split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) {
-  _getPointNormals();
-  
-  // Calculate the split point and its normal
-  Real2 p = point(t);
-  Real2 normal = p - _center;
-  
-  // Calculate the new control points
-  Real2 startControl = (start - p).project(normal.rightPerpendicular()) + p;
-  Real2   endControl = (end   - p).project(normal. leftPerpendicular()) + p;
-  
-  // Split the arc into two arcs
-  lhs = new Arc2(start, startControl, p);
-  rhs = new Arc2(p, endControl, end);
+  // return new Bezier2(_start, _control, _end);
 }
 
 namespace {
-  Real2 axisPoints[4] {
-    {  1,  0 },
-    {  0,  1 },
-    { -1,  0 },
-    {  0, -1 },
-  };
-}
-
-Real2 Arc2::project(Real2 point) {
-  _getPointNormals();
-  
-  // Project onto the circle
-  Real2 projection = (point - _center).normalized() * Real2(_radius) + _center;
-  
-  // Check if the projection is within the arc
-  Real2 startVector = start - _center;
-  Real2 endVector = end - _center;
-  Real2 projectionVector = projection - _center;
-  
-  // Determine if the orientation is correct
-  bool lhs = Real2x2::rowMajor(startVector, projectionVector).determinant() >= 0;
-  bool rhs = Real2x2::rowMajor(  endVector, projectionVector).determinant() <= 0;
-  if (lhs && rhs) {
-    // The projection is within the arc
-    return projection;
+  Real2 _L(Real2 a, Real2 b, Real t) {
+    return a + (b - a) * Real2(t);
   }
   
-  // The projection is outside the arc
-  if ((projection - start).squareMagnitude() <
-      (projection -   end).squareMagnitude())
-    return start;
-  else
-    return end;
-}
-
-Real2 Arc2::point(Real t) {
-  _getPointNormals();
-  Angle startAngle = start - _center;
-  Angle   endAngle =   end - _center;
-  Angle angle = Angle::span(startAngle, endAngle);
-  return _center +
-    Angle::cosSin(angle.radians * t + startAngle.radians) * Real2(_radius);
-}
-
-Real2 Arc2::normal(Real t) {
-  _getPointNormals();
-  Angle startAngle = start - _center;
-  Angle   endAngle =   end - _center;
-  Angle angle = Angle::span(startAngle, endAngle);
-  return Angle::cosSin(angle.radians * t + startAngle.radians);
-}
-
-Real Arc2::inverse(Real2 point) {
-  _getPointNormals();
-  Angle startAngle = start - _center;
-  Angle   endAngle =   end - _center;
-  Angle angle = Angle::span(startAngle, endAngle);
-  Angle pointAngle = Angle::span(startAngle, point - _center);
-  return pointAngle.radians / angle.radians;
-}
-
-List<Real4> Arc2::_pointNormals() {
-  // Determine the radius and center of the arc
-  // Real2 middle = (start + end) * Real2(0.5);
-  // Real2 cm = (middle - control);
-  // Real controlMiddle = cm.magnitude();
-  // Real controlStart = (control - start).magnitude();
-  // Real theta = acos(controlMiddle / controlStart);
-  // _center = control + cm * Real2(controlStart / (controlMiddle * theta.sin()));
-  Real2 middle = (start + end) * Real2(0.5);
-  Real2 cm = (middle - control);
-  Real controlMiddle = cm.magnitude();
-  Real controlStart = (middle - start).magnitude();
-  _center = middle + cm * Real2(controlStart.square() / controlMiddle.square());
-  
-  _radius = (_center - start).magnitude();
-  Real startAngle = atan2(start.y - _center.y, start.x - _center.x);
-  Real   endAngle = atan2(  end.y - _center.y,   end.x - _center.x);
-  Real angle = Angle::span(startAngle, endAngle);
-  _length = _radius * angle;
-  
-  // Generate the equidistant points
-  Real2 normal = (start - _center).normalized();
-  List<Real4> points {{ start.x, start.y, normal.x, normal.y }};
-  int pointCount = _length.max(100);
-  for (int i = 1; i < pointCount; i++) {
-    Real2 sinCos = Angle::sinCos(startAngle + angle * Real(i) / Real(pointCount)) * Real2(_radius);
-    sinCos = { sinCos.y, sinCos.x };
-    Real2 point = _center + sinCos;
-    normal = (point - _center).normalized();
-    points.append({ point.x, point.y, normal.x, normal.y });
+  Real2 _Q(Real2 a, Real2 b, Real2 c, Real t) {
+    return _L(_L(a, b, t), _L(b, c, t), t);
   }
-  normal = (end - _center).normalized();
-  points.append({ end.x, end.y, normal.x, normal.y });
+}
+
+Ref<Path2 &> Bezier2::split(Real tStart, Real tEnd) {
+  Real2 newStart = point(tStart);
+  Real2 newEnd   = point(tEnd  );
+  
+  // Split from tStart-1
+  Real2 n0 = newStart;
+  Real2 n1 = _Q(control1, control2, end, tStart);
+  Real2 n2 = _L(control2, end, tStart);
+  Real2 n3 = end;
+  
+  // Normalize the tEnd for the previously split curve
+  Real t = (tEnd - tStart) / Real(1 - tStart);
+  
+  // Split from tStart-tEnd
+  Real2 v0 = newStart;
+  Real2 v1 = _L(n0, n1, t);
+  Real2 v2 = _Q(n0, n1, n2, t);
+  Real2 v3 = newEnd;
+  
+  return new Bezier2(v0, v1, v2, v3);
+}
+
+void Bezier2::split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) {
+  lhs = new Bezier2(start, control1, control2, end);
+  rhs = new Bezier2(start, control1, control2, end);
+  // _getPointNormals();
+  
+  // // Calculate the split point and its normal
+  // Real2 p = point(t);
+  // Real2 normal = p - _center;
+  
+  // // Calculate the new control points
+  // Real2 startControl = (start - p).project(normal.rightPerpendicular()) + p;
+  // Real2   endControl = (end   - p).project(normal. leftPerpendicular()) + p;
+  
+  // // Split the arc into two arcs
+  // lhs = new Arc2(start, startControl, p);
+  // rhs = new Arc2(p, endControl, end);
+}
+
+Real2 Bezier2::project(Real2 point) {
+  return this->point(inverse(point));
+}
+
+Real2 Bezier2::point(Real t) {
+  Real _t = 1 - t;
+  
+  Real  t2 =  t  *  t;
+  Real  t3 =  t2 *  t;
+  Real _t2 = _t  * _t;
+  Real _t3 = _t2 * _t;
+  
+  return
+    start    * Real2(_t3) +
+    control1 * Real2(3 * _t2 * t) +
+    control2 * Real2(3 * _t * t2) +
+    end      * Real2(t3);
+}
+
+Real2 Bezier2::normal(Real t) {
+  Real _t = 1 - t;
+  
+  Real  t2 =  t  *  t;
+  Real  t3 =  t2 *  t;
+  Real _t2 = _t  * _t;
+  Real _t3 = _t2 * _t;
+  
+  Real2 tangent =
+    start    * Real2(-3 * _t2) +
+    control1 * Real2(3 * _t2 - 6 * _t * t) +
+    control2 * Real2(6 * _t * t - 3 * t2) +
+    end      * Real2(3 * t2);
+  
+  return tangent.normalized().rightPerpendicular();
+}
+
+Real Bezier2::inverse(Real2 point) {
+  _getPointNormals();
+  
+  // Find the closest point
+  int closest = 0;
+  Real min = start.squareDistance(point);
+  for (int i = 1; i < _lengths.count(); i++) {
+    Real dist = Real2(_lengths[i]).squareDistance(point);
+    if (dist < min) {
+      min = dist;
+      closest = i;
+    }
+  }
+  
+  // Interpolate on the left and right sides
+  Real t = Real(closest) / Real((int)_lengths.count() - 1);
+  
+  // Left
+  Real t1 = t;
+  Real min1 = min;
+  if (closest > 0) {
+    Line2 line { Real2(_lengths[closest - 1]), Real2(_lengths[closest]) };
+    t1 = Real(closest - 1 + line.inverse(point)) / Real((int)_lengths.count() - 1);
+    min1 = this->point(t1).squareDistance(point);
+  }
+  
+  // Right
+  Real t2 = t;
+  Real min2 = min;
+  if (closest < _lengths.count() - 1) {
+    Line2 line { Real2(_lengths[closest]), Real2(_lengths[closest + 1]) };
+    t2 = Real(closest + line.inverse(point)) / Real((int)_lengths.count() - 1);
+    min2 = this->point(t2).squareDistance(point);
+  }
+  
+  // Return the closest point
+  return min1 < min2 ? t1 : t2;
+}
+
+Real Bezier2::_lengthLookup(Real t) {
+  // Binary search for the appropriate length
+  Real len = t * _lengths.last().z;
+  int start = 0, end = _lengths.count();
+  while (end - start > 1) {
+    int mid = (start + end) / 2;
+    if (_lengths[mid].z < len)
+      start = mid;
+    else
+      end = mid;
+  }
+  
+  // Interpolate between the two points
+  Real remaining;
+  if (end == _lengths.count())
+    remaining = 0;
+  else {
+    Real t1 = _lengths[start].z;
+    Real t2 = _lengths[end  ].z;
+    remaining = (len - t1) / (t2 - t1);
+  }
+  return (start + remaining) / Real((int)_lengths.count() - 1);
+}
+
+List<Real4> Bezier2::_pointNormals() {
+  // Generate the length table
+  int count =
+       start.distance(control1) +
+    control1.distance(control2) +
+    control2.distance(end);
+  
+  // Find the lengths along the curve
+  Real length = 0;
+  Real2 previous = start;
+  _lengths.append({ start, 0 });
+  for (int i = 1; i <= count; i++) {
+    Real t = Real(i) / Real(count);
+    Real2 p = point(t);
+    length += p.distance(previous);
+    _lengths.append({ p, length });
+    previous = p;
+  }
+  
+  // Generate evenly-spaced points
+  List<Real4> points;
+  count = length;
+  for (int i = 0; i <= count; i++) {
+    Real t = _lengthLookup(Real(i) / Real(count));
+    Real2 p = point(t);
+    Real2 n = normal(t);
+    points.append(Real4(p.x, p.y, n.x, n.y));
+  }
   
   return points;
 }

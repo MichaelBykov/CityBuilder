@@ -121,7 +121,7 @@ namespace {
     else        normalB = normalB.rightPerpendicular();
     
     Real dot = normalA.dot(normalB);
-    if (dot > -0.99) {
+    if (dot > -0.999) {
       // Add a joint
       
       // Determine the amount to offset
@@ -135,40 +135,58 @@ namespace {
         + Real(0.1);
       
       // Offset the original road
-      a->path = aStart ?
-        a->path.split(offset / a->path.length(), 1) :
-        a->path.split(0, 1 - offset / a->path.length()) ;
-      b->path = bStart ?
-        b->path.split(offset / b->path.length(), 1) :
-        b->path.split(0, 1 - offset / b->path.length()) ;
+      if (a->path.type() == Path2::Type::bezier) {
+        // Push back just the end point
+        Bezier2 *bezier = (Bezier2 *)&a->path.path();
+        if (aStart)
+          a->path = RadiusPath2(new Bezier2(
+            bezier->start + normalA * Real2(offset),
+            bezier->control1,
+            bezier->control2,
+            bezier->end
+          ), a->path.radius());
+        else
+          a->path = RadiusPath2(new Bezier2(
+            bezier->start,
+            bezier->control1,
+            bezier->control2,
+            bezier->end + normalA * Real2(offset)
+          ), a->path.radius());
+      } else {
+        a->path = aStart ?
+          a->path.split(offset / a->path.length(), 1) :
+          a->path.split(0, 1 - offset / a->path.length()) ;
+      }
       
-      // Find the intersection point
-      // {
-      //   Real2 _a = aStart ? a->path.start() : a->path.end();
-      //   Real2 _b = bStart ? b->path.start() : b->path.end();
-      //   Real4 _aPN = aStart ? a->path.pointNormals().first() : a->path.pointNormals().last();
-      //   Real4 _bPN = bStart ? b->path.pointNormals().first() : b->path.pointNormals().last();
-      //   Real2 _aV = { _aPN.z, _aPN.w };
-      //   Real2 _bV = { _bPN.z, _bPN.w };
-      //   if (aStart) _aV = _aV.rightPerpendicular();
-      //   else        _aV = _aV. leftPerpendicular();
-      //   if (bStart) _bV = _bV.rightPerpendicular();
-      //   else        _bV = _bV. leftPerpendicular();
-        
-      //   // Intersection of _a + _aV * s and _b + _bV * t
-      //   Real determinant = _aV.x * _bV.y - _aV.y * _bV.x;
-      //   Real2 diff = _b - _a;
-      //   Real s = (diff.x * _bV.y - diff.y * _bV.x) / determinant;
-      //   intersection = _a + _aV * Real2(s);
-      // }
-      
+      if (b->path.type() == Path2::Type::bezier) {
+        // Push back just the end point
+        Bezier2 *bezier = (Bezier2 *)&b->path.path();
+        if (aStart)
+          b->path = RadiusPath2(new Bezier2(
+            bezier->start + normalB * Real2(offset),
+            bezier->control1,
+            bezier->control2,
+            bezier->end
+          ), b->path.radius());
+        else
+          b->path = RadiusPath2(new Bezier2(
+            bezier->start,
+            bezier->control1,
+            bezier->control2,
+            bezier->end + normalB * Real2(offset)
+          ), b->path.radius());
+      } else {
+        b->path = bStart ?
+          b->path.split(offset / b->path.length(), 1) :
+          b->path.split(0, 1 - offset / b->path.length()) ;
+      }
       
       // Add the joint
       bool clockwise = normalA.rightPerpendicular().dot(normalB) > 0;
       Road *joint;
       
       if (clockwise) {
-        joint = roads->add(new Road(a->definition, new Arc2(
+        joint = roads->add(new Road(a->definition, new Bezier2(
           aStart ? a->path.start() : a->path.end(),
           intersection,
           bStart ? b->path.start() : b->path.end()
@@ -176,7 +194,7 @@ namespace {
         joint->start = a;
         joint->end = b;
       } else {
-        joint = roads->add(new Road(a->definition, new Arc2(
+        joint = roads->add(new Road(a->definition, new Bezier2(
           bStart ? b->path.start() : b->path.end(),
           intersection,
           aStart ? a->path.start() : a->path.end()

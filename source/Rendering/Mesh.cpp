@@ -158,6 +158,10 @@ void Mesh::load() {
     // Safety
     return;
   
+  if (_vertices.isEmpty() || _indices.isEmpty())
+    // Nothing to load
+    return;
+  
   // Create the vertex buffer
   bgfx::VertexLayout layout;
   layout.begin()
@@ -180,6 +184,10 @@ void Mesh::load() {
 }
 
 void Mesh::draw(Resource<Program> shader) const {
+  if (!loaded)
+    // Safety
+    return;
+  
   // Submit the mesh to the GPU for rendering
   bgfx::setVertexBuffer(0, _vertexBuffer);
   bgfx::setIndexBuffer(_indexBuffer);

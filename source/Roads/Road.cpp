@@ -84,8 +84,3 @@ Road::Road(RoadDef *definition, Ref<Path2 &> path)
     path(path, definition->dimensions.x * Real(0.5 * 0.333333333333)) {
   
 }
-
-Road::~Road() {
-  // Deallocate the attached path
-  delete &path;
-}

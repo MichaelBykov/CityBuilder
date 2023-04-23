@@ -41,96 +41,98 @@ namespace _Internal_Intersection_Table_ {
     return { line1.start + vector1 * Real2(s) };
   }
   
-  List<Real2> line_arc(Line2 &line, Arc2 &arc) {
-    Real2 linePoint = line.project(arc.center());
+  List<Real2> line_bezier(Line2 &line, Bezier2 &bezier) {
+    // Real2 linePoint = line.project(arc.center());
     
-    Real offset = linePoint.squareDistance(arc.center()) - arc.radius().square();
+    // Real offset = linePoint.squareDistance(arc.center()) - arc.radius().square();
     
-    if (offset.approxZero()) {
-      // The line is tangent to the arc
-      return { linePoint };
-    }
+    // if (offset.approxZero()) {
+    //   // The line is tangent to the arc
+    //   return { linePoint };
+    // }
     
-    if (offset > 0) {
-      // The line is outside the arc
-      return { };
-    }
+    // if (offset > 0) {
+    //   // The line is outside the arc
+    //   return { };
+    // }
     
-    // Find the two intersection points of the line and the arc
-    Real2 center = (line.end - line.start).project(arc.center()) + line.start;
-    Real2 cos = Real2((Real(1) - (center - arc.center()).squareMagnitude()).sqrt());
-    Real2 normal = (center - arc.center()).normalized();
-    Real2 point1 = center + normal * cos;
-    Real2 point2 = center - normal * cos;
+    // // Find the two intersection points of the line and the arc
+    // Real2 center = (line.end - line.start).project(arc.center()) + line.start;
+    // Real2 cos = Real2((Real(1) - (center - arc.center()).squareMagnitude()).sqrt());
+    // Real2 normal = (center - arc.center()).normalized();
+    // Real2 point1 = center + normal * cos;
+    // Real2 point2 = center - normal * cos;
     
-    // Check that the intersection points are on the line
-    bool p1 =
-      (point1 - line.start).dot(line.end - line.start) >= 0 &&
-      (point1 - line.end  ).dot(line.start - line.end) >= 0;
-    bool p2 =
-      (point1 - line.start).dot(line.end - line.start) >= 0 &&
-      (point1 - line.end  ).dot(line.start - line.end) >= 0;
+    // // Check that the intersection points are on the line
+    // bool p1 =
+    //   (point1 - line.start).dot(line.end - line.start) >= 0 &&
+    //   (point1 - line.end  ).dot(line.start - line.end) >= 0;
+    // bool p2 =
+    //   (point1 - line.start).dot(line.end - line.start) >= 0 &&
+    //   (point1 - line.end  ).dot(line.start - line.end) >= 0;
     
-    // Check that the intersection points are on the arc
-    bool a1 = arc.project(point1).squareDistance(point1).approxZero();
-    bool a2 = arc.project(point2).squareDistance(point2).approxZero();
+    // // Check that the intersection points are on the arc
+    // bool a1 = arc.project(point1).squareDistance(point1).approxZero();
+    // bool a2 = arc.project(point2).squareDistance(point2).approxZero();
     
-    // Return the found valid intersection points
-    List<Real2> points;
-    if (p1 && a1) points.append(point1);
-    if (p2 && a2) points.append(point2);
-    return points;
+    // // Return the found valid intersection points
+    // List<Real2> points;
+    // if (p1 && a1) points.append(point1);
+    // if (p2 && a2) points.append(point2);
+    // return points;
+    return { };
   }
   
   
   
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
-| Arc - X                                                                      |
+| Bezier - X                                                                   |
 |                                                                              |
 \* -------------------------------------------------------------------------- */
   
-  List<Real2> arc_arc(Arc2 &arc1, Arc2 &arc2) {
-    Real distance = arc1.center().distance(arc2.center());
+  List<Real2> bezier_bezier(Bezier2 &bezier1, Bezier2 &bezier2) {
+    // Real distance = arc1.center().distance(arc2.center());
     
-    if ((distance - arc1.radius() - arc2.radius()).approxZero()) {
-      // The arcs are tangent
-      Real2 point =
-        (arc2.center() - arc1.center()).normalized() * Real2(arc1.radius()) +
-         arc1.center();
-      if (arc1.project(point).squareDistance(point).approxZero() &&
-          arc2.project(point).squareDistance(point).approxZero())
-        return { point };
-      else
-        // Not on both of the arcs
-        return { };
-    } else if (distance > arc1.radius() + arc2.radius())
-      // The arcs are fully separated
-      return { };
+    // if ((distance - arc1.radius() - arc2.radius()).approxZero()) {
+    //   // The arcs are tangent
+    //   Real2 point =
+    //     (arc2.center() - arc1.center()).normalized() * Real2(arc1.radius()) +
+    //      arc1.center();
+    //   if (arc1.project(point).squareDistance(point).approxZero() &&
+    //       arc2.project(point).squareDistance(point).approxZero())
+    //     return { point };
+    //   else
+    //     // Not on both of the arcs
+    //     return { };
+    // } else if (distance > arc1.radius() + arc2.radius())
+    //   // The arcs are fully separated
+    //   return { };
     
-    // Find the intersection points
-    Real2 center =
-      (arc2.center() - arc1.center()).normalized() *
-      Real2(arc1.radius() + (distance - arc1.radius() - arc2.radius()) * Real(0.5)) +
-      arc1.center();
-    Real2 cos = Real2((Real(1) - (center - arc1.center()).squareMagnitude()).sqrt());
-    Real2 normal = (center - arc1.center()).normalized();
-    Real2 point1 = center + normal * cos;
-    Real2 point2 = center - normal * cos;
+    // // Find the intersection points
+    // Real2 center =
+    //   (arc2.center() - arc1.center()).normalized() *
+    //   Real2(arc1.radius() + (distance - arc1.radius() - arc2.radius()) * Real(0.5)) +
+    //   arc1.center();
+    // Real2 cos = Real2((Real(1) - (center - arc1.center()).squareMagnitude()).sqrt());
+    // Real2 normal = (center - arc1.center()).normalized();
+    // Real2 point1 = center + normal * cos;
+    // Real2 point2 = center - normal * cos;
     
-    // Check that the intersection points are on the first arc
-    bool a1 = arc1.project(point1).squareDistance(point1).approxZero();
-    bool a2 = arc1.project(point2).squareDistance(point2).approxZero();
+    // // Check that the intersection points are on the first arc
+    // bool a1 = arc1.project(point1).squareDistance(point1).approxZero();
+    // bool a2 = arc1.project(point2).squareDistance(point2).approxZero();
     
-    // Check that the intersection points are on the second arc
-    bool b1 = arc2.project(point1).squareDistance(point1).approxZero();
-    bool b2 = arc2.project(point2).squareDistance(point2).approxZero();
+    // // Check that the intersection points are on the second arc
+    // bool b1 = arc2.project(point1).squareDistance(point1).approxZero();
+    // bool b2 = arc2.project(point2).squareDistance(point2).approxZero();
     
-    // Return the found valid intersection points
-    List<Real2> points;
-    if (a1 && b1) points.append(point1);
-    if (a2 && b2) points.append(point2);
-    return points;
+    // // Return the found valid intersection points
+    // List<Real2> points;
+    // if (a1 && b1) points.append(point1);
+    // if (a2 && b2) points.append(point2);
+    // return points;
+    return { };
   }
   
   

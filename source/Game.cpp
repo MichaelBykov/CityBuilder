@@ -21,7 +21,7 @@ Game::Game() {
   // Create some initial roads
   RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
   Road *road1 = _roads.add(new Road(highway, new Line2({ 0, 0 }, { 10, 10 })));
-  Road *road2 = _roads.add(new Road(highway, new Arc2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
+  Road *road2 = _roads.add(new Road(highway, new Bezier2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
   _roads.connect(road1, road2);
   _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], new Line2({ 0, -10 }, { 10, -10 })));
   _roads.update();
@@ -305,7 +305,7 @@ namespace {
             Real2 _start = { start.x, start.z };
             Real2 _end = { origin.x, origin.z };
             
-            Arc2 *arcPath = new Arc2(
+            Bezier2 *arcPath = new Bezier2(
               orientation.isPositive() ? _start : _end,
               { controlPoint.x, controlPoint.z },
               orientation.isPositive() ? _end : _start
@@ -313,15 +313,15 @@ namespace {
             path = arcPath;
             flipped = orientation.isNegative();
             
-            if (arcPath->radius() < road->dimensions.x * scale + Real(0.1)) {
-              // Turns in on itself
-              path = new Line2({ start.x, start.z }, { origin.x, origin.z });
-              roadValid = false;
-              flipped = false;
-            } else {
+            // if (arcPath->radius() < road->dimensions.x * scale + Real(0.1)) {
+            //   // Turns in on itself
+            //   path = new Line2({ start.x, start.z }, { origin.x, origin.z });
+            //   roadValid = false;
+            //   flipped = false;
+            // } else {
               roadValid = Game::instance().roads().validate(road, path);
               arc = true;
-            }
+            // }
           }
         }
         break;
@@ -552,24 +552,24 @@ namespace {
         }
         
         // Show the curve point
-        if (arc) {
-          Arc2 &arc = *(Arc2 *)&*path;
-          Real3 point = { arc.control.x, 0, arc.control.y };
-          int start = vertices.count();
-          vertices.append({ point, hoverColor0 });
-          for (int i = 0; i < 16; i++) {
-            Real2 xz = Angle::cosSin(i * Angle::pi2 / 16);
-            vertices.append({ point + Real3(xz.x, 0, xz.y), hoverColor });
-          }
-          indices.append(start + 0);
-          indices.append(start + 16);
-          indices.append(start + 1);
-          for (int i = 0; i < 15; i++) {
-            indices.append(start + 0);
-            indices.append(start + i + 1);
-            indices.append(start + i + 2);
-          }
-        }
+        // if (arc) {
+          // Bezier2 &arc = *(Bezier2 *)&*path;
+          // Real3 point = { arc.control.x, 0, arc.control.y };
+          // int start = vertices.count();
+          // vertices.append({ point, hoverColor0 });
+          // for (int i = 0; i < 16; i++) {
+          //   Real2 xz = Angle::cosSin(i * Angle::pi2 / 16);
+          //   vertices.append({ point + Real3(xz.x, 0, xz.y), hoverColor });
+          // }
+          // indices.append(start + 0);
+          // indices.append(start + 16);
+          // indices.append(start + 1);
+          // for (int i = 0; i < 15; i++) {
+          //   indices.append(start + 0);
+          //   indices.append(start + i + 1);
+          //   indices.append(start + i + 2);
+          // }
+        // }
       }
       }
       

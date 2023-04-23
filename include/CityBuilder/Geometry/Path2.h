@@ -74,7 +74,7 @@ struct Path2 {
   /// A description of the path type.
   enum class Type {
     line,
-    arc
+    bezier
   };
   
   /// Get the path type.
@@ -110,7 +110,7 @@ protected:
 struct Line2 : Path2 {
   Line2() : Path2(Type::line) { }
   
-  Line2(const Real2 &start, const Real2 &end);
+  Line2(Real2 start, Real2 end);
   
   Real length() override;
   
@@ -132,20 +132,17 @@ protected:
   List<Real4> _pointNormals() override;
 };
 
-/// A two-dimensional arc curve.
-struct Arc2 : Path2 {
-  /// A control point of the curve.
-  const Real2 control;
+/// A two-dimensional cubic Bezier curve.
+struct Bezier2 : Path2 {
+  const Real2 control1, control2;
   
-  Arc2() : Path2(Type::arc) { }
+  Bezier2() : Path2(Type::bezier) { }
   
-  Arc2(const Real2 &start, const Real2 &control, const Real2 &end);
+  Bezier2(Real2 start, Real2 control, Real2 end);
+  
+  Bezier2(Real2 start, Real2 control1, Real2 control2, Real2 end);
   
   Real length() override;
-  
-  Real2 center();
-  
-  Real radius();
   
   Ref<Path2 &> offset(Real distance) override;
   
@@ -162,9 +159,10 @@ struct Arc2 : Path2 {
   Real inverse(Real2 point) override;
   
 protected:
-  Real2 _center;
-  Real _length;
-  Real _radius;
+  
+  List<Real3> _lengths;
+  
+  Real _lengthLookup(Real t);
   
   List<Real4> _pointNormals() override;
 };
