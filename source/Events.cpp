@@ -27,6 +27,7 @@ namespace {
   Resource<Texture> uiTexture;
   Resource<UIMesh> uiMesh;
   Ref<UI::Node &> node;
+  Ref<UI::Node &> node2;
 }
 
 void Events::start() {
@@ -45,43 +46,7 @@ void Events::start() {
   // UI testing
   uiTexture = new Texture("ui/round", 128, false);
   node = new UI::Node(1000, 600, 80, 80, 30, { 115, 208, 255, 255 });
-
-  // uiMesh->add({ // Vertices
-  //   { Real3(30 +   0, 120 +  0, 1), Real2(0, 0) },
-  //   { Real3(30 +  30, 120 +  0, 1), Real2(0, 0.33) },
-  //   { Real3(30 + 100, 120 +  0, 1), Real2(0, 0.67) },
-  //   { Real3(30 + 130, 120 +  0, 1), Real2(0, 1) },
-    
-  //   { Real3(30 +   0, 120 + 30, 1), Real2(0.33, 0) },
-  //   { Real3(30 +  30, 120 + 30, 1), Real2(0.33, 0.33) },
-  //   { Real3(30 + 100, 120 + 30, 1), Real2(0.33, 0.67) },
-  //   { Real3(30 + 130, 120 + 30, 1), Real2(0.33, 1) },
-    
-  //   { Real3(30 +   0, 120 + 60, 1), Real2(0.67, 0) },
-  //   { Real3(30 +  30, 120 + 60, 1), Real2(0.67, 0.33) },
-  //   { Real3(30 + 100, 120 + 60, 1), Real2(0.67, 0.67) },
-  //   { Real3(30 + 130, 120 + 60, 1), Real2(0.67, 1) },
-    
-  //   { Real3(30 +   0, 120 + 90, 1), Real2(1, 0) },
-  //   { Real3(30 +  30, 120 + 90, 1), Real2(1, 0.33) },
-  //   { Real3(30 + 100, 120 + 90, 1), Real2(1, 0.67) },
-  //   { Real3(30 + 130, 120 + 90, 1), Real2(1, 1) },
-  // }, { // Triangles
-    
-  //   4, 0, 1, 4, 1, 5,
-  //   5, 1, 2, 5, 2, 6,
-  //   6, 2, 3, 6, 3, 7,
-    
-  //   8, 4, 5, 8, 5, 9,
-  //   9, 6, 5, 9, 6, 10,
-  //   10, 6, 7, 10, 7, 11,
-    
-  //   12, 8, 9, 12, 9, 13,
-  //   13, 9, 10, 13, 10, 14,
-  //   14, 10, 11, 14, 11, 15,
-  // });
-
-  // uiMesh->load();
+  node2 = new UI::Node(800, 400, 180, 180, 30, { 255, 215, 94, 255 });
 }
 
 void Events::stop() {
@@ -160,13 +125,15 @@ void Events::update() {
     bgfx::setState(
       BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
       BGFX_STATE_MSAA |
+      BGFX_STATE_DEPTH_TEST_ALWAYS |
       BGFX_STATE_BLEND_FUNC(
         BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
     );
     
     // Draw all the UI components
     uiTexture->load(1, Uniforms::s_ui);
-    UI::System::drawRootNode(node);
+    node->draw();
+    node2->draw();
   }
   
   // Debug info

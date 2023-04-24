@@ -9,6 +9,10 @@
 USING_NS_CITY_BUILDER
 using namespace UI;
 
+void Node::draw() {
+  _draw();
+}
+
 void Node::_draw() {
   if (_isDirty) {    
     _uiMesh = new UIMesh();
@@ -16,25 +20,25 @@ void Node::_draw() {
     if (_radius > 0) {
       _uiMesh->add({
         // Top Left Corner
-        { Real3(_position.x, _position.y, 1), Real2(0, 0), _color },
-        { Real3(_position.x + _radius, _position.y, 1), Real2(0.33, 0), _color },
-        { Real3(_position.x, _position.y + _radius, 1), Real2(0, 0.33), _color },
-        { Real3(_position.x + _radius, _position.y + _radius, 1), Real2(0.33, 0.33), _color },
+        { Real3(_position.x, _position.y, _zIndex), Real2(0, 0), _color },
+        { Real3(_position.x + _radius, _position.y, _zIndex), Real2(0.33, 0), _color },
+        { Real3(_position.x, _position.y + _radius, _zIndex), Real2(0, 0.33), _color },
+        { Real3(_position.x + _radius, _position.y + _radius, _zIndex), Real2(0.33, 0.33), _color },
         // Top Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y, 1), Real2(0.67, 0), _color },
-        { Real3(_position.x + _length.x, _position.y, 1), Real2(1, 0), _color },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _radius, 1), Real2(0.67, 0.33), _color },
-        { Real3(_position.x + _length.x, _position.y + _radius, 1), Real2(1, 0.33), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y, _zIndex), Real2(0.67, 0), _color },
+        { Real3(_position.x + _length.x, _position.y, _zIndex), Real2(1, 0), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y + _radius, _zIndex), Real2(0.67, 0.33), _color },
+        { Real3(_position.x + _length.x, _position.y + _radius, _zIndex), Real2(1, 0.33), _color },
         // Bottom Left Corner
-        { Real3(_position.x, _position.y + (_length.y - _radius), 1), Real2(0, 0.67), _color },
-        { Real3(_position.x + _radius, _position.y + (_length.y - _radius), 1), Real2(0.33, 0.67), _color },
-        { Real3(_position.x, _position.y + _length.y, 1), Real2(0, 1), _color },
-        { Real3(_position.x + _radius, _position.y + _length.y, 1), Real2(0.33, 1), _color },
+        { Real3(_position.x, _position.y + (_length.y - _radius), _zIndex), Real2(0, 0.67), _color },
+        { Real3(_position.x + _radius, _position.y + (_length.y - _radius), _zIndex), Real2(0.33, 0.67), _color },
+        { Real3(_position.x, _position.y + _length.y, _zIndex), Real2(0, 1), _color },
+        { Real3(_position.x + _radius, _position.y + _length.y, _zIndex), Real2(0.33, 1), _color },
         // Bottom Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y + (_length.y - _radius), 1), Real2(0.67, 0.67), _color },
-        { Real3(_position.x + _length.x, _position.y + (_length.y - _radius), 1), Real2(1, 0.67), _color },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _length.y, 1), Real2(0.67, 1), _color },
-        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(1, 1), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y + (_length.y - _radius), _zIndex), Real2(0.67, 0.67), _color },
+        { Real3(_position.x + _length.x, _position.y + (_length.y - _radius), _zIndex), Real2(1, 0.67), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y + _length.y, _zIndex), Real2(0.67, 1), _color },
+        { Real3(_position.x + _length.x, _position.y + _length.y, _zIndex), Real2(1, 1), _color },
       }, {
         0, 1, 2, 1, 2, 3,       // Top Left Corner
         4, 5, 6, 5, 6, 7,       // Top Right Corner
@@ -56,8 +60,19 @@ void Node::_draw() {
       });
     }
 
+    // Send the mesh to the GPU
     _uiMesh->load();
+    _isDirty = false;
   }
 
   _uiMesh->draw(Program::ui);
+
+  // State is being reset between renders, this sets it back to what we want
+  bgfx::setState(
+    BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+    BGFX_STATE_MSAA |
+    BGFX_STATE_DEPTH_TEST_ALWAYS |
+    BGFX_STATE_BLEND_FUNC(
+      BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+  );
 }

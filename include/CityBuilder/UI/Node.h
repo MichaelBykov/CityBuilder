@@ -18,11 +18,11 @@ namespace UI {
 class Node {
 public:
   friend class System;
-  Node(): _length(0, 0), _position(0, 0), _radius(0), _color(255, 255, 255, 255), _isDirty(true) {}
-  Node(Real w, Real h): _length(w, h), _position(0, 0), _radius(0), _color(255, 255, 255, 255), _isDirty(true) {}
-  Node(Real w, Real h, Real x, Real y): _length(w, h), _position(x, y), _radius(0), _color(255, 255, 255, 255), _isDirty(true) {}
-  Node(Real w, Real h, Real x, Real y, Real r): _length(w, h), _position(x, y), _radius(r), _color(255, 255, 255, 255), _isDirty(true) {}
-  Node(Real w, Real h, Real x, Real y, Real r, Color4 color): _length(w, h), _position(x, y), _radius(r), _color(color), _isDirty(true) {}
+  Node(): _length(0, 0), _position(0, 0), _radius(0), _zIndex(1), _color(255, 255, 255, 255), _isDirty(true) {}
+  Node(Real w, Real h): _length(w, h), _position(0, 0), _radius(0), _zIndex(1), _color(255, 255, 255, 255), _isDirty(true) {}
+  Node(Real w, Real h, Real x, Real y): _length(w, h), _position(x, y), _radius(0), _zIndex(1), _color(255, 255, 255, 255), _isDirty(true) {}
+  Node(Real w, Real h, Real x, Real y, Real r): _length(w, h), _position(x, y), _radius(r), _zIndex(1), _color(255, 255, 255, 255), _isDirty(true) {}
+  Node(Real w, Real h, Real x, Real y, Real r, Color4 color): _length(w, h), _position(x, y), _radius(r), _zIndex(1), _color(color), _isDirty(true) {}
   ~Node() {};
 
   void setWidth();
@@ -37,10 +37,12 @@ public:
   void getBorderRadius();
   void setColor(Color4 color);
   void getColor();
+  void draw();
 private:
   Real2 _length;
   Real2 _position;
   Real _radius;
+  Real _zIndex;
   Color4 _color;
   bool _isDirty;
   Resource<UIMesh> _uiMesh;
