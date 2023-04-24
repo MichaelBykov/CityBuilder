@@ -16,25 +16,25 @@ void Node::_draw() {
     if (_radius > 0) {
       _uiMesh->add({
         // Top Left Corner
-        { Real3(_position.x, _position.y, 1), Real2(0, 0) },
-        { Real3(_position.x + _radius, _position.y, 1), Real2(0.33, 0) },
-        { Real3(_position.x, _position.y + _radius, 1), Real2(0, 0.33) },
-        { Real3(_position.x + _radius, _position.y + _radius, 1), Real2(0.33, 0.33) },
+        { Real3(_position.x, _position.y, 1), Real2(0, 0), _color },
+        { Real3(_position.x + _radius, _position.y, 1), Real2(0.33, 0), _color },
+        { Real3(_position.x, _position.y + _radius, 1), Real2(0, 0.33), _color },
+        { Real3(_position.x + _radius, _position.y + _radius, 1), Real2(0.33, 0.33), _color },
         // Top Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y, 1), Real2(0.67, 0) },
-        { Real3(_position.x + _length.x, _position.y, 1), Real2(1, 0) },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _radius, 1), Real2(0.67, 0.33) },
-        { Real3(_position.x + _length.x, _position.y + _radius, 1), Real2(1, 0.33) },
+        { Real3(_position.x + (_length.x - _radius), _position.y, 1), Real2(0.67, 0), _color },
+        { Real3(_position.x + _length.x, _position.y, 1), Real2(1, 0), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y + _radius, 1), Real2(0.67, 0.33), _color },
+        { Real3(_position.x + _length.x, _position.y + _radius, 1), Real2(1, 0.33), _color },
         // Bottom Left Corner
-        { Real3(_position.x, _position.y + (_length.y - _radius), 1), Real2(0, 0.67) },
-        { Real3(_position.x + _radius, _position.y + (_length.y - _radius), 1), Real2(0.33, 0.67) },
-        { Real3(_position.x, _position.y + _length.y, 1), Real2(0, 1) },
-        { Real3(_position.x + _radius, _position.y + _length.y, 1), Real2(0.33, 1) },
+        { Real3(_position.x, _position.y + (_length.y - _radius), 1), Real2(0, 0.67), _color },
+        { Real3(_position.x + _radius, _position.y + (_length.y - _radius), 1), Real2(0.33, 0.67), _color },
+        { Real3(_position.x, _position.y + _length.y, 1), Real2(0, 1), _color },
+        { Real3(_position.x + _radius, _position.y + _length.y, 1), Real2(0.33, 1), _color },
         // Bottom Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y + (_length.y - _radius), 1), Real2(0.67, 0.67) },
-        { Real3(_position.x + _length.x, _position.y + (_length.y - _radius), 1), Real2(1, 0.67) },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _length.y, 1), Real2(0.67, 1) },
-        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(1, 1) },
+        { Real3(_position.x + (_length.x - _radius), _position.y + (_length.y - _radius), 1), Real2(0.67, 0.67), _color },
+        { Real3(_position.x + _length.x, _position.y + (_length.y - _radius), 1), Real2(1, 0.67), _color },
+        { Real3(_position.x + (_length.x - _radius), _position.y + _length.y, 1), Real2(0.67, 1), _color },
+        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(1, 1), _color },
       }, {
         0, 1, 2, 1, 2, 3,       // Top Left Corner
         4, 5, 6, 5, 6, 7,       // Top Right Corner
@@ -47,10 +47,10 @@ void Node::_draw() {
     } else {
       _uiMesh->add({
         // It's a box
-        { Real3(_position.x, _position.y, 1), Real2(0.5, 0.5) },
-        { Real3(_position.x + _length.x, _position.y, 1), Real2(0.5, 0.5) },
-        { Real3(_position.x, _position.y + _length.y, 1), Real2(0.5, 0.5) },
-        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(0.5, 0.5) },
+        { Real3(_position.x, _position.y, 1), Real2(0.5, 0.5), _color },
+        { Real3(_position.x + _length.x, _position.y, 1), Real2(0.5, 0.5), _color },
+        { Real3(_position.x, _position.y + _length.y, 1), Real2(0.5, 0.5), _color },
+        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(0.5, 0.5), _color },
       }, {
         0, 1, 2, 2, 3, 1, // Box
       });

@@ -44,7 +44,7 @@ void Events::start() {
   
   // UI testing
   uiTexture = new Texture("ui/round", 128, false);
-  node = new UI::Node(1000, 600, 80, 80);
+  node = new UI::Node(1000, 600, 80, 80, 30, { 115, 208, 255, 255 });
 
   // uiMesh->add({ // Vertices
   //   { Real3(30 +   0, 120 +  0, 1), Real2(0, 0) },
