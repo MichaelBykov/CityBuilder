@@ -25,6 +25,8 @@ add_library(CityBuilder
   "source/Roads/RoadDef.cpp"
   "source/Roads/Road.cpp"
   "source/Roads/RoadNetwork.cpp"
+  "source/UI/Node.cpp"
+  "source/UI/System.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"

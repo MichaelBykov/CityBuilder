@@ -10,6 +10,9 @@
 #include <CityBuilder/Rendering/Object.h>
 #include <CityBuilder/Rendering/Uniforms.h>
 #include <CityBuilder/Rendering/UIMesh.h>
+#include <CityBuilder/UI/Node.h>
+#include <CityBuilder/UI/System.h>
+#include <CityBuilder/Storage/Ref.h>
 USING_NS_CITY_BUILDER
 
 namespace {
@@ -23,6 +26,7 @@ namespace {
   // For UI testing
   Resource<Texture> uiTexture;
   Resource<UIMesh> uiMesh;
+  Ref<UI::Node &> node;
 }
 
 void Events::start() {
@@ -40,42 +44,44 @@ void Events::start() {
   
   // UI testing
   uiTexture = new Texture("ui/round", 128, false);
-  uiMesh = new UIMesh();
-  uiMesh->add({ // Vertices
-    { Real3(30 +   0, 120 +  0, 1), Real2(0, 0) },
-    { Real3(30 +  30, 120 +  0, 1), Real2(0, 0.33) },
-    { Real3(30 + 100, 120 +  0, 1), Real2(0, 0.67) },
-    { Real3(30 + 130, 120 +  0, 1), Real2(0, 1) },
+  node = new UI::Node(1000, 600, 80, 80);
+
+  // uiMesh->add({ // Vertices
+  //   { Real3(30 +   0, 120 +  0, 1), Real2(0, 0) },
+  //   { Real3(30 +  30, 120 +  0, 1), Real2(0, 0.33) },
+  //   { Real3(30 + 100, 120 +  0, 1), Real2(0, 0.67) },
+  //   { Real3(30 + 130, 120 +  0, 1), Real2(0, 1) },
     
-    { Real3(30 +   0, 120 + 30, 1), Real2(0.33, 0) },
-    { Real3(30 +  30, 120 + 30, 1), Real2(0.33, 0.33) },
-    { Real3(30 + 100, 120 + 30, 1), Real2(0.33, 0.67) },
-    { Real3(30 + 130, 120 + 30, 1), Real2(0.33, 1) },
+  //   { Real3(30 +   0, 120 + 30, 1), Real2(0.33, 0) },
+  //   { Real3(30 +  30, 120 + 30, 1), Real2(0.33, 0.33) },
+  //   { Real3(30 + 100, 120 + 30, 1), Real2(0.33, 0.67) },
+  //   { Real3(30 + 130, 120 + 30, 1), Real2(0.33, 1) },
     
-    { Real3(30 +   0, 120 + 60, 1), Real2(0.67, 0) },
-    { Real3(30 +  30, 120 + 60, 1), Real2(0.67, 0.33) },
-    { Real3(30 + 100, 120 + 60, 1), Real2(0.67, 0.67) },
-    { Real3(30 + 130, 120 + 60, 1), Real2(0.67, 1) },
+  //   { Real3(30 +   0, 120 + 60, 1), Real2(0.67, 0) },
+  //   { Real3(30 +  30, 120 + 60, 1), Real2(0.67, 0.33) },
+  //   { Real3(30 + 100, 120 + 60, 1), Real2(0.67, 0.67) },
+  //   { Real3(30 + 130, 120 + 60, 1), Real2(0.67, 1) },
     
-    { Real3(30 +   0, 120 + 90, 1), Real2(1, 0) },
-    { Real3(30 +  30, 120 + 90, 1), Real2(1, 0.33) },
-    { Real3(30 + 100, 120 + 90, 1), Real2(1, 0.67) },
-    { Real3(30 + 130, 120 + 90, 1), Real2(1, 1) },
-  }, { // Triangles
+  //   { Real3(30 +   0, 120 + 90, 1), Real2(1, 0) },
+  //   { Real3(30 +  30, 120 + 90, 1), Real2(1, 0.33) },
+  //   { Real3(30 + 100, 120 + 90, 1), Real2(1, 0.67) },
+  //   { Real3(30 + 130, 120 + 90, 1), Real2(1, 1) },
+  // }, { // Triangles
     
-    4, 0, 1, 4, 1, 5,
-    5, 1, 2, 5, 2, 6,
-    6, 2, 3, 6, 3, 7,
+  //   4, 0, 1, 4, 1, 5,
+  //   5, 1, 2, 5, 2, 6,
+  //   6, 2, 3, 6, 3, 7,
     
-    8, 4, 5, 8, 5, 9,
-    9, 6, 5, 9, 6, 10,
-    10, 6, 7, 10, 7, 11,
+  //   8, 4, 5, 8, 5, 9,
+  //   9, 6, 5, 9, 6, 10,
+  //   10, 6, 7, 10, 7, 11,
     
-    12, 8, 9, 12, 9, 13,
-    13, 9, 10, 13, 10, 14,
-    14, 10, 11, 14, 11, 15,
-  });
-  uiMesh->load();
+  //   12, 8, 9, 12, 9, 13,
+  //   13, 9, 10, 13, 10, 14,
+  //   14, 10, 11, 14, 11, 15,
+  // });
+
+  // uiMesh->load();
 }
 
 void Events::stop() {
@@ -160,7 +166,7 @@ void Events::update() {
     
     // Draw all the UI components
     uiTexture->load(1, Uniforms::s_ui);
-    uiMesh->draw(Program::ui);
+    UI::System::drawRootNode(node);
   }
   
   // Debug info
