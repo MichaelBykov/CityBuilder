@@ -53,6 +53,14 @@ struct Path2 {
   ///   The point to convert.
   virtual Real inverse(Real2 point) = 0;
   
+  /// Push the path end point back by the given amount preserving the normal at
+  /// the end point.
+  /// \param[in] start
+  ///   Whether to push the start (true) or end (false) point back.
+  /// \param[in] amount
+  ///   The amount to push back.
+  virtual Ref<Path2 &> pushedBack(bool start, Real amount) = 0;
+  
   /// Find the intersections between this and another path.
   /// \param[in] other
   ///   The path to intersect with.
@@ -128,6 +136,8 @@ struct Line2 : Path2 {
   
   Real inverse(Real2 point) override;
   
+  Ref<Path2 &> pushedBack(bool start, Real amount) override;
+  
 protected:
   List<Real4> _pointNormals() override;
 };
@@ -161,6 +171,8 @@ struct Bezier2 : Path2 {
   Real2 normal(Real t) override;
   
   Real inverse(Real2 point) override;
+  
+  Ref<Path2 &> pushedBack(bool start, Real amount) override;
   
 protected:
   

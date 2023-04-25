@@ -12,6 +12,23 @@
 #include <initializer_list>
 #include <new>
 
+namespace Templates {
+  /// Access the type contents of a single-parameter lambda.
+  template<typename>
+  struct Lambda1 { };
+
+  /// Access the type contents of a single-parameter lambda.
+  template<typename Lambda, typename Return, typename Parameter>
+  struct Lambda1<Return (Lambda::*)(Parameter) const> {
+    /// The lambda return type.
+    typedef Return returns;
+    
+    /// The lambda parameter's type.
+    typedef Parameter parameter;
+  };
+  
+} // namespace Templates
+
 /// A general-purpose array list.
 template<typename T>
 struct List {
@@ -21,6 +38,9 @@ struct List {
   typedef const T *ConstIterator;
   
 private:
+  template<typename U>
+  friend struct List;
+  
   /// The data pointed to by a list.
   struct Data {
     /// The number of references to the list data.
@@ -356,6 +376,18 @@ public:
       _data->release();
       _data = nullptr;
     }
+  }
+  
+  
+  
+  template<typename Lambda, typename U = typename Templates::Lambda1<decltype(&Lambda::operator())>::returns>
+  List<U> map(Lambda convert) const {
+    List<U> list;
+    list._expand(count());
+    for (size_t i = 0; i < count(); i++)
+      new (&list._data->contents[i]) U(convert(_data->contents[i]));
+    list._data->count = count();
+    return list;
   }
   
   

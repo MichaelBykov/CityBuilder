@@ -9,6 +9,11 @@
 #include <CityBuilder/Storage/Ref.h>
 USING_NS_CITY_BUILDER
 
+void RadiusPath2::pushBack(bool start, Real amount) {
+  _path = _path->pushedBack(start, amount);
+  _bounds = _path->bounds().inflated(_radius);
+}
+
 bool RadiusPath2::intersectionTest(RadiusPath2 &other) {
   // Check bounds first
   if (!_bounds.intersects(other._bounds))

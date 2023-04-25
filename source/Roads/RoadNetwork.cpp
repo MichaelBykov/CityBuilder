@@ -106,6 +106,44 @@ Road *RoadNetwork::add(Road *road) {
   return road;
 }
 
+void RoadNetwork::remove(Road *road) {
+  // Remove the meshes
+  if (!road->_meshes.isEmpty()) {
+    // Remove all the previous meshes
+    for (Road::_mesh &mesh : road->_meshes) {
+      if (mesh.texture == nullptr) {
+        // Remove from the divider meshes
+        for (intptr_t i = 0; i < _markings.count(); i++)
+          if (_markings[i].mesh.address() == mesh.mesh.address()) {
+            _markings.remove(i);
+            break;
+          }
+      } else {
+        // Remove from the standard meshes
+        auto &meshes = _meshes[mesh.texture];
+        for (intptr_t i = 0; i < meshes.count(); i++)
+          if (meshes[i].mesh.address() == mesh.mesh.address()) {
+            meshes.remove(i);
+            break;
+          }
+      }
+    }
+    road->_meshes.removeAll();
+  }
+  
+  for (intptr_t i = 0; i < _roads.count(); i++)
+    if (_roads[i] == road) {
+      _roads.remove(i);
+      return;
+    }
+}
+
+Intersection *RoadNetwork::add(Intersection *intersection) {
+  _intersections.append(intersection);
+  intersection->_dirty = true;
+  return intersection;
+}
+
 namespace {
   void addJoint(Road *a, bool aStart, Road *b, bool bStart, RoadNetwork *roads) {
     // Check if we need to add a connective joint
@@ -198,6 +236,7 @@ namespace {
       (bStart ? b->start : b->end) = a;
     }
   }
+  
 }
 
 bool RoadNetwork::connect(Road *a, Road *b) {
@@ -255,6 +294,108 @@ bool RoadNetwork::connect(Road *a, Road *b) {
   }
   
   return true;
+}
+
+namespace {
+  List<Road *> splitRoad(Road *road, const List<Real2> &intersections, bool &start, bool &end, RoadNetwork *network) {
+    List<Real> t = intersections.map([road](Real2 p) { return road->path.inverse(p); });
+    t.sort();
+    
+    if (t.first().approxZero()) {
+      start = true;
+      t.remove(0);
+    }
+    if (!t.isEmpty() && (t.last() - Real(1)).approxZero()) {
+      end = true;
+      t.remove(t.count() - 1);
+    }
+    
+    List<Road *> roads;
+    if (!t.isEmpty()) {
+      Real start = 0;
+      for (Real t : t) {
+        roads.append(network->add(new Road(
+          road->definition,
+          road->path.path().split(start, t)
+        )));
+        start = t;
+      }
+      roads.append(network->add(new Road(
+        road->definition,
+        road->path.path().split(start, 1)
+      )));
+      network->remove(road);
+    } else
+      roads.append(road);
+    
+    // Reconnect the roads
+    switch (road->start.type) {
+    case Connection::none: break;
+    case Connection::road:
+      roads.first()->start = road->start.other.road;
+      roads.first()->start.other.road = roads.first();
+      break;
+    
+    case Connection::intersection:
+      roads.first()->start = road->start.other.intersection;
+      // roads.first()->start.other.intersection->roads.append(roads.first());
+      // TODO: Finish
+      break;
+    }
+    
+    switch (road->end.type) {
+    case Connection::none: break;
+    case Connection::road:
+      roads.last()->end = road->end.other.road;
+      roads.last()->end.other.road = roads.last();
+      break;
+    
+    case Connection::intersection:
+      roads.last()->end = road->end.other.intersection;
+      // TODO: Finish
+      break;
+    }
+    
+    return roads;
+  }
+}
+
+List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
+  if (a == b || !a->path.bounds().intersects(b->path.bounds()))
+    return { a };
+  
+  // Find the intersection points
+  List<Real2> intersections = a->path.path().intersections(b->path.path());
+  if (intersections.isEmpty())
+    // Nothing to intersect
+    return { a };
+  
+  // Split up the roads
+  bool aStart = false, aEnd = false;
+  List<Road *> _a = splitRoad(a, intersections, aStart, aEnd, this);
+  
+  bool bStart = false, bEnd = false;
+  List<Road *> _b = splitRoad(b, intersections, bStart, bEnd, this);
+  
+  // Form the intersections
+  List<Intersection *> _intersections { };
+  for (Real2 p : intersections) {
+    Intersection *intersection = add(new Intersection(p));
+    
+    // Add all roads at the intersection
+    for (Road *road : _a)
+      if (road->path.start().squareDistance(p) < 0.1 ||
+          road->path.end()  .squareDistance(p) < 0.1)
+        intersection->addRoad(road);
+    for (Road *road : _b)
+      if (road->path.start().squareDistance(p) < 0.1 ||
+          road->path.end()  .squareDistance(p) < 0.1)
+        intersection->addRoad(road);
+    
+    _intersections.append(intersection);
+  }
+  
+  return _a;
 }
 
 Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
@@ -422,12 +563,13 @@ bool RoadNetwork::build(RoadDef *road, Ref<Path2 &> path) {
   // Check that the given path is valid
   if (!validate(road, path))
     return false;
+  intptr_t count = _roads.count();
   
   // Create the road
   Road *r = add(new Road(road, path));
   
   // Attempt to attach to other roads
-  for (intptr_t i = 0; i < _roads.count(); i++) {
+  for (intptr_t i = 0; i < count; i++) {
     Road *_road = _roads[i];
     if (connect(_road, r)) {
       // Make sure the connected road is redrawn too to remove the previous
@@ -438,6 +580,21 @@ bool RoadNetwork::build(RoadDef *road, Ref<Path2 &> path) {
           r->end.type   != Connection::none)
         break;
     }
+  }
+  
+  // Create intersections
+  List<Road *> segments { r };
+  Bounds2 bounds = r->path.bounds();
+  for (intptr_t i = 0; i < count; i++) {
+    Road *_road = _roads[i];
+    if (!bounds.intersects(_road->path.bounds()))
+      // No possible intersection
+      continue;
+    
+    List<Road *> produced { };
+    for (Road *segment : segments)
+      produced.appendList(intersect(segment, _road));
+    segments = produced;
   }
   
   return true;

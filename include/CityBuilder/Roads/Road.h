@@ -31,18 +31,16 @@ struct Road {
   
   
   /// Create a new road.
-  /// \param definition
+  /// \param[in] definition
   ///   The road definition.
   ///   Should be a shared pointer.
-  /// \param path
+  /// \param[in] path
   ///   The road's path.
-  ///   Should be a unique instance.
-  /// \param scene
-  ///   The scene manager.
   Road(RoadDef *definition, Ref<Path2 &> path);
   
 private:
   friend struct RoadNetwork;
+  friend struct Intersection;
   
   /// Whether or not the road needs to be redrawn.
   bool _dirty = true;

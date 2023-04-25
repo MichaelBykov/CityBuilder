@@ -112,6 +112,19 @@ Real Line2::inverse(Real2 point) {
   return ((point - start).dot(end - start) / (end - start).squareMagnitude()).min(1).max(0);
 }
 
+Ref<Path2 &> Line2::pushedBack(bool start, Real amount) {
+  if (start)
+    return new Line2(
+      this->start + (this->end - this->start).normalized() * Real2(amount),
+      this->end
+    );
+  else
+    return new Line2(
+      this->start,
+      this->end + (this->start - this->end).normalized() * Real2(amount)
+    );
+}
+
 List<Real4> Line2::_pointNormals() {
   Real2 normal = (end - start).normalized().rightPerpendicular();
   return {
@@ -292,6 +305,26 @@ Real Bezier2::inverse(Real2 point) {
   
   // Return the closest point
   return min1 < min2 ? t1 : t2;
+}
+
+Ref<Path2 &> Bezier2::pushedBack(bool start, Real amount) {
+  if (start) {
+    Real2 normal = (this->control1 - this->start).normalized();
+    return new Bezier2(
+      this->start    + normal * Real2(amount),
+      this->control1 + normal * Real2(amount * Real(0.5)),
+      this->control2,
+      this->end
+    );
+  } else {
+    Real2 normal = (this->control2 - this->end).normalized();
+    return new Bezier2(
+      this->start,
+      this->control1,
+      this->control2 + normal * Real2(amount * Real(0.5)),
+      this->end      + normal * Real2(amount)
+    );
+  }
 }
 
 Real Bezier2::_lengthLookup(Real t) {

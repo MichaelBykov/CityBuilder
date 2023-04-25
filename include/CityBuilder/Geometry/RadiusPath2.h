@@ -76,6 +76,8 @@ public:
     return RadiusPath2(_path->split(tStart, tEnd), _radius);
   }
   
+  void pushBack(bool start, Real amount);
+  
   
   
   /// Check if this radius path intersects another radius path in a valid way.

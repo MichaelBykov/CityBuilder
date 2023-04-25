@@ -10,6 +10,7 @@
 #include <CityBuilder/Rendering/Mesh.h>
 #include <CityBuilder/Storage/BSTree.h>
 #include "Road.h"
+#include "Intersection.h"
 
 NS_CITY_BUILDER_BEGIN
 
@@ -19,20 +20,41 @@ struct RoadNetwork {
   RoadNetwork();
   
   /// Add a road to the network.
-  /// \param road
+  /// \param[inout] road
   ///   The road to add.
   /// \returns
   ///   The road that was added.
   Road *add(Road *road);
   
+  /// Remove a road from the network.
+  /// \param[inout] road
+  ///   The road to remove.
+  void remove(Road *road);
+  
+  /// Add an intersection to the network.
+  /// \param[inout] intersection
+  ///   The intersection to add.
+  /// \returns
+  ///   The intersection that was added.
+  Intersection *add(Intersection *intersection);
+  
   /// Connect two roads together.
-  /// \param a
+  /// \param[inout] a
   ///   The first road to connect.
-  /// \param b
+  /// \param[inout] b
   ///   The second road to connect.
   /// \returns
   ///   Whether or not the two roads could be connected.
   bool connect(Road *a, Road *b);
+  
+  /// Attempt to connect two roads through an intersection.
+  /// \param[inout] a
+  ///   The road to connect.
+  /// \param[inout] b
+  ///   The road to connect to.
+  /// \returns
+  ///   A list of the sub-roads that the road was split into.
+  List<Road *> intersect(Road *a, Road *b);
   
   /// Snap a point to the nearest road.
   /// \param[in] point
@@ -127,6 +149,9 @@ private:
   
   /// The roads in the network.
   List<Road *> _roads;
+  
+  /// The intersections in the network.
+  List<Intersection *> _intersections;
   
   /// The texture for road markings
   Resource<Texture> _markingTexture;
