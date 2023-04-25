@@ -73,6 +73,9 @@ struct Game {
   /// Start building a road.
   void buildRoad(RoadDef *road);
   
+  /// Cancel the current action.
+  void cancel();
+  
 private:
   /// The scene's sun.
   DistanceLight _sun;

@@ -25,7 +25,7 @@ public:
   
   
   RadiusPath2(Ref<Path2 &> path, Real radius)
-    : _path(path), _radius(radius), _bounds(path->bounds().inflate(radius)) { }
+    : _path(path), _radius(radius), _bounds(path->bounds().inflated(radius)) { }
   
   
   inline Path2 &path() {

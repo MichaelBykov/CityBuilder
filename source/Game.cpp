@@ -145,6 +145,11 @@ namespace {
       // Listen for cancel events
       cancelListener = Input::onCancel += [this]() {
         switch (stage) {
+        case 0:
+          // Cancel the road building
+          Game::instance().cancel();
+          break;
+          
         case 1:
           stage = 0;
           move(point);
@@ -654,6 +659,10 @@ void Game::buildRoad(RoadDef *road) {
   
   // Create the road building state
   _actionState = new Road_Building(road);
+}
+
+void Game::cancel() {
+  _act(Action::none);
 }
 
 void Game::_act(Action action) {

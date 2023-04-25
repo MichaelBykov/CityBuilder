@@ -143,18 +143,21 @@ Real Bezier2::length() {
 }
 
 Ref<Path2 &> Bezier2::offset(Real distance) {
+  _getPointNormals();
   
+  // For our use case (mostly arc approximations for intersection testing),
+  // we can simply offset by a constant
+  Real4 pnStart = pointNormals().first();
+  Real4 pnEnd   = pointNormals().last ();
+  Real2 newStart = start + Real2(pnStart.z, pnStart.w) * Real2(distance);
+  Real2 newEnd   = end   + Real2(pnEnd  .z, pnEnd  .w) * Real2(distance);
   
-  return new Bezier2(start, control1, control2, end);
-  // _getPointNormals();
-  // Real cs = (start - _center).magnitude();
-  // Real ce = (end   - _center).magnitude();
+  Real2 vector1 = control1 - start;
+  Real2 vector2 = control2 - end  ;
+  Real2 newControl1 = newStart + Real2(1 + distance / Real(3 * vector1.magnitude())) * vector1;
+  Real2 newControl2 = newEnd   + Real2(1 + distance / Real(3 * vector2.magnitude())) * vector2;
   
-  // Real2 _start   = _center + (start   - _center) * Real2((cs + distance) / cs);
-  // Real2 _end     = _center + (end     - _center) * Real2((ce + distance) / ce);
-  // Real2 _control = _center + (control - _center) * Real2((cs + distance) / cs);
-  
-  // return new Bezier2(_start, _control, _end);
+  return new Bezier2(newStart, newControl1, newControl2, newEnd);
 }
 
 namespace {
@@ -190,21 +193,20 @@ Ref<Path2 &> Bezier2::split(Real tStart, Real tEnd) {
 }
 
 void Bezier2::split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) {
-  lhs = new Bezier2(start, control1, control2, end);
-  rhs = new Bezier2(start, control1, control2, end);
-  // _getPointNormals();
+  Real2 p = point(t);
   
-  // // Calculate the split point and its normal
-  // Real2 p = point(t);
-  // Real2 normal = p - _center;
+  Real2 n0 = start;
+  Real2 n2 = _L(start, control1, t);
+  Real2 n1 = _Q(start, control1, control2, t);
+  Real2 n3 = p;
   
-  // // Calculate the new control points
-  // Real2 startControl = (start - p).project(normal.rightPerpendicular()) + p;
-  // Real2   endControl = (end   - p).project(normal. leftPerpendicular()) + p;
+  Real2 v0 = p;
+  Real2 v1 = _Q(control1, control2, end, t);
+  Real2 v2 = _L(control2, end, t);
+  Real2 v3 = end;
   
-  // // Split the arc into two arcs
-  // lhs = new Arc2(start, startControl, p);
-  // rhs = new Arc2(p, endControl, end);
+  lhs = new Bezier2(n0, n1, n2, n3);
+  rhs = new Bezier2(v0, v1, v2, v3);
 }
 
 Real2 Bezier2::project(Real2 point) {

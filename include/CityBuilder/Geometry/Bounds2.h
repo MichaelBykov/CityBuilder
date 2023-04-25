@@ -39,7 +39,7 @@ struct Bounds2 {
     return *this;
   }
   
-  /// Inflate a bounding box evenly by a given amount.
+  /// Inflate the bounding box evenly by a given amount.
   /// \param[in] amount
   ///   The amount to inflate the bounding box by.
   Bounds2 &inflate(Real amount) {
@@ -48,16 +48,32 @@ struct Bounds2 {
     return *this;
   }
   
+  /// Get a new bounding box inflated evenly by a given amount.
+  /// \param[in] amount
+  ///   The amount to inflate the bounding box by.
+  Bounds2 inflated(Real amount) const {
+    return { origin - Real2(amount), size + Real2(amount + amount) };
+  }
+  
+  /// Check if a point is within the bounding box.
+  /// \param[in] point
+  ///   The point to check.
+  bool contains(const Real2 &point) const {
+    return point.exactlyGreater(origin).verticalAnd() &&
+      (point - origin).exactlyLess(size).verticalAnd();
+  }
+  
   /// Check if this bounding box intersects another bounding box.
   /// \param[in] other
   ///   The other bounding box.
   bool intersects(const Bounds2 &other) const {
     Real2 a1 = origin;
     Real2 a2 = other.origin;
-    Real2 b1 = origin + size;
-    Real2 b2 = other.origin + other.size;
+    Real2 b1 = size;
+    Real2 b2 = other.size;
     
-    return b1.exactlyLess(a2).verticalOr() || a1.exactlyLess(b2).verticalOr();
+  return (((a1 + b1 * Real2(0.5)) - (a2 + b2 * Real2(0.5))).abs() * Real2(2.0))
+    .exactlyLess(b1 + b2).verticalAnd();
   }
 };
 

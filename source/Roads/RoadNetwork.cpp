@@ -161,7 +161,7 @@ namespace {
       if (b->path.type() == Path2::Type::bezier) {
         // Push back just the end point
         Bezier2 *bezier = (Bezier2 *)&b->path.path();
-        if (aStart)
+        if (bStart)
           b->path = RadiusPath2(new Bezier2(
             bezier->start + normalB * Real2(offset),
             bezier->control1,
@@ -278,6 +278,8 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
   Real distance;
   
   for (Road *road : _roads) {
+    if (!road->path.bounds().contains(p))
+      continue;
     Real2 projection = road->path.path().project(p);
     Real dist = p.squareDistance(projection);
     if (dist < (road->definition->dimensions.x * Real(0.5 * scale)).square()) {
@@ -321,7 +323,11 @@ bool RoadNetwork::validate(RoadDef *roadDef, Real3 point) {
   
   // Check if the road would interfere with any other roads
   Real2 p = { point.x, point.z };
+  Real radius = roadDef->dimensions.x * Real(0.5) * scale;
+  Bounds2 bounds = { p - Real2(radius), Real2(radius * Real(2)) };
   for (Road *road : _roads) {
+    if (!road->path.bounds().intersects(bounds))
+      continue;
     Real2 projection = road->path.path().project(p);
     Real dist = p.squareDistance(projection);
     if (dist < (
@@ -342,8 +348,11 @@ bool RoadNetwork::validate(RoadDef *roadDef, Ref<Path2 &> path) {
     return false;
   
   // Check if the road would interfere with any other roads
-  RadiusPath2 _path { path->offset(0.0), roadDef->dimensions.x * Real(0.5 * scale) };
+  RadiusPath2 _path { path, roadDef->dimensions.x * Real(0.5 * scale) };
   for (Road *road : _roads) {
+    if (!road->path.bounds().intersects(_path.bounds()))
+      continue;
+    
     Real2 start = road->path.path().project(path->start);
     Real2   end = road->path.path().project(path->end  );
     bool _start = start.squareDistance(path->start) < 0.1;
