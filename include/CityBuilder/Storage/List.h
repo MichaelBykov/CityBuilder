@@ -369,6 +369,18 @@ public:
     _sort(_data->contents, _data->count);
   }
   
+  /// Sort the list using a lambda.
+  /// \param[in] comparison
+  ///   The comparison function to use.
+  ///   Should accept two arguments, lhs and rhs, and return lhs < rhs.
+  template<typename Lambda>
+  void sort(Lambda comparison) {
+    if (count() < 2)
+      // Nothing to sort
+      return;
+    _sort(_data->contents, _data->count, comparison);
+  }
+  
 private:
   template<typename = T>
   void _sort(T *list, size_t count) {
@@ -379,6 +391,41 @@ private:
     else if (count == 2) {
       // Check if the first two terms need to be swapped
       if (list[1] < list[0]) {
+        T t = std::move(list[0]);
+        new (&list[0]) T(std::move(list[1]));
+        new (&list[1]) T(std::move(t));
+      }
+    } else {
+      // Divide
+      size_t mid = count / 2;
+      _sort(list, mid);
+      _sort(list + mid, count - mid);
+      
+      // Merge
+      size_t i = 0, j = mid;
+      while (i < j && j < count) {
+        if (list[j] < list[i]) {
+          // Rotate
+          T t = std::move(list[j]);
+          for (size_t k = j; k > i; k--)
+            new (&list[k]) T(std::move(list[k - 1]));
+          new (&list[i]) T(std::move(t));
+          j++;
+        }
+        i++;
+      }
+    }
+  }
+  
+  template<typename Lambda>
+  void _sort(T *list, size_t count, Lambda comparison) {
+    // Merge sort
+    if (count < 2)
+      // Nothing to sort
+      return;
+    else if (count == 2) {
+      // Check if the first two terms need to be swapped
+      if (comparison(list[1], list[0])) {
         T t = std::move(list[0]);
         new (&list[0]) T(std::move(list[1]));
         new (&list[1]) T(std::move(t));

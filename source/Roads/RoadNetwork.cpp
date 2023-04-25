@@ -121,7 +121,7 @@ namespace {
     else        normalB = normalB.rightPerpendicular();
     
     Real dot = normalA.dot(normalB);
-    if (dot > -0.999) {
+    if (dot > -0.9999) {
       // Add a joint
       
       // Determine the amount to offset
@@ -182,26 +182,13 @@ namespace {
       }
       
       // Add the joint
-      bool clockwise = normalA.rightPerpendicular().dot(normalB) > 0;
-      Road *joint;
-      
-      if (clockwise) {
-        joint = roads->add(new Road(a->definition, new Bezier2(
-          aStart ? a->path.start() : a->path.end(),
-          intersection,
-          bStart ? b->path.start() : b->path.end()
-        )));
-        joint->start = a;
-        joint->end = b;
-      } else {
-        joint = roads->add(new Road(a->definition, new Bezier2(
-          bStart ? b->path.start() : b->path.end(),
-          intersection,
-          aStart ? a->path.start() : a->path.end()
-        )));
-        joint->start = b;
-        joint->end = a;
-      }
+      Road *joint = roads->add(new Road(a->definition, new Bezier2(
+        aStart ? a->path.start() : a->path.end(),
+        intersection,
+        bStart ? b->path.start() : b->path.end()
+      )));
+      joint->start = a;
+      joint->end = b;
       
       (aStart ? a->start : a->end) = joint;
       (bStart ? b->start : b->end) = joint;

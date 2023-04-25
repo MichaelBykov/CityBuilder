@@ -26,7 +26,8 @@ List<Real2> Path2::intersections(Path2 &other) {
       return _Internal_Intersection_Table_::
         line_bezier(
           static_cast<Line2 &>(*this),
-          static_cast<Bezier2 &>(other)
+          static_cast<Bezier2 &>(other),
+          0
         );
     }
   
@@ -36,13 +37,15 @@ List<Real2> Path2::intersections(Path2 &other) {
       return _Internal_Intersection_Table_::
         line_bezier(
           static_cast<Line2 &>(other),
-          static_cast<Bezier2 &>(*this)
+          static_cast<Bezier2 &>(*this),
+          0
         );
     case Type::bezier:
       return _Internal_Intersection_Table_::
         bezier_bezier(
           static_cast<Bezier2 &>(*this),
-          static_cast<Bezier2 &>(other)
+          static_cast<Bezier2 &>(other),
+          0
         );
     }
   }
@@ -140,6 +143,13 @@ Bezier2::Bezier2(Real2 start, Real2 control1, Real2 control2, Real2 end)
 Real Bezier2::length() {
   _getPointNormals();
   return _lengths.last().z;
+}
+
+bool Bezier2::isDegenerate() {
+  Line2 line(start, end);
+  return
+    line.project(control1).approxEqual(control1).verticalAnd() &&
+    line.project(control2).approxEqual(control2).verticalAnd() ;
 }
 
 Ref<Path2 &> Bezier2::offset(Real distance) {
@@ -314,6 +324,8 @@ List<Real4> Bezier2::_pointNormals() {
        start.distance(control1) +
     control1.distance(control2) +
     control2.distance(end);
+  if (count < 2)
+    count = 2;
   
   // Find the lengths along the curve
   Real length = 0;
@@ -330,6 +342,8 @@ List<Real4> Bezier2::_pointNormals() {
   // Generate evenly-spaced points
   List<Real4> points;
   count = length;
+  if (count < 2)
+    count = 2;
   for (int i = 0; i <= count; i++) {
     Real t = _lengthLookup(Real(i) / Real(count));
     Real2 p = point(t);

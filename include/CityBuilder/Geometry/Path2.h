@@ -144,6 +144,10 @@ struct Bezier2 : Path2 {
   
   Real length() override;
   
+  /// Check if the Bezier curve is degenerate
+  /// (all control points and end points are collinear).
+  bool isDegenerate();
+  
   Ref<Path2 &> offset(Real distance) override;
   
   Ref<Path2 &> split(Real tStart, Real tEnd) override;

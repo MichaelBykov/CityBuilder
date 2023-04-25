@@ -41,45 +41,63 @@ namespace _Internal_Intersection_Table_ {
     return { line1.start + vector1 * Real2(s) };
   }
   
-  List<Real2> line_bezier(Line2 &line, Bezier2 &bezier) {
-    // Real2 linePoint = line.project(arc.center());
+  List<Real2> line_bezier(Line2 &line, Bezier2 &bezier, int iteration) {
+    // Compute the intersection between a line and a bezier curve through
+    // subdivision
+    if (line.bounds().intersects(bezier.bounds())) {
+      if (iteration > 64 || line.bounds().size.approxZero().verticalAnd()) {
+        // Intersection point
+        return { (line.start + line.end) * Real2(0.5) };
+      } else if (bezier.isDegenerate()) {
+        // Line-line intersection
+        Line2 line2(bezier.start, bezier.end);
+        return line_line(line, line2);
+      } else if (bezier.bounds().size.approxZero().verticalAnd()) {
+        // Intersection point
+        return { (bezier.start + bezier.end) * Real2(0.5) };
+      } else {
+        // Split
+        Ref<Path2 &> line1, line2, curve1, curve2;
+        line.split(0.5, line1, line2);
+        bezier.split(0.5, curve1, curve2);
+        
+        // Compute all the intersections
+        List<Real2> intersections;
+        intersections.appendList(line_bezier(
+          static_cast<Line2 &>(*line1),
+          static_cast<Bezier2 &>(*curve1),
+          iteration + 1
+        ));
+        intersections.appendList(line_bezier(
+          static_cast<Line2 &>(*line1),
+          static_cast<Bezier2 &>(*curve2),
+          iteration + 1
+        ));
+        intersections.appendList(line_bezier(
+          static_cast<Line2 &>(*line2),
+          static_cast<Bezier2 &>(*curve1),
+          iteration + 1
+        ));
+        intersections.appendList(line_bezier(
+          static_cast<Line2 &>(*line2),
+          static_cast<Bezier2 &>(*curve2),
+          iteration + 1
+        ));
+        
+        // Filter out the duplicates
+        intersections.sort([](const Real2 &lhs, const Real2 &rhs) {
+          return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y);
+        });
+        for (int i = 1; i < intersections.count(); i++)
+          if (intersections[i].approxEqual(intersections[i - 1]).verticalAnd()) {
+            intersections.remove(i);
+            i--;
+          }
+        
+        return intersections;
+      }
+    }
     
-    // Real offset = linePoint.squareDistance(arc.center()) - arc.radius().square();
-    
-    // if (offset.approxZero()) {
-    //   // The line is tangent to the arc
-    //   return { linePoint };
-    // }
-    
-    // if (offset > 0) {
-    //   // The line is outside the arc
-    //   return { };
-    // }
-    
-    // // Find the two intersection points of the line and the arc
-    // Real2 center = (line.end - line.start).project(arc.center()) + line.start;
-    // Real2 cos = Real2((Real(1) - (center - arc.center()).squareMagnitude()).sqrt());
-    // Real2 normal = (center - arc.center()).normalized();
-    // Real2 point1 = center + normal * cos;
-    // Real2 point2 = center - normal * cos;
-    
-    // // Check that the intersection points are on the line
-    // bool p1 =
-    //   (point1 - line.start).dot(line.end - line.start) >= 0 &&
-    //   (point1 - line.end  ).dot(line.start - line.end) >= 0;
-    // bool p2 =
-    //   (point1 - line.start).dot(line.end - line.start) >= 0 &&
-    //   (point1 - line.end  ).dot(line.start - line.end) >= 0;
-    
-    // // Check that the intersection points are on the arc
-    // bool a1 = arc.project(point1).squareDistance(point1).approxZero();
-    // bool a2 = arc.project(point2).squareDistance(point2).approxZero();
-    
-    // // Return the found valid intersection points
-    // List<Real2> points;
-    // if (p1 && a1) points.append(point1);
-    // if (p2 && a2) points.append(point2);
-    // return points;
     return { };
   }
   
@@ -91,47 +109,63 @@ namespace _Internal_Intersection_Table_ {
 |                                                                              |
 \* -------------------------------------------------------------------------- */
   
-  List<Real2> bezier_bezier(Bezier2 &bezier1, Bezier2 &bezier2) {
-    // Real distance = arc1.center().distance(arc2.center());
+  List<Real2> bezier_bezier(Bezier2 &bezier1, Bezier2 &bezier2, int iteration) {
+    // Compute the intersection between two bezier curves through subdivision
+    if (bezier1.bounds().intersects(bezier2.bounds())) {
+      if (iteration > 64 || bezier1.bounds().size.approxZero().verticalAnd()) {
+        // Intersection point
+        return { (bezier1.start + bezier1.end) * Real2(0.5) };
+      } else if (bezier2.bounds().size.approxZero().verticalAnd()) {
+        // Intersection point
+        return { (bezier2.start + bezier2.end) * Real2(0.5) };
+      } else if (bezier1.isDegenerate() && bezier2.isDegenerate()) {
+        // Line-line intersection
+        Line2 a(bezier1.start, bezier1.end);
+        Line2 b(bezier2.start, bezier2.end);
+        return line_line(a, b);
+      } else {
+        // Split
+        Ref<Path2 &> bezier1_1, bezier1_2, bezier2_1, bezier2_2;
+        bezier1.split(0.5, bezier1_1, bezier1_2);
+        bezier2.split(0.5, bezier2_1, bezier2_2);
+        
+        // Compute all the intersections
+        List<Real2> intersections;
+        intersections.appendList(bezier_bezier(
+          static_cast<Bezier2 &>(*bezier1_1),
+          static_cast<Bezier2 &>(*bezier2_1),
+          iteration + 1
+        ));
+        intersections.appendList(bezier_bezier(
+          static_cast<Bezier2 &>(*bezier1_1),
+          static_cast<Bezier2 &>(*bezier2_2),
+          iteration + 1
+        ));
+        intersections.appendList(bezier_bezier(
+          static_cast<Bezier2 &>(*bezier1_2),
+          static_cast<Bezier2 &>(*bezier2_1),
+          iteration + 1
+        ));
+        intersections.appendList(bezier_bezier(
+          static_cast<Bezier2 &>(*bezier1_2),
+          static_cast<Bezier2 &>(*bezier2_2),
+          iteration + 1
+        ));
+        
+        // Filter out the duplicates
+        intersections.sort([](const Real2 &lhs, const Real2 &rhs) {
+          return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y);
+        });
+        for (int i = 1; i < intersections.count(); i++)
+          if (intersections[i].approxEqual(intersections[i - 1]).verticalAnd()) {
+            intersections.remove(i);
+            i--;
+          }
+        
+        return intersections;
+      }
+    }
     
-    // if ((distance - arc1.radius() - arc2.radius()).approxZero()) {
-    //   // The arcs are tangent
-    //   Real2 point =
-    //     (arc2.center() - arc1.center()).normalized() * Real2(arc1.radius()) +
-    //      arc1.center();
-    //   if (arc1.project(point).squareDistance(point).approxZero() &&
-    //       arc2.project(point).squareDistance(point).approxZero())
-    //     return { point };
-    //   else
-    //     // Not on both of the arcs
-    //     return { };
-    // } else if (distance > arc1.radius() + arc2.radius())
-    //   // The arcs are fully separated
-    //   return { };
-    
-    // // Find the intersection points
-    // Real2 center =
-    //   (arc2.center() - arc1.center()).normalized() *
-    //   Real2(arc1.radius() + (distance - arc1.radius() - arc2.radius()) * Real(0.5)) +
-    //   arc1.center();
-    // Real2 cos = Real2((Real(1) - (center - arc1.center()).squareMagnitude()).sqrt());
-    // Real2 normal = (center - arc1.center()).normalized();
-    // Real2 point1 = center + normal * cos;
-    // Real2 point2 = center - normal * cos;
-    
-    // // Check that the intersection points are on the first arc
-    // bool a1 = arc1.project(point1).squareDistance(point1).approxZero();
-    // bool a2 = arc1.project(point2).squareDistance(point2).approxZero();
-    
-    // // Check that the intersection points are on the second arc
-    // bool b1 = arc2.project(point1).squareDistance(point1).approxZero();
-    // bool b2 = arc2.project(point2).squareDistance(point2).approxZero();
-    
-    // // Return the found valid intersection points
-    // List<Real2> points;
-    // if (a1 && b1) points.append(point1);
-    // if (a2 && b2) points.append(point2);
-    // return points;
     return { };
   }
   
