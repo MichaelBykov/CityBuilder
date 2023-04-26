@@ -16,6 +16,7 @@ void Node::setBorderRadius(Real radius) {
   } else {
     setTexture("Square");
   }
+  _isDirty = true;
 }
 
 Real Node::getBorderRadius() {
@@ -30,36 +31,57 @@ String& Node::getTexture() {
   return _texture;
 }
 
+void Node::setParent(Ref<Node &>* parent) {
+  _parent = parent;
+  _isDirty = true;
+}
+
+Ref<Node &>* Node::getParent() {
+  return _parent;
+}
+
 void Node::draw() {
   _draw();
 }
 
 void Node::_draw() {
+  // Don't draw empty elements
+  if (_length.x < 1 || _length.y < 1) {
+    return;
+  }
+
+  // Only recreate the mesh if it's dirty
   if (_isDirty) {    
     _uiMesh = new UIMesh();
 
+    Real2 local = _position;
+    if (_parent != nullptr) {
+      local += (*_parent)->_position;
+    }
+
+    // Draw a rounded square or square
     if (_radius > 0) {
       _uiMesh->add({
         // Top Left Corner
-        { Real3(_position.x, _position.y, _zIndex), Real2(0, 0), _color },
-        { Real3(_position.x + _radius, _position.y, _zIndex), Real2(0.33, 0), _color },
-        { Real3(_position.x, _position.y + _radius, _zIndex), Real2(0, 0.33), _color },
-        { Real3(_position.x + _radius, _position.y + _radius, _zIndex), Real2(0.33, 0.33), _color },
+        { Real3(local.x, local.y, _zIndex), Real2(0, 0), _color },
+        { Real3(local.x + _radius, local.y, _zIndex), Real2(0.33, 0), _color },
+        { Real3(local.x, local.y + _radius, _zIndex), Real2(0, 0.33), _color },
+        { Real3(local.x + _radius, local.y + _radius, _zIndex), Real2(0.33, 0.33), _color },
         // Top Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y, _zIndex), Real2(0.67, 0), _color },
-        { Real3(_position.x + _length.x, _position.y, _zIndex), Real2(1, 0), _color },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _radius, _zIndex), Real2(0.67, 0.33), _color },
-        { Real3(_position.x + _length.x, _position.y + _radius, _zIndex), Real2(1, 0.33), _color },
+        { Real3(local.x + (_length.x - _radius), local.y, _zIndex), Real2(0.67, 0), _color },
+        { Real3(local.x + _length.x, local.y, _zIndex), Real2(1, 0), _color },
+        { Real3(local.x + (_length.x - _radius), local.y + _radius, _zIndex), Real2(0.67, 0.33), _color },
+        { Real3(local.x + _length.x, local.y + _radius, _zIndex), Real2(1, 0.33), _color },
         // Bottom Left Corner
-        { Real3(_position.x, _position.y + (_length.y - _radius), _zIndex), Real2(0, 0.67), _color },
-        { Real3(_position.x + _radius, _position.y + (_length.y - _radius), _zIndex), Real2(0.33, 0.67), _color },
-        { Real3(_position.x, _position.y + _length.y, _zIndex), Real2(0, 1), _color },
-        { Real3(_position.x + _radius, _position.y + _length.y, _zIndex), Real2(0.33, 1), _color },
+        { Real3(local.x, local.y + (_length.y - _radius), _zIndex), Real2(0, 0.67), _color },
+        { Real3(local.x + _radius, local.y + (_length.y - _radius), _zIndex), Real2(0.33, 0.67), _color },
+        { Real3(local.x, local.y + _length.y, _zIndex), Real2(0, 1), _color },
+        { Real3(local.x + _radius, local.y + _length.y, _zIndex), Real2(0.33, 1), _color },
         // Bottom Right Corner
-        { Real3(_position.x + (_length.x - _radius), _position.y + (_length.y - _radius), _zIndex), Real2(0.67, 0.67), _color },
-        { Real3(_position.x + _length.x, _position.y + (_length.y - _radius), _zIndex), Real2(1, 0.67), _color },
-        { Real3(_position.x + (_length.x - _radius), _position.y + _length.y, _zIndex), Real2(0.67, 1), _color },
-        { Real3(_position.x + _length.x, _position.y + _length.y, _zIndex), Real2(1, 1), _color },
+        { Real3(local.x + (_length.x - _radius), local.y + (_length.y - _radius), _zIndex), Real2(0.67, 0.67), _color },
+        { Real3(local.x + _length.x, local.y + (_length.y - _radius), _zIndex), Real2(1, 0.67), _color },
+        { Real3(local.x + (_length.x - _radius), local.y + _length.y, _zIndex), Real2(0.67, 1), _color },
+        { Real3(local.x + _length.x, local.y + _length.y, _zIndex), Real2(1, 1), _color },
       }, {
         0, 1, 2, 1, 2, 3,       // Top Left Corner
         4, 5, 6, 5, 6, 7,       // Top Right Corner
@@ -72,10 +94,10 @@ void Node::_draw() {
     } else {
       _uiMesh->add({
         // It's a box
-        { Real3(_position.x, _position.y, 1), Real2(0, 0), _color },
-        { Real3(_position.x + _length.x, _position.y, 1), Real2(1, 0), _color },
-        { Real3(_position.x, _position.y + _length.y, 1), Real2(0, 1), _color },
-        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(1, 1), _color },
+        { Real3(local.x, local.y, 1), Real2(0, 0), _color },
+        { Real3(local.x + _length.x, local.y, 1), Real2(1, 0), _color },
+        { Real3(local.x, local.y + _length.y, 1), Real2(0, 1), _color },
+        { Real3(local.x + _length.x, local.y + _length.y, 1), Real2(1, 1), _color },
       }, {
         0, 1, 2, 2, 3, 1, // Box
       });

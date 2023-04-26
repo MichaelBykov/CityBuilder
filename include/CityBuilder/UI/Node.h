@@ -7,6 +7,7 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
+#include <CityBuilder/Storage/Ref.h>
 #include <CityBuilder/UI/System.h>
 #include <CityBuilder/Rendering/Uniforms.h>
 #include <CityBuilder/Rendering/UIMesh.h>
@@ -25,7 +26,8 @@ public:
     _zIndex(1), 
     _color(255, 255, 255, 255),
     _isDirty(true),
-    _texture("Square")
+    _texture("Square"),
+    _parent(nullptr)
   {}
 
   Node(Real w, Real h):
@@ -35,7 +37,8 @@ public:
     _zIndex(1),
     _color(255, 255, 255, 255),
     _isDirty(true),
-    _texture("Square")
+    _texture("Square"),
+    _parent(nullptr)
   {}
 
   Node(Real w, Real h, Real x, Real y):
@@ -45,7 +48,8 @@ public:
     _zIndex(1),
     _color(255, 255, 255, 255),
     _isDirty(true),
-    _texture("Square")
+    _texture("Square"),
+    _parent(nullptr)
   {}
 
   Node(Real w, Real h, Real x, Real y, Real r):
@@ -53,7 +57,8 @@ public:
     _position(x, y),
     _zIndex(1),
     _color(255, 255, 255, 255),
-    _isDirty(true)
+    _isDirty(true),
+    _parent(nullptr)
   { setBorderRadius(r); }
 
   Node(Real w, Real h, Real x, Real y, Real r, Color4 color):
@@ -61,25 +66,36 @@ public:
     _position(x, y),
     _zIndex(1),
     _color(color),
-    _isDirty(true)
+    _isDirty(true),
+    _parent(nullptr)
   { setBorderRadius(r); }
 
   ~Node() {};
 
   void setWidth();
   void getWidth();
+
   void setHeight();
   void getHeight();
+
   void setXPos();
   void getXPos();
+
   void setYPos();
   void getYPos();
+
   void setBorderRadius(Real radius);
   Real getBorderRadius();
+
   void setColor(Color4 color);
   void getColor();
+
   void setTexture(const String& texture);
   String& getTexture();
+
+  void setParent(Ref<Node &>* parent);
+  Ref<Node &>* getParent();
+
   void draw();
 
 protected:
@@ -90,6 +106,7 @@ protected:
   Color4 _color;
   bool _isDirty;
   String _texture;
+  Ref<Node &>* _parent;
   Resource<UIMesh> _uiMesh;
 
   void _draw();

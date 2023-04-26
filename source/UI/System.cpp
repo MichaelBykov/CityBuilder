@@ -45,7 +45,8 @@ void System::start() {
 
   // Make some elements
   root = new Node(1280, 720, 60, 60, 12, { 64, 64, 64, 255 });
-  bulldozer = new Icon("Bulldozer", 64, 64, 60 + 250, 60 + 250, 0, { 0, 0, 255, 255 });
+  bulldozer = new Icon("Bulldozer", 64, 64, 0, 0, 0, { 0, 0, 255, 255 });
+  bulldozer->setParent(&root);
 }
 
 void System::draw(const Real2& screen) {
