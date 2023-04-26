@@ -142,6 +142,8 @@ if(APPLE)
   
   set(RESOURCES_ZONES
     "zones/residential.zone"
+    "zones/commercial.zone"
+    "zones/industrial.zone"
   )
   set_source_files_properties(${RESOURCES_ZONES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/zones)
   

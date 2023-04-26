@@ -19,7 +19,9 @@ bool ZoneDef::load(const String &path) {
     .section("zone")
       .field("name", zone.name)
       .field("color", zone.color, {
-        { "green", Color3(125, 255, 65) }
+        { "green" , Color3(125, 255,  65) },
+        { "blue"  , Color3( 65, 125, 255) },
+        { "orange", Color3(255, 125, 65) },
       })
   ;
   if (!success)
