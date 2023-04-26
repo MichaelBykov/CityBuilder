@@ -38,7 +38,7 @@ void Events::stop() {
 void Events::pause() {
   // Overlay a paused text over the scene
   bgfx::dbgTextClear();
-  bgfx::dbgTextPrintf(4, 6, 0x0f, "PAUSED");
+  bgfx::dbgTextPrintf(4, 4, 0x0f, "PAUSED");
   bgfx::setDebug(BGFX_DEBUG_TEXT);
 }
 

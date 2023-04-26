@@ -251,6 +251,10 @@ void Driver::main() {
               Events::Input::Type::keyboard
             };
             Events::inputStart(input);
+            
+            if (event.keyCode == 0x35) // Escape
+              // Do not allow the window to escape fullscreen
+              continue;
             break;
           
           case NSEventTypeKeyUp:
