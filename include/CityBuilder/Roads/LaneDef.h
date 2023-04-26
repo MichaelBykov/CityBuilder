@@ -44,6 +44,9 @@ struct LaneDef {
       /// The lane should connect to all of the same lane traveling in the same
       /// direction.
       sameDirection,
+      /// The lane should connect to the nearest lane of the same type, if it
+      /// exists.
+      nearest
     };
     
     /// The start x-coordinate of the lane.

@@ -8,7 +8,7 @@ D 3, 0.33 uv 0.875 normal  0,1 normal 1,0
 M 3, 0    uv 1     normal  1,0
 
 [traffic]
-U 0-3, 0.33 all.peds
+U 0-3, 0.33 all.peds connect nearest
 
 [texture]
 main "sidewalk"

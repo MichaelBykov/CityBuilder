@@ -363,7 +363,11 @@ namespace {
 }
 
 List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
-  if (a == b || !a->path.bounds().intersects(b->path.bounds()))
+  if (a == b || !a->path.bounds().intersects(b->path.bounds()) ||
+    a->start.type == Connection::road && a->start.other.road == b ||
+    a->end  .type == Connection::road && a->end  .other.road == b ||
+    b->start.type == Connection::road && b->start.other.road == a ||
+    b->end  .type == Connection::road && b->end  .other.road == a )
     return { a };
   
   // Find the intersection points
@@ -371,48 +375,56 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
   { // Project points
     Real2 projection;
     if ((projection = a->path.path().project(b->path.start())).squareDistance(b->path.start()) < 1) {
-      // Add if it's not already there
-      bool exists = false;
-      for (Real2 p : intersections)
-        if (p.approxEqual(projection).verticalAnd()) {
-          exists = true;
-          break;
-        }
-      if (!exists)
-        intersections.append(projection);
+      if (b->start.type == Connection::none) {
+        // Add if it's not already there
+        bool exists = false;
+        for (Real2 p : intersections)
+          if (p.approxEqual(projection).verticalAnd()) {
+            exists = true;
+            break;
+          }
+        if (!exists)
+          intersections.append(projection);
+      }
     }
     if ((projection = a->path.path().project(b->path.end())).squareDistance(b->path.end()) < 1) {
-      // Add if it's not already there
-      bool exists = false;
-      for (Real2 p : intersections)
-        if (p.approxEqual(projection).verticalAnd()) {
-          exists = true;
-          break;
-        }
-      if (!exists)
-        intersections.append(projection);
+      if (b->end.type == Connection::none) {
+        // Add if it's not already there
+        bool exists = false;
+        for (Real2 p : intersections)
+          if (p.approxEqual(projection).verticalAnd()) {
+            exists = true;
+            break;
+          }
+        if (!exists)
+          intersections.append(projection);
+      }
     }
     if ((projection = b->path.path().project(a->path.start())).squareDistance(a->path.start()) < 1) {
-      // Add if it's not already there
-      bool exists = false;
-      for (Real2 p : intersections)
-        if (p.approxEqual(projection).verticalAnd()) {
-          exists = true;
-          break;
-        }
-      if (!exists)
-        intersections.append(projection);
+      if (a->start.type == Connection::none) {
+        // Add if it's not already there
+        bool exists = false;
+        for (Real2 p : intersections)
+          if (p.approxEqual(projection).verticalAnd()) {
+            exists = true;
+            break;
+          }
+        if (!exists)
+          intersections.append(projection);
+      }
     }
     if ((projection = b->path.path().project(a->path.end())).squareDistance(a->path.end()) < 1) {
-      // Add if it's not already there
-      bool exists = false;
-      for (Real2 p : intersections)
-        if (p.approxEqual(projection).verticalAnd()) {
-          exists = true;
-          break;
-        }
-      if (!exists)
-        intersections.append(projection);
+      if (a->end.type == Connection::none) {
+        // Add if it's not already there
+        bool exists = false;
+        for (Real2 p : intersections)
+          if (p.approxEqual(projection).verticalAnd()) {
+            exists = true;
+            break;
+          }
+        if (!exists)
+          intersections.append(projection);
+      }
     }
   }
   if (intersections.isEmpty())
@@ -813,9 +825,11 @@ void RoadNetwork::update() {
       // Create a new mesh
       BSTree<LaneDef *, int> lanes;
       
+      int armIndex = 0;
       for (Intersection::Arm &arm : intersection->arms) {
-        for (const RoadDef::Lane &lane : arm.road->definition->lanes)
-          for (const auto &traffic : lane.definition->traffic)
+        bool first = true;
+        for (const RoadDef::Lane &lane : arm.road->definition->lanes) {
+          for (const auto &traffic : lane.definition->traffic) {
             switch (traffic.connection) {
             case LaneDef::Traffic::Connection::none:
               // TODO
@@ -828,53 +842,56 @@ void RoadNetwork::update() {
                 Resource<Mesh> mesh = _addMesh(intersection, lane.definition, lanes);
                 
                 Real3 center { intersection->center.x, lane.definition->profile.dimensions.y * scale, intersection->center.y };
+                Real3 originalStart, originalEnd, prevStart, prevEnd, currStart, currEnd, beginStart, beginEnd;
                 for (intptr_t i = 0; i < intersection->arms.count(); i++) {
+                  prevStart = beginStart;
+                  prevEnd   = beginEnd;
+                  
                   Intersection::Arm &arm = intersection->arms[i];
                   
+                  // Determine the bounds of the road
+                  Real4 pointNormal = arm.start ?
+                    arm.road->path.pointNormals().first() :
+                    arm.road->path.pointNormals(). last() ;
+                  Real2 point  = { pointNormal.x, pointNormal.y };
+                  Real2 normal = { pointNormal.z, pointNormal.w };
+                  if (!arm.start)
+                    normal = -normal;
+                  
+                  Real2  leftEdge = point - normal * Real2(arm.road->definition->dimensions.x * Real(0.5) * scale);
+                  Real2 rightEdge = point + normal * Real2(arm.road->definition->dimensions.x * Real(0.5) * scale);
+                  
+                  // Find the edges of the surrounding arms
+                  Intersection::Arm &prev = intersection->arms[i - 1 < 0 ? intersection->arms.count() - 1 : i - 1];
+                  Intersection::Arm &next = intersection->arms[i + 1 >= intersection->arms.count() ? 0 : i + 1];
+                  
+                  Real4 prevPointNormal = prev.start ?
+                    prev.road->path.pointNormals().first() :
+                    prev.road->path.pointNormals(). last() ;
+                  Real2 prevPoint  = { prevPointNormal.x, prevPointNormal.y };
+                  Real2 prevNormal = { prevPointNormal.z, prevPointNormal.w };
+                  if (!prev.start)
+                    prevNormal = -prevNormal;
+                  Real2 prevLeftEdge = prevPoint - prevNormal * Real2(prev.road->definition->dimensions.x * Real(0.5) * scale);
+                  
+                  Real4 nextPointNormal = next.start ?
+                    next.road->path.pointNormals().first() :
+                    next.road->path.pointNormals(). last() ;
+                  Real2 nextPoint  = { nextPointNormal.x, nextPointNormal.y };
+                  Real2 nextNormal = { nextPointNormal.z, nextPointNormal.w };
+                  if (!next.start)
+                    nextNormal = -nextNormal;
+                  Real2 nextRightEdge = nextPoint + nextNormal * Real2(next.road->definition->dimensions.x * Real(0.5) * scale);
+                  
+                  Real2  left = ((leftEdge + nextRightEdge) * Real2(0.5) - intersection->center).normalized();
+                  Real2 right = ((rightEdge + prevLeftEdge) * Real2(0.5) - intersection->center).normalized();
+                  
+                  left  /= (-normal).dot(left );
+                  right /= ( normal).dot(right);
+                  
+                  bool first = true;
                   for (const RoadDef::Lane &_lane : arm.road->definition->lanes)
                     if (_lane.definition == lane.definition) {
-                      // Determine the bounds of the lane
-                      Real4 pointNormal = arm.start ?
-                        arm.road->path.pointNormals().first() :
-                        arm.road->path.pointNormals(). last() ;
-                      Real2 point  = { pointNormal.x, pointNormal.y };
-                      Real2 normal = { pointNormal.z, pointNormal.w };
-                      if (!arm.start)
-                        normal = -normal;
-                      
-                      Real2  leftEdge = point - normal * Real2(arm.road->definition->dimensions.x * Real(0.5) * scale);
-                      Real2 rightEdge = point + normal * Real2(arm.road->definition->dimensions.x * Real(0.5) * scale);
-                      
-                      // Find the edges of the surrounding lanes
-                      Intersection::Arm &prev = intersection->arms[i - 1 < 0 ? intersection->arms.count() - 1 : i - 1];
-                      Intersection::Arm &next = intersection->arms[i + 1 >= intersection->arms.count() ? 0 : i + 1];
-                      
-                      Real4 prevPointNormal = prev.start ?
-                        prev.road->path.pointNormals().first() :
-                        prev.road->path.pointNormals(). last() ;
-                      Real2 prevPoint  = { prevPointNormal.x, prevPointNormal.y };
-                      Real2 prevNormal = { prevPointNormal.z, prevPointNormal.w };
-                      if (!prev.start)
-                        prevNormal = -prevNormal;
-                      Real2 prevRightEdge = prevPoint + prevNormal * Real2(prev.road->definition->dimensions.x * Real(0.5) * scale);
-                      
-                      Real4 nextPointNormal = next.start ?
-                        next.road->path.pointNormals().first() :
-                        next.road->path.pointNormals(). last() ;
-                      Real2 nextPoint  = { nextPointNormal.x, nextPointNormal.y };
-                      Real2 nextNormal = { nextPointNormal.z, nextPointNormal.w };
-                      if (!next.start)
-                        nextNormal = -nextNormal;
-                      Real2 nextLeftEdge = nextPoint - nextNormal * Real2(next.road->definition->dimensions.x * Real(0.5) * scale);
-                      
-                      Real2  left = ((leftEdge + prevRightEdge) * Real2(0.5) - intersection->center).normalized();
-                      Real2 right = ((rightEdge + nextLeftEdge) * Real2(0.5) - intersection->center).normalized();
-                      
-                      left  /= Real(( normal).dot(left ));
-                      right /= Real((-normal).dot(right));
-                      
-                      
-                      
                       // Extrude the lane into the left-center-right triangle
                       Real offset = (-arm.road->definition->dimensions.x * Real(0.5) + _lane.position.x) * scale;
                       List<Mesh::Vertex> vertices { };
@@ -893,11 +910,11 @@ void RoadNetwork::update() {
                         if (_offset.approxZero()) {
                           _projection = center;
                         } else if (_offset < 0) {
-                          // On the right side
-                          _projection = center + Real3(right.x, 0, right.y) * Real3(-_offset);
-                        } else {
                           // On the left side
-                          _projection = center + Real3(left.x, 0, left.y) * Real3(_offset);
+                          _projection = center + Real3(left.x, 0, left.y) * Real3(-_offset);
+                        } else {
+                          // On the right side
+                          _projection = center + Real3(right.x, 0, right.y) * Real3(_offset);
                         }
                         
                         vertices.append({
@@ -905,13 +922,21 @@ void RoadNetwork::update() {
                           .normal   = _normal,
                           .uv       = { v.uv, _projection.distance(_position) }
                         });
+                        
+                        currStart = _position;
+                        currEnd   = _projection;
+                        if (first) {
+                          beginStart = _position;
+                          beginEnd   = _projection;
+                          first = false;
+                        }
                       }
                       
                       // Add the triangles
                       List<int> triangles { };
-                      for (int i = 0; i < _lane.definition->profile.triangles.count() - 1; i += 2) {
-                        int a = _lane.definition->profile.triangles[i + 0];
-                        int b = _lane.definition->profile.triangles[i + 1];
+                      for (int j = 0; j < _lane.definition->profile.triangles.count() - 1; j += 2) {
+                        int a = _lane.definition->profile.triangles[j + 0];
+                        int b = _lane.definition->profile.triangles[j + 1];
                         
                         triangles.append(b * 2 + 0);
                         triangles.append(a * 2 + 0);
@@ -921,13 +946,126 @@ void RoadNetwork::update() {
                         triangles.append(b * 2 + 1);
                         triangles.append(a * 2 + 0);
                       }
-                      
                       mesh->add(vertices, triangles);
                     }
+                  
+                  // Add turn span
+                  if (i > 0) {
+                    Real3 hub, prev, next;
+                    if (prevEnd.squareDistance(currEnd) > 0.01) {
+                      if (prevEnd.squareDistance(center) < currEnd.squareDistance(center)) {
+                        hub = prevEnd;
+                        prev = prevStart;
+                        next = currEnd;
+                      } else {
+                        hub = currEnd;
+                        prev = prevEnd;
+                        next = currStart;
+                      }
+                    } else {
+                      hub = currEnd;
+                      prev = prevStart;
+                      next = currStart;
+                    }
+                    
+                    mesh->add({
+                      { prev, { 0, 1, 0 }, { 0, 1 } },
+                      { next, { 0, 1, 0 }, { 1, 1 } },
+                      { hub  , { 0, 1, 0 }, { 0.5, 0 } },
+                    }, {
+                      0, 1, 2
+                    });
+                  } else {
+                    originalStart = currStart;
+                    originalEnd   = currEnd  ;
+                  }
+                }
+                
+                // Add turn span
+                {
+                  prevStart = beginStart;
+                  prevEnd   = beginEnd;
+                  currStart = originalStart;
+                  currEnd   = originalEnd;
+                  
+                  Real3 hub, prev, next;
+                  if (prevEnd.squareDistance(currEnd) > 0.01) {
+                    if (prevEnd.squareDistance(center) < currEnd.squareDistance(center)) {
+                      hub = prevEnd;
+                      prev = prevStart;
+                      next = currEnd;
+                    } else {
+                      hub = currEnd;
+                      prev = prevEnd;
+                      next = currStart;
+                    }
+                  } else {
+                    hub = currEnd;
+                    prev = prevStart;
+                    next = currStart;
+                  }
+                  
+                  mesh->add({
+                    { prev, { 0, 1, 0 }, { 0, 1 } },
+                    { next, { 0, 1, 0 }, { 1, 1 } },
+                    { hub  , { 0, 1, 0 }, { 0.5, 0 } },
+                  }, {
+                    0, 1, 2
+                  });
+                }
+              }
+              break;
+            
+            case LaneDef::Traffic::Connection::nearest:
+              if (first) {
+                // Check if the next arm has a lane of the same type
+                  Intersection::Arm &next = intersection->arms[armIndex + 1 >= intersection->arms.count() ? 0 : armIndex + 1];
+                if (!next.road->definition->lanes.isEmpty() && next.road->definition->lanes.last().definition == lane.definition) {
+                  // Connect
+                  Resource<Mesh> mesh = _addMesh(intersection, lane.definition, lanes);
+                  
+                  Real4 pointNormal = arm.start ?
+                    arm.road->path.pointNormals().first() :
+                    arm.road->path.pointNormals(). last() ;
+                  Real2 point  = { pointNormal.x, pointNormal.y };
+                  Real2 normal = { pointNormal.z, pointNormal.w };
+                  if (!arm.start)
+                    normal = -normal;
+                  Real2 origin = point + normal * Real2(((-arm.road->definition->dimensions.x + lane.definition->profile.dimensions.x) * Real(0.5) + lane.position.x) * scale);
+                  
+                  const RoadDef::Lane &nextLane = next.road->definition->lanes.last();
+                  Real4 nextPointNormal = next.start ?
+                    next.road->path.pointNormals().first() :
+                    next.road->path.pointNormals(). last() ;
+                  Real2 nextPoint  = { nextPointNormal.x, nextPointNormal.y };
+                  Real2 nextNormal = { nextPointNormal.z, nextPointNormal.w };
+                  if (!next.start)
+                    nextNormal = -nextNormal;
+                  Real2 prevOrigin = nextPoint + nextNormal * Real2(((-next.road->definition->dimensions.x + lane.definition->profile.dimensions.x) * Real(0.5) + nextLane.position.x) * scale);
+                  
+                  // Find the intersection point of the two lines
+                  Real2 vector1 = normal.rightPerpendicular();
+                  Real2 vector2 = nextNormal.rightPerpendicular();
+                  Real determinant = vector1.x * vector2.y - vector1.y * vector2.x;
+                  Real2 diff = prevOrigin - origin;
+                  Real s = (diff.x * vector2.y - diff.y * vector2.x) / determinant;
+                  Real t = (diff.x * vector1.y - diff.y * vector1.x) / determinant;
+                  Real2 intersect = origin + vector1 * Real2(s);
+                  
+                  Bezier2 curve {
+                    origin,
+                    origin + Real2(0.5) * (intersect - origin),
+                    prevOrigin + Real2(0.5) * (intersect - prevOrigin),
+                    prevOrigin
+                  };
+                  mesh->extrude(lane.definition->profile, curve, { -lane.definition->profile.dimensions.x * Real(0.5), 0 }, scale);
                 }
               }
               break;
             }
+            first = false;
+          }
+        }
         
         // Extend decorations as applicable
         switch (arm.road->definition->decorationsExtent) {
@@ -956,6 +1094,8 @@ void RoadNetwork::update() {
         default:
           break;
         }
+        
+        armIndex++;
       }
       
       // Push all the created meshes to the GPU
