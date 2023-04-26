@@ -9,13 +9,14 @@
 #include <CityBuilder/Storage/Map.h>
 #include <CityBuilder/UI/Primitive/Rectangle.h>
 #include <CityBuilder/UI/Primitive/Rounded.h>
+#include <CityBuilder/UI/Primitive/Character.h>
 
 USING_NS_CITY_BUILDER
 using namespace UI;
 
 namespace {
   Map<String, Resource<Texture>&> _textures = Map<String, Resource<Texture>&>::buckets<128>();
-  Ref<Rounded &> root;
+  Ref<Character &> root;
 }
 
 void System::addTexture(const String& name, const String& path, int size, bool mipMaps) {
@@ -40,13 +41,14 @@ void System::start() {
   System::addTexture("Bulldozer", "ui/bulldozer-icon", 24);
   System::addTexture("Road",      "ui/road-icon",      24);
   System::addTexture("Zone",      "ui/zone-icon",      24);
+  System::addTexture("Font",      "ui/font",           384);
 
   // Make some elements
-  root = new Rounded();
+  root = new Character();
+  root->setCharacter('B');
   root->setDimensions({ 200, 200 });
   root->setPosition({ 20, 20 });
   root->setColor({ 255, 255, 255, 255 });
-  root->setBorderRadius(20);
 }
 
 
@@ -82,6 +84,6 @@ void System::draw(const Real2& screen) {
   );
   
   // System::drawNode(root);
-  System::loadTexture("Round");
+  System::loadTexture("Font");
   root->drawMesh({ 0, 0 });
 }
