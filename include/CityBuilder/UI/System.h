@@ -37,6 +37,10 @@ public:
   /// @brief Sets up the UI program and texture atlas
   static void start();
 
+  /// @brief Fires on window resize to resize the UI
+  /// @param screen 
+  static void resize(const Real2& screen);
+
   /// @brief Draws a node and all of its children
   /// @param root
   /// @param offset

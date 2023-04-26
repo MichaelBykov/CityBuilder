@@ -16,7 +16,10 @@ using namespace UI;
 
 namespace {
   Map<String, Resource<Texture>&> _textures = Map<String, Resource<Texture>&>::buckets<128>();
-  Ref<Character &> root;
+  Ref<Rounded &> hotbar_bg;
+  Ref<Rectangle &> zone_ico;
+  Ref<Rectangle &> road_ico;
+  Ref<Rectangle &> dozer_ico;
 }
 
 void System::addTexture(const String& name, const String& path, int size, bool mipMaps) {
@@ -44,13 +47,48 @@ void System::start() {
   System::addTexture("Font",      "ui/font",           384);
 
   // Make some elements
-  root = new Character();
-  root->setCharacter('B');
-  root->setDimensions({ 200, 200 });
-  root->setPosition({ 20, 20 });
-  root->setColor({ 255, 255, 255, 255 });
+  hotbar_bg = new Rounded();
+  hotbar_bg->setColor({ 45, 45, 45, 255 });
+  hotbar_bg->setBorderRadius(7);
+
+  zone_ico = new Rectangle();
+  zone_ico->setColor({ 179, 179, 179, 255 });
+  zone_ico->setTexture("Zone");
+
+  road_ico = new Rectangle();
+  road_ico->setColor({ 179, 179, 179, 255 });
+  road_ico->setTexture("Road");
+
+  dozer_ico = new Rectangle();
+  dozer_ico->setColor({ 179, 179, 179, 255 });
+  dozer_ico->setTexture("Bulldozer");
 }
 
+void System::resize(const Real2& screen) {
+  Real icoPercent = screen.x * Real(0.025);
+  Real2 ico_size = { icoPercent, icoPercent };
+  zone_ico->setDimensions(ico_size);
+  road_ico->setDimensions(ico_size);
+  dozer_ico->setDimensions(ico_size);
+
+  Real2 hotbar_size = {
+    (ico_size.x * Real(3)) + Real(7 * 4),
+    ico_size.y + Real(7 * 2)
+  };
+  Real2 hotbar_pos = {
+    (screen.x / Real(2)) - (hotbar_size.x / Real(2)),
+    screen.y - hotbar_size.y - Real(7)
+  };
+  hotbar_bg->setDimensions(hotbar_size);
+  hotbar_bg->setPosition(hotbar_pos);
+
+  Real2 zone_ico_pos = { hotbar_pos.x + Real(7), hotbar_pos.y + Real(7) };
+  zone_ico->setPosition(zone_ico_pos);
+  Real2 road_ico_pos = { zone_ico_pos.x + ico_size.x + Real(7), zone_ico_pos.y };
+  road_ico->setPosition(road_ico_pos);
+  Real2 dozer_ico_pos = { road_ico_pos.x + ico_size.x + Real(7), road_ico_pos.y };
+  dozer_ico->setPosition(dozer_ico_pos);
+}
 
 void System::drawNode(Ref<Node &> root, Real2 offset) {
   // System::loadTexture(root->getTexture());
@@ -83,7 +121,16 @@ void System::draw(const Real2& screen) {
       BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
   );
   
-  // System::drawNode(root);
-  System::loadTexture("Font");
-  root->drawMesh({ 0, 0 });
+  // Draw the UI
+  System::loadTexture("Round");
+  hotbar_bg->drawMesh({ 0, 0 });
+
+  System::loadTexture("Zone");
+  zone_ico->drawMesh({ 0, 0 });
+
+  System::loadTexture("Road");
+  road_ico->drawMesh({ 0, 0 });
+
+  System::loadTexture("Bulldozer");
+  dozer_ico->drawMesh({ 0, 0 });
 }

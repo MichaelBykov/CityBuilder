@@ -113,4 +113,5 @@ void Events::update() {
 
 void Events::resize(Real4 rect) {
   game->mainCamera().setViewport(rect);
+  UI::System::resize({ rect.z - rect.x, rect.w - rect.y });
 }
