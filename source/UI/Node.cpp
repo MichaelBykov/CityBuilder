@@ -9,6 +9,27 @@
 USING_NS_CITY_BUILDER
 using namespace UI;
 
+void Node::setBorderRadius(Real radius) {
+  _radius = radius;
+  if (_radius > 0) {
+    setTexture("Round");
+  } else {
+    setTexture("Square");
+  }
+}
+
+Real Node::getBorderRadius() {
+  return _radius;
+}
+
+void Node::setTexture(const String& texture) {
+  _texture = texture;
+}
+
+String& Node::getTexture() {
+  return _texture;
+}
+
 void Node::draw() {
   _draw();
 }
@@ -51,10 +72,10 @@ void Node::_draw() {
     } else {
       _uiMesh->add({
         // It's a box
-        { Real3(_position.x, _position.y, 1), Real2(0.5, 0.5), _color },
-        { Real3(_position.x + _length.x, _position.y, 1), Real2(0.5, 0.5), _color },
-        { Real3(_position.x, _position.y + _length.y, 1), Real2(0.5, 0.5), _color },
-        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(0.5, 0.5), _color },
+        { Real3(_position.x, _position.y, 1), Real2(0, 0), _color },
+        { Real3(_position.x + _length.x, _position.y, 1), Real2(1, 0), _color },
+        { Real3(_position.x, _position.y + _length.y, 1), Real2(0, 1), _color },
+        { Real3(_position.x + _length.x, _position.y + _length.y, 1), Real2(1, 1), _color },
       }, {
         0, 1, 2, 2, 3, 1, // Box
       });

@@ -9,8 +9,6 @@
 #include <CityBuilder/Game.h>
 #include <CityBuilder/Rendering/Object.h>
 #include <CityBuilder/Rendering/Uniforms.h>
-#include <CityBuilder/Rendering/UIMesh.h>
-#include <CityBuilder/UI/Node.h>
 #include <CityBuilder/UI/System.h>
 #include <CityBuilder/Storage/Ref.h>
 USING_NS_CITY_BUILDER
@@ -21,32 +19,19 @@ namespace {
   
   /// The current global frame number.
   uint64_t frame = 0;
-  
-  
-  // For UI testing
-  Resource<Texture> uiTexture;
-  Resource<UIMesh> uiMesh;
-  Ref<UI::Node &> node;
-  Ref<UI::Node &> node2;
 }
 
 void Events::start() {
   game = new Game();
   
   // Load the default shader
-  Program::pbr = new Program("vertex", "fragment");
-  
-  Program::ui = new Program("ui.vertex", "ui.fragment");
+  Program::pbr = new Program("vertex", "fragment"); 
   
   // Create the shader uniforms
   Uniforms::create();
   
-  
-  
   // UI testing
-  uiTexture = new Texture("ui/round", 128, false);
-  node = new UI::Node(1000, 600, 80, 80, 30, { 115, 208, 255, 255 });
-  node2 = new UI::Node(800, 400, 180, 180, 30, { 255, 215, 94, 255 });
+  UI::System::start();
 }
 
 void Events::stop() {
@@ -104,37 +89,10 @@ void Events::update() {
   
   // Draw the scene
   game->ground().draw();
-  
   game->roads().draw();
-  
+
   // Draw the UI
-  {
-    // Setup the UI projection
-    Real4x4 projectionMatrix;
-    bx::mtxOrtho(
-      projectionMatrix,
-      0, screen.x, screen.y, 0,
-      0.1, 100, 0,
-      bgfx::getCaps()->homogeneousDepth
-    );
-    bgfx::setViewTransform(1, NULL, projectionMatrix);
-    bgfx::setViewRect(1, 0, 0, (uint16_t)screen.x, (uint16_t)screen.y);
-    
-    // Setup the UI view
-    bgfx::touch(1);
-    bgfx::setState(
-      BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-      BGFX_STATE_MSAA |
-      BGFX_STATE_DEPTH_TEST_ALWAYS |
-      BGFX_STATE_BLEND_FUNC(
-        BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-    );
-    
-    // Draw all the UI components
-    uiTexture->load(1, Uniforms::s_ui);
-    node->draw();
-    node2->draw();
-  }
+  UI::System::draw(screen);
   
   // Debug info
   {

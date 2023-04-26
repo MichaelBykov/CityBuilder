@@ -27,6 +27,7 @@ add_library(CityBuilder
   "source/Roads/RoadNetwork.cpp"
   "source/UI/Node.cpp"
   "source/UI/System.cpp"
+  "source/UI/Icon.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
@@ -138,9 +139,17 @@ if(APPLE)
   set_source_files_properties(${RESOURCES_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/textures)
   
   # UI textures
-  compile_ui_texture(round.texture textures/ui/round.png)
+  compile_ui_texture(round.texture          textures/ui/round.png)
+  compile_ui_texture(square.texture         textures/ui/square.png)
+  compile_ui_texture(bulldozer-icon.texture textures/ui/bulldozer-icon.png)
+  compile_ui_texture(road-icon.texture      textures/ui/road-icon.png)
+  compile_ui_texture(zone-icon.texture      textures/ui/zone-icon.png)
   set(RESOURCES_UI_TEXTURES
     round.texture
+    square.texture
+    bulldozer-icon.texture
+    road-icon.texture
+    zone-icon.texture
   )
   set_source_files_properties(${RESOURCES_UI_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/ui)
   
