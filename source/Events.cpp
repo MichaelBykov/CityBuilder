@@ -27,7 +27,6 @@ void Events::start() {
   // Load the default shader
   Program::pbr = new Program("vertex", "fragment"); 
   Program::hover = new Program("hover.vertex", "hover.fragment");
-  Program::ui    = new Program(   "ui.vertex",    "ui.fragment");
   Program::zone  = new Program( "zone.vertex",  "zone.fragment");
   
   // Create the shader uniforms
@@ -95,9 +94,17 @@ void Events::update() {
   }
   
   // Draw the scene
-  game->ground().draw();
-  game->roads().draw();
-
+  game->draw();
+  
+  // Draw any hover components
+  bgfx::setState(
+    BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+    BGFX_STATE_MSAA |
+    BGFX_STATE_BLEND_FUNC(
+      BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+  );
+  game->drawHovers();
+  
   // Draw the UI
   UI::System::draw(screen);
   
