@@ -41,6 +41,9 @@ struct Program {
   /// The standard PBR shader.
   static Resource<Program> pbr;
   
+  /// The hover shader.
+  static Resource<Program> hover;
+  
   /// The standard UI shader.
   static Resource<Program> ui;
   

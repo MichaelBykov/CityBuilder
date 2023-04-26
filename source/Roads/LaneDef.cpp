@@ -42,6 +42,12 @@ bool LaneDef::load(const String &path) {
           { "all.peds", Traffic::Category::all_peds },
           { "all.vehicle", Traffic::Category::all_vehicles },
         })
+        .option("connect")
+          .match(&Traffic::connection, {
+            { "none", Traffic::Connection::none },
+            { "same-direction", Traffic::Connection::sameDirection },
+            { "nearest", Traffic::Connection::nearest }
+          })
       .end()
   ;
   if (!success)

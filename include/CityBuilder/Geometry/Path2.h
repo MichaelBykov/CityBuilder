@@ -8,6 +8,8 @@
 #pragma once
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Storage/List.h>
+#include <CityBuilder/Storage/Ref.h>
+#include "Bounds2.h"
 
 NS_CITY_BUILDER_BEGIN
 
@@ -23,7 +25,48 @@ struct Path2 {
   
   virtual Real length() = 0;
   
-  virtual Path2 *offset(Real distance) = 0;
+  virtual Ref<Path2 &> offset(Real distance) = 0;
+  
+  virtual Ref<Path2 &> split(Real tStart, Real tEnd) = 0;
+  
+  virtual void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) = 0;
+  
+  /// Project a point onto the path.
+  /// \param[in] point
+  ///   The point to project.
+  /// \returns
+  ///   The projected point.
+  virtual Real2 project(Real2 point) = 0;
+  
+  /// Get the point of the path at the given interpolation parameter.
+  /// \param[in] t
+  ///   The interpolation parameter.
+  virtual Real2 point(Real t) = 0;
+  
+  /// Get the normal of the path at the given interpolation parameter.
+  /// \param[in] t
+  ///   The interpolation parameter.
+  virtual Real2 normal(Real t) = 0;
+  
+  /// Convert a point on the path to an interpolation parameter.
+  /// \param[in] point
+  ///   The point to convert.
+  virtual Real inverse(Real2 point) = 0;
+  
+  /// Push the path end point back by the given amount preserving the normal at
+  /// the end point.
+  /// \param[in] start
+  ///   Whether to push the start (true) or end (false) point back.
+  /// \param[in] amount
+  ///   The amount to push back.
+  virtual Ref<Path2 &> pushedBack(bool start, Real amount) = 0;
+  
+  /// Find the intersections between this and another path.
+  /// \param[in] other
+  ///   The path to intersect with.
+  /// \returns
+  ///   A list of intersections.
+  List<Real2> intersections(Path2 &other);
   
   /// Generate a list of equally-spaced points that define the path along with
   /// their normals.
@@ -31,15 +74,38 @@ struct Path2 {
     return _getPointNormals();
   }
   
+  /// Get the bounds of the path.
+  inline Bounds2 bounds() {
+    return _bounds;
+  }
+  
+  /// A description of the path type.
+  enum class Type {
+    line,
+    bezier
+  };
+  
+  /// Get the path type.
+  inline Type type() {
+    return _type;
+  }
+  
 protected:
-  Path2() { }
-  
-  Path2(Real2 start, Real2 end) : start(start), end(end) { }
-  
   /// The computed bounds of the path.
-  Real4 _bounds;
+  Bounds2 _bounds;
   /// A cache of the path points.
   List<Real4> _pointCache;
+  
+  /// The path type.
+  Type _type;
+  
+  
+  
+  Path2(Type type) : _type(type) { }
+  
+  Path2(Type type, Real2 start, Real2 end)
+    : _type(type), start(start), end(end) { }
+  
   
   /// A generator for equidistant path points.
   virtual List<Real4> _pointNormals() = 0;
@@ -50,34 +116,69 @@ protected:
 
 /// A two-dimensional line.
 struct Line2 : Path2 {
-  Line2() { }
+  Line2() : Path2(Type::line) { }
   
-  Line2(const Real2 &start, const Real2 &end);
+  Line2(Real2 start, Real2 end);
   
   Real length() override;
   
-  Path2 *offset(Real distance) override;
+  Ref<Path2 &> offset(Real distance) override;
+  
+  Ref<Path2 &> split(Real tStart, Real tEnd) override;
+  
+  void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) override;
+  
+  Real2 project(Real2 point) override;
+  
+  Real2 point(Real t) override;
+  
+  Real2 normal(Real t) override;
+  
+  Real inverse(Real2 point) override;
+  
+  Ref<Path2 &> pushedBack(bool start, Real amount) override;
   
 protected:
   List<Real4> _pointNormals() override;
 };
 
-/// A two-dimensional arc curve.
-struct Arc2 : Path2 {
-  /// A control point of the curve.
-  const Real2 control;
+/// A two-dimensional cubic Bezier curve.
+struct Bezier2 : Path2 {
+  const Real2 control1, control2;
   
-  Arc2() { }
+  Bezier2() : Path2(Type::bezier) { }
   
-  Arc2(const Real2 &start, const Real2 &control, const Real2 &end);
+  Bezier2(Real2 start, Real2 control, Real2 end);
+  
+  Bezier2(Real2 start, Real2 control1, Real2 control2, Real2 end);
   
   Real length() override;
   
-  Path2 *offset(Real distance) override;
+  /// Check if the Bezier curve is degenerate
+  /// (all control points and end points are collinear).
+  bool isDegenerate();
+  
+  Ref<Path2 &> offset(Real distance) override;
+  
+  Ref<Path2 &> split(Real tStart, Real tEnd) override;
+  
+  void split(Real t, Ref<Path2 &> &lhs, Ref<Path2 &> &rhs) override;
+  
+  Real2 project(Real2 point) override;
+  
+  Real2 point(Real t) override;
+  
+  Real2 normal(Real t) override;
+  
+  Real inverse(Real2 point) override;
+  
+  Ref<Path2 &> pushedBack(bool start, Real amount) override;
   
 protected:
-  Real2 _center;
-  Real _length;
+  
+  List<Real3> _lengths;
+  
+  Real _lengthLookup(Real t);
   
   List<Real4> _pointNormals() override;
 };

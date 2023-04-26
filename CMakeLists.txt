@@ -17,17 +17,19 @@ add_library(CityBuilder
   "source/Storage/Check.cpp"
   "source/Storage/String.cpp"
   "source/Geometry/Path2.cpp"
+  "source/Geometry/RadiusPath2.cpp"
   "source/Geometry/Profile.cpp"
-  # "source/Geometry/Mesh.cpp"
-  # "source/Geometry/SharedMesh.cpp"
+  "source/Geometry/Ray3.cpp"
   "source/Tools/Markup.cpp"
   "source/Roads/LaneDef.cpp"
   "source/Roads/RoadDef.cpp"
   "source/Roads/Road.cpp"
+  "source/Roads/Intersection.cpp"
   "source/Roads/RoadNetwork.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
+  "Source/Rendering/DynamicMesh.cpp"
   "Source/Rendering/UIMesh.cpp"
   "Source/Rendering/Program.cpp"
   "Source/Rendering/Texture.cpp"
@@ -106,12 +108,16 @@ if(APPLE)
   compile_shader(fragment.shader FRAGMENT shaders/fragment.sc)
   compile_shader(ui.vertex.shader VERTEX shaders/ui.vertex.sc)
   compile_shader(ui.fragment.shader FRAGMENT shaders/ui.fragment.sc)
+  compile_shader(hover.vertex.shader VERTEX shaders/hover.vertex.sc)
+  compile_shader(hover.fragment.shader FRAGMENT shaders/hover.fragment.sc)
   compile_texture(grass.texture media/grass-tmp.jpg)
   set(RESOURCE_FILES
     vertex.shader
     fragment.shader
     ui.vertex.shader
     ui.fragment.shader
+    hover.vertex.shader
+    hover.fragment.shader
     grass.texture
   )
   

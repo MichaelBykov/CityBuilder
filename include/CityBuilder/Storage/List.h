@@ -12,6 +12,23 @@
 #include <initializer_list>
 #include <new>
 
+namespace Templates {
+  /// Access the type contents of a single-parameter lambda.
+  template<typename>
+  struct Lambda1 { };
+
+  /// Access the type contents of a single-parameter lambda.
+  template<typename Lambda, typename Return, typename Parameter>
+  struct Lambda1<Return (Lambda::*)(Parameter) const> {
+    /// The lambda return type.
+    typedef Return returns;
+    
+    /// The lambda parameter's type.
+    typedef Parameter parameter;
+  };
+  
+} // namespace Templates
+
 /// A general-purpose array list.
 template<typename T>
 struct List {
@@ -21,6 +38,9 @@ struct List {
   typedef const T *ConstIterator;
   
 private:
+  template<typename U>
+  friend struct List;
+  
   /// The data pointed to by a list.
   struct Data {
     /// The number of references to the list data.
@@ -212,7 +232,7 @@ public:
   
   /// Whether or not the list is empty.
   bool isEmpty() const {
-    return _data == nullptr;
+    return _data == nullptr || _data->count == 0;
   }
   
   const T *begin() const {
@@ -355,6 +375,112 @@ public:
     if (_data != nullptr) {
       _data->release();
       _data = nullptr;
+    }
+  }
+  
+  
+  
+  template<typename Lambda, typename U = typename Templates::Lambda1<decltype(&Lambda::operator())>::returns>
+  List<U> map(Lambda convert) const {
+    List<U> list;
+    list._expand(count());
+    for (size_t i = 0; i < count(); i++)
+      new (&list._data->contents[i]) U(convert(_data->contents[i]));
+    list._data->count = count();
+    return list;
+  }
+  
+  
+  
+  /// Sort the list using the default comparison operator.
+  template<typename = T>
+  void sort() {
+    if (count() < 2)
+      // Nothing to sort
+      return;
+    _sort(_data->contents, _data->count);
+  }
+  
+  /// Sort the list using a lambda.
+  /// \param[in] comparison
+  ///   The comparison function to use.
+  ///   Should accept two arguments, lhs and rhs, and return lhs < rhs.
+  template<typename Lambda>
+  void sort(Lambda comparison) {
+    if (count() < 2)
+      // Nothing to sort
+      return;
+    _sort(_data->contents, _data->count, comparison);
+  }
+  
+private:
+  template<typename = T>
+  void _sort(T *list, size_t count) {
+    // Merge sort
+    if (count < 2)
+      // Nothing to sort
+      return;
+    else if (count == 2) {
+      // Check if the first two terms need to be swapped
+      if (list[1] < list[0]) {
+        T t = std::move(list[0]);
+        new (&list[0]) T(std::move(list[1]));
+        new (&list[1]) T(std::move(t));
+      }
+    } else {
+      // Divide
+      size_t mid = count / 2;
+      _sort(list, mid);
+      _sort(list + mid, count - mid);
+      
+      // Merge
+      size_t i = 0, j = mid;
+      while (i < j && j < count) {
+        if (list[j] < list[i]) {
+          // Rotate
+          T t = std::move(list[j]);
+          for (size_t k = j; k > i; k--)
+            new (&list[k]) T(std::move(list[k - 1]));
+          new (&list[i]) T(std::move(t));
+          j++;
+        }
+        i++;
+      }
+    }
+  }
+  
+  template<typename Lambda>
+  void _sort(T *list, size_t count, Lambda comparison) {
+    // Merge sort
+    if (count < 2)
+      // Nothing to sort
+      return;
+    else if (count == 2) {
+      // Check if the first two terms need to be swapped
+      if (comparison(list[1], list[0])) {
+        T t = std::move(list[0]);
+        new (&list[0]) T(std::move(list[1]));
+        new (&list[1]) T(std::move(t));
+      }
+    } else {
+      // Divide
+      size_t mid = count / 2;
+      _sort(list, mid);
+      _sort(list + mid, count - mid);
+      
+      // Merge
+      size_t i = 0, j = mid;
+      while (i < j && j < count) {
+        if (list[j] < list[i]) {
+          // Rotate
+          T t = std::move(list[j]);
+          for (size_t k = j; k > i; k--)
+            new (&list[k]) T(std::move(list[k - 1]));
+          new (&list[i]) T(std::move(t));
+          j++;
+        }
+        i++;
+      }
     }
   }
 };

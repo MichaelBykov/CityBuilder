@@ -7,7 +7,7 @@
 
 #pragma once
 #include <CityBuilder/Common.h>
-#include <CityBuilder/Geometry/Path2.h>
+#include <CityBuilder/Geometry/RadiusPath2.h>
 #include <CityBuilder/Rendering/Mesh.h>
 #include "Connection.h"
 #include "RoadDef.h"
@@ -20,40 +20,38 @@ struct Road {
   RoadDef *definition;
   
   /// The road's path.
-  Path2 &path;
+  RadiusPath2 path;
   
   /// The road's start connection.
-  Connection start;
+  Connection start { };
   
   /// The road's end connection.
-  Connection end;
+  Connection end { };
   
   
   
   /// Create a new road.
-  /// \param definition
+  /// \param[in] definition
   ///   The road definition.
   ///   Should be a shared pointer.
-  /// \param path
+  /// \param[in] path
   ///   The road's path.
-  ///   Should be a unique instance.
-  /// \param scene
-  ///   The scene manager.
-  Road(RoadDef *definition, Path2 &path);
-  
-  // We will never need to be transferring the road around.
-  Road(const Road &other) = delete;
-  
-  ~Road();
+  Road(RoadDef *definition, Ref<Path2 &> path);
   
 private:
   friend struct RoadNetwork;
+  friend struct Intersection;
   
   /// Whether or not the road needs to be redrawn.
   bool _dirty = true;
   
+  struct _mesh {
+    Texture *texture;
+    Resource<Mesh> mesh;
+  };
+  
   /// The road's meshes.
-  List<Resource<Mesh>> _meshes { };
+  List<_mesh> _meshes { };
 };
 
 NS_CITY_BUILDER_END

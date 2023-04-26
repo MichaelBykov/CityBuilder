@@ -12,6 +12,20 @@ USING_NS_CITY_BUILDER
 
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
+| Events                                                                       |
+|                                                                              |
+\* -------------------------------------------------------------------------- */
+
+Event<> Input::onPrimaryMouseDown { };
+
+Event<> Input::onCancel { };
+
+Event<int> Input::onQuickAction { };
+
+
+
+/* -------------------------------------------------------------------------- *\
+|                                                                              |
 | Default values                                                               |
 |                                                                              |
 \* -------------------------------------------------------------------------- */
@@ -38,9 +52,11 @@ Real2 Input::_mouseMoveSpeed = { 0.001, 0.001 };
 
 Real2 Input::_mouseOrbitSpeed = { 0.0033, 0.0033 };
 
-bool Input::_leftMouseDown = false;
+bool Input::_primaryMouseDown = false;
 
-bool Input::_rightMouseDown = false;
+bool Input::_secondaryMouseDown = false;
+
+Real2 Input::_mousePos = { };
 
 bool Input::_systemKeys[16] { false };
 
@@ -162,6 +178,26 @@ void Input::setMouseOrbitSpeed(Real2 speed) {
   _mouseOrbitSpeed = speed;
 }
 
+Real2 Input::mousePosition() {
+  return _mousePos;
+}
+
+bool Input::primaryMouseDown() {
+  return _primaryMouseDown;
+}
+
+bool Input::secondaryMouseDown() {
+  return _secondaryMouseDown;
+}
+
+bool Input::shiftDown() {
+#if (__APPLE__ && __MACH__) // MacOS
+  
+  return _systemKeys[0] || _systemKeys[4];
+  
+#endif
+}
+
 
 
 
@@ -183,6 +219,20 @@ void Events::inputStart(Input &input) {
       NS_CITY_BUILDER Input::_keysDown[key] = true;
     }
     
+    // Quick actions
+    switch (key) {
+    case (int)KeyCode::_0: NS_CITY_BUILDER Input::onQuickAction(0); break;
+    case (int)KeyCode::_1: NS_CITY_BUILDER Input::onQuickAction(1); break;
+    case (int)KeyCode::_2: NS_CITY_BUILDER Input::onQuickAction(2); break;
+    case (int)KeyCode::_3: NS_CITY_BUILDER Input::onQuickAction(3); break;
+    case (int)KeyCode::_4: NS_CITY_BUILDER Input::onQuickAction(4); break;
+    case (int)KeyCode::_5: NS_CITY_BUILDER Input::onQuickAction(5); break;
+    case (int)KeyCode::_6: NS_CITY_BUILDER Input::onQuickAction(6); break;
+    case (int)KeyCode::_7: NS_CITY_BUILDER Input::onQuickAction(7); break;
+    case (int)KeyCode::_8: NS_CITY_BUILDER Input::onQuickAction(8); break;
+    case (int)KeyCode::_9: NS_CITY_BUILDER Input::onQuickAction(9); break;
+    }
+    
     // Handle the system modifier keys
 #if (__APPLE__ && __MACH__) // MacOS
     
@@ -195,10 +245,26 @@ void Events::inputStart(Input &input) {
     case (int)KeyCode::rightCommand: NS_CITY_BUILDER Input::_systemKeys[5] = true; break;
     case (int)KeyCode::rightControl: NS_CITY_BUILDER Input::_systemKeys[6] = true; break;
     case (int)KeyCode::rightOption : NS_CITY_BUILDER Input::_systemKeys[7] = true; break;
+    
+    case (int)KeyCode::escape   : NS_CITY_BUILDER Input::onCancel(); break;
+    case (int)KeyCode::backspace: NS_CITY_BUILDER Input::onCancel(); break;
     }
       
 #endif
   } break;
+  
+  case Input::Type::mouseButton:
+    switch (input.mouseButton.button) {
+    case 0:
+      NS_CITY_BUILDER Input::_primaryMouseDown = true;
+      NS_CITY_BUILDER Input::onPrimaryMouseDown();
+      break;
+    
+    case 1:
+      NS_CITY_BUILDER Input::_secondaryMouseDown = true;
+      break;
+    }
+    break;
   
   default:
     break;
@@ -233,6 +299,13 @@ void Events::inputStop(Input &input) {
 #endif
   } break;
   
+  case Input::Type::mouseButton:
+    switch (input.mouseButton.button) {
+    case 0: NS_CITY_BUILDER Input::_primaryMouseDown   = false; break;
+    case 1: NS_CITY_BUILDER Input::_secondaryMouseDown = false; break;
+    }
+    break;
+  
   default:
     break;
   }
@@ -241,8 +314,18 @@ void Events::inputStop(Input &input) {
 void Events::inputChange(Input &input) {
   switch (input.type) {
   case Input::Type::keyboard:
-  case Input::Type::mouseDrag:
+  case Input::Type::mouseButton:
     break;
+  
+  case Input::Type::mouseDrag: {
+    // Update the current mouse position
+    NS_CITY_BUILDER Input::_mousePos = input.mouseDrag.position;
+  } break;
+  
+  case Input::Type::mouseMove: {
+    // Update the current mouse position
+    NS_CITY_BUILDER Input::_mousePos = input.mousePosition;
+  } break;
   
   case Input::Type::mouseScroll: {
     // There are two times when scrolling is used: UI and to operate the scene

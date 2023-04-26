@@ -88,11 +88,78 @@ Mesh &Mesh::extrude(const ProfileMesh &profile, Path2 &path, Real2 offset, Real 
   return *this;
 }
 
+Mesh &Mesh::halfRevolve(const ProfileMesh &profile, Real2 center, Angle startAngle, Angle endAngle, Real2 offset, Real scale) {
+  uint16_t indexOffset = _vertices.count();
+  
+  // Get the path points
+  Angle angle = Angle::span(startAngle, endAngle);
+  int points = (angle.radians / Real(5_deg)).ceil().max(2);
+  
+  // Extrude the profile
+  for (int i = 0; i < points; i++) {
+    // Get the current normal
+    Angle a = startAngle + angle * (Real(i) / Real(points - 1));
+    Real2 normal = a.cosSin();
+    
+    // Add the vertices
+    int vertexCount = 0;
+    for (const ProfileMesh::Vertex &vertex : profile.vertices) {
+      if (vertex.position.x + offset.x + Real(0.0001) > 0) {
+        // Over the halfway point, add a vertex at the center
+        Real _offset = (vertex.position.x + offset.x) * scale;
+        _vertices.append({
+          Real3(center.x + normal.x * _offset, (offset.y + vertex.position.y) * scale, center.y + normal.y * _offset),
+          { 0, 1, 0 },
+          { vertex.uv, Real(i) / Real(points - 1) }
+        });
+        vertexCount++;
+        break;
+      }
+      Real2 norm = normal * Real2(vertex.normal.x);
+      _vertices.append({
+        Real3(
+          center.x,
+          (offset.y + vertex.position.y) * scale,
+          center.y
+        ) +
+        Real3(normal.x, 0, normal.y) *
+        Real3((vertex.position.x + offset.x) * scale),
+        { norm.x, vertex.normal.y, norm.y },
+        { vertex.uv, Real(i) / Real(points - 1) }
+      });
+      vertexCount++;
+    }
+    
+    if (i > 0) {
+      // Connect triangles with the previous extrusion
+      int prev = indexOffset + (i - 1) * vertexCount;
+      int curr = prev + vertexCount;
+      for (intptr_t j = 0; j < profile.triangles.count(); j += 2)
+        if (profile.triangles[j] < vertexCount && profile.triangles[j + 1] < vertexCount) {
+          _indices.append(prev + profile.triangles[j    ]);
+          _indices.append(curr + profile.triangles[j    ]);
+          _indices.append(prev + profile.triangles[j + 1]);
+          
+          _indices.append(curr + profile.triangles[j    ]);
+          _indices.append(curr + profile.triangles[j + 1]);
+          _indices.append(prev + profile.triangles[j + 1]);
+        } else
+          break;
+    }
+  }
+  
+  return *this;
+}
+
 
 
 void Mesh::load() {
   if (loaded)
     // Safety
+    return;
+  
+  if (_vertices.isEmpty() || _indices.isEmpty())
+    // Nothing to load
     return;
   
   // Create the vertex buffer
@@ -117,6 +184,10 @@ void Mesh::load() {
 }
 
 void Mesh::draw(Resource<Program> shader) const {
+  if (!loaded)
+    // Safety
+    return;
+  
   // Submit the mesh to the GPU for rendering
   bgfx::setVertexBuffer(0, _vertexBuffer);
   bgfx::setIndexBuffer(_indexBuffer);
