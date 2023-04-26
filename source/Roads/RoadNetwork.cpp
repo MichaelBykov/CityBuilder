@@ -304,11 +304,11 @@ namespace {
     List<Real> t = intersections.map([road](Real2 p) { return road->path.inverse(p); });
     t.sort();
     
-    if (t.first().approxZero()) {
+    if (t.first() < 1.0 / road->path.length()) {
       start = true;
       t.remove(0);
     }
-    if (!t.isEmpty() && (t.last() - Real(1)).approxZero()) {
+    if (!t.isEmpty() && 1 - t.last() < 1.0 / road->path.length()) {
       end = true;
       t.remove(t.count() - 1);
     }
@@ -368,6 +368,53 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
   
   // Find the intersection points
   List<Real2> intersections = a->path.path().intersections(b->path.path());
+  { // Project points
+    Real2 projection;
+    if ((projection = a->path.path().project(b->path.start())).squareDistance(b->path.start()) < 1) {
+      // Add if it's not already there
+      bool exists = false;
+      for (Real2 p : intersections)
+        if (p.approxEqual(projection).verticalAnd()) {
+          exists = true;
+          break;
+        }
+      if (!exists)
+        intersections.append(projection);
+    }
+    if ((projection = a->path.path().project(b->path.end())).squareDistance(b->path.end()) < 1) {
+      // Add if it's not already there
+      bool exists = false;
+      for (Real2 p : intersections)
+        if (p.approxEqual(projection).verticalAnd()) {
+          exists = true;
+          break;
+        }
+      if (!exists)
+        intersections.append(projection);
+    }
+    if ((projection = b->path.path().project(a->path.start())).squareDistance(a->path.start()) < 1) {
+      // Add if it's not already there
+      bool exists = false;
+      for (Real2 p : intersections)
+        if (p.approxEqual(projection).verticalAnd()) {
+          exists = true;
+          break;
+        }
+      if (!exists)
+        intersections.append(projection);
+    }
+    if ((projection = b->path.path().project(a->path.end())).squareDistance(a->path.end()) < 1) {
+      // Add if it's not already there
+      bool exists = false;
+      for (Real2 p : intersections)
+        if (p.approxEqual(projection).verticalAnd()) {
+          exists = true;
+          break;
+        }
+      if (!exists)
+        intersections.append(projection);
+    }
+  }
   if (intersections.isEmpty())
     // Nothing to intersect
     return { a };

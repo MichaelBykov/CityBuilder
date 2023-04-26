@@ -85,14 +85,12 @@ namespace _Internal_Intersection_Table_ {
         ));
         
         // Filter out the duplicates
-        intersections.sort([](const Real2 &lhs, const Real2 &rhs) {
-          return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y);
-        });
-        for (int i = 1; i < intersections.count(); i++)
-          if (intersections[i].approxEqual(intersections[i - 1]).verticalAnd()) {
-            intersections.remove(i);
-            i--;
-          }
+        for (int i = 0; i < intersections.count(); i++)
+          for (int j = i + 1; j < intersections.count(); j++)
+            if (intersections[i].squareDistance(intersections[j]) < 0.1) {
+              intersections.remove(j);
+              j--;
+            }
         
         return intersections;
       }
@@ -153,15 +151,12 @@ namespace _Internal_Intersection_Table_ {
         ));
         
         // Filter out the duplicates
-        intersections.sort([](const Real2 &lhs, const Real2 &rhs) {
-          return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y);
-        });
-        for (int i = 1; i < intersections.count(); i++)
-          if (intersections[i].approxEqual(intersections[i - 1]).verticalAnd()) {
-            intersections.remove(i);
-            i--;
-          }
-        
+        for (int i = 0; i < intersections.count(); i++)
+          for (int j = i + 1; j < intersections.count(); j++)
+            if (intersections[i].squareDistance(intersections[j]) < 0.1) {
+              intersections.remove(j);
+              j--;
+            }
         return intersections;
       }
     }
