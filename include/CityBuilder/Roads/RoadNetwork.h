@@ -141,6 +141,17 @@ private:
   ///   The mesh that was added or loaded, as applicable.
   Resource<Mesh> _addMesh(Road *road, LaneDef *lane, BSTree<LaneDef *, int> &lanes);
   
+  /// Add a mesh to an intersection for a given lane.
+  /// \param[in] intersection
+  ///   The intersection to add the lane to.
+  /// \param[in] lane
+  ///   The lane to add a mesh for.
+  /// \param[in] lanes
+  ///   The lane mesh store for the road.
+  /// \returns
+  ///   The mesh that was added or loaded, as applicable.
+  Resource<Mesh> _addMesh(Intersection *intersection, LaneDef *lane, BSTree<LaneDef *, int> &lanes);
+  
   /// The road meshes in the network.
   Map<Texture *, List<_mesh>> _meshes;
   

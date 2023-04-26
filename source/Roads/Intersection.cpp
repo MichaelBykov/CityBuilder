@@ -18,6 +18,8 @@ Intersection::Intersection(Real2 center)
 }
 
 void Intersection::addRoad(Road *road) {
+  _dirty = true;
+  
   // Check which end of the road connects to the intersection
   bool start =
     road->path.start().squareDistance(center) <
@@ -68,4 +70,13 @@ void Intersection::addRoad(Road *road) {
   
   // Mark the intersection as dirty
   _dirty = true;
+}
+
+void Intersection::replaceRoad(Road *road, Road *newRoad) {
+  for (Arm &arm : arms)
+    if (arm.road == road) {
+      arm.road = newRoad;
+      newRoad->_dirty = true;
+      return;
+    }
 }

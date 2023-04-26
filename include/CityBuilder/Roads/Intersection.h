@@ -56,6 +56,14 @@ struct Intersection {
   ///   The road to add.
   void addRoad(Road *road);
   
+  /// Replace an existing road in the intersection with a subset of the same
+  /// road.
+  /// \param[inout] road
+  ///   The road to replace.
+  /// \param[inout] newRoad
+  ///   The new road to replace the old road with.
+  void replaceRoad(Road *road, Road *newRoad);
+  
 private:
   friend struct RoadNetwork;
   
