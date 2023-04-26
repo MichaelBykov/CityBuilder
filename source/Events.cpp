@@ -9,6 +9,8 @@
 #include <CityBuilder/Game.h>
 #include <CityBuilder/Rendering/Object.h>
 #include <CityBuilder/Rendering/Uniforms.h>
+#include <CityBuilder/UI/System.h>
+#include <CityBuilder/Storage/Ref.h>
 USING_NS_CITY_BUILDER
 
 namespace {
@@ -22,13 +24,15 @@ namespace {
 void Events::start() {
   game = new Game();
   
-  // Load the default shaders
-  Program::pbr   = new Program(      "vertex",       "fragment");
+  // Load the default shader
+  Program::pbr = new Program("vertex", "fragment"); 
   Program::hover = new Program("hover.vertex", "hover.fragment");
-  Program::ui    = new Program(   "ui.vertex",    "ui.fragment");
   
   // Create the shader uniforms
   Uniforms::create();
+  
+  // UI testing
+  UI::System::start();
 }
 
 void Events::stop() {
@@ -89,41 +93,11 @@ void Events::update() {
   }
   
   // Draw the scene
-  game->draw();
-  
-  // Draw any hover components
-  bgfx::setState(
-    BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-    BGFX_STATE_MSAA |
-    BGFX_STATE_BLEND_FUNC(
-      BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-  );
-  game->drawHovers();
-  
+  game->ground().draw();
+  game->roads().draw();
+
   // Draw the UI
-  {
-    // Setup the UI projection
-    Real4x4 projectionMatrix;
-    bx::mtxOrtho(
-      projectionMatrix,
-      0, screen.x, screen.y, 0,
-      0.1, 100, 0,
-      bgfx::getCaps()->homogeneousDepth
-    );
-    bgfx::setViewTransform(1, NULL, projectionMatrix);
-    bgfx::setViewRect(1, 0, 0, (uint16_t)screen.x, (uint16_t)screen.y);
-    
-    // Setup the UI view
-    bgfx::touch(1);
-    bgfx::setState(
-      BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-      BGFX_STATE_MSAA |
-      BGFX_STATE_BLEND_FUNC(
-        BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-    );
-    
-    // Draw all the UI components
-  }
+  UI::System::draw(screen);
   
   // Debug info
   {
@@ -144,4 +118,5 @@ void Events::update() {
 
 void Events::resize(Real4 rect) {
   game->mainCamera().setViewport(rect);
+  UI::System::resize({ rect.z - rect.x, rect.w - rect.y });
 }
