@@ -9,6 +9,7 @@
 #include <CityBuilder/Common.h>
 #include <CityBuilder/Geometry/RadiusPath2.h>
 #include <CityBuilder/Rendering/Mesh.h>
+#include <CityBuilder/Zones/ZoneDef.h>
 #include "Connection.h"
 #include "RoadDef.h"
 
@@ -52,6 +53,9 @@ private:
   
   /// The road's meshes.
   List<_mesh> _meshes { };
+  
+  /// The road's zone mesh.
+  Resource<Mesh> _zoneMesh = nullptr;
 };
 
 NS_CITY_BUILDER_END

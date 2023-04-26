@@ -78,6 +78,37 @@ namespace {
   };
   
   
+  ProfileMesh zoneProfile = {{
+    ProfilePoint {
+      .position = { 0, 0 },
+      .normal0 = { 0, 1 },
+      .uv0 = 0,
+      .type = ProfilePoint::Type::move
+    },
+    ProfilePoint {
+      .position = { 9, 0 },
+      .normal0 = { 0, 0.99 },
+      .uv0 = 1,
+      .type = ProfilePoint::Type::move
+    },
+  }};
+  
+  ProfileMesh inverseZoneProfile = {{
+    ProfilePoint {
+      .position = { 0, 0 },
+      .normal0 = { 0, 0.99 },
+      .uv0 = 1,
+      .type = ProfilePoint::Type::move
+    },
+    ProfilePoint {
+      .position = { 9, 0 },
+      .normal0 = { 0, 0 },
+      .uv0 = 0,
+      .type = ProfilePoint::Type::move
+    },
+  }};
+  
+  
   
   /// The scale of road cross sections.
   const Real scale = 0.333333333333;
@@ -94,10 +125,17 @@ RoadNetwork::RoadNetwork() {
       "single",
       "highway",
       nullptr
+    ) ||
+    !ZoneDef::loadBatch("zones/",
+      "residential",
+      // "commercial",
+      // "industrial",
+      nullptr
     )
   ) exit(1);
   
   _markingTexture = new Texture("textures/lane-markers");
+  _zoneTexture = new Texture("textures/zone", (uint64_t) BGFX_SAMPLER_U_CLAMP);
 }
 
 Road *RoadNetwork::add(Road *road) {
@@ -129,6 +167,16 @@ void RoadNetwork::remove(Road *road) {
       }
     }
     road->_meshes.removeAll();
+  }
+  
+  // Remove the zone mesh
+  if (road->_zoneMesh) {
+    for (intptr_t i = 0; i < _zoneMeshes.count(); i++)
+      if (_zoneMeshes[i].address() == road->_zoneMesh.address()) {
+        _zoneMeshes.remove(i);
+        break;
+      }
+    road->_zoneMesh = nullptr;
   }
   
   for (intptr_t i = 0; i < _roads.count(); i++)
@@ -730,6 +778,18 @@ void RoadNetwork::update() {
         road->_meshes.removeAll();
       }
       
+      if (road->_zoneMesh) {
+        // Remove the zone mesh
+        for (intptr_t i = 0; i < _zoneMeshes.count(); i++)
+          if (_zoneMeshes[i].address() == road->_zoneMesh.address()) {
+            _zoneMeshes.remove(i);
+            break;
+          }
+        road->_zoneMesh = nullptr;
+      }
+      
+      
+      
       // Create a new mesh
       BSTree<LaneDef *, int> lanes;
       
@@ -834,6 +894,19 @@ void RoadNetwork::update() {
       // Push all the created meshes to the GPU
       for (Road::_mesh &mesh : road->_meshes)
         mesh.mesh->load();
+      
+      // Create a zone mesh
+      if (road->definition->allowBuildings != RoadDef::Buildings::none) {
+        Resource<Mesh> mesh = new Mesh();
+        
+        // Extrude the zone
+        mesh->extrude(zoneProfile, road->path.path(), { road->definition->dimensions.x * Real(0.5), 0.1 }, scale);
+        mesh->extrude(inverseZoneProfile, road->path.path(), { -road->definition->dimensions.x * Real(0.5) - Real(9), 0.1 }, scale);
+        
+        road->_zoneMesh = mesh;
+        _zoneMeshes.append(mesh);
+        mesh->load();
+      }
       
       road->_dirty = false;
     }
@@ -1089,18 +1162,24 @@ void RoadNetwork::update() {
                   Real2 vector1 = normal.rightPerpendicular();
                   Real2 vector2 = nextNormal.rightPerpendicular();
                   Real determinant = vector1.x * vector2.y - vector1.y * vector2.x;
-                  Real2 diff = prevOrigin - origin;
-                  Real s = (diff.x * vector2.y - diff.y * vector2.x) / determinant;
-                  Real t = (diff.x * vector1.y - diff.y * vector1.x) / determinant;
-                  Real2 intersect = origin + vector1 * Real2(s);
                   
-                  Bezier2 curve {
-                    origin,
-                    origin + Real2(0.5) * (intersect - origin),
-                    prevOrigin + Real2(0.5) * (intersect - prevOrigin),
-                    prevOrigin
-                  };
-                  mesh->extrude(lane.definition->profile, curve, { -lane.definition->profile.dimensions.x * Real(0.5), 0 }, scale);
+                  if (determinant.approxZero()) {
+                    Line2 line { origin, prevOrigin };
+                    mesh->extrude(lane.definition->profile, line, { -lane.definition->profile.dimensions.x * Real(0.5), 0 }, scale);
+                  } else {
+                    Real2 diff = prevOrigin - origin;
+                    Real s = (diff.x * vector2.y - diff.y * vector2.x) / determinant;
+                    Real t = (diff.x * vector1.y - diff.y * vector1.x) / determinant;
+                    Real2 intersect = origin + vector1 * Real2(s);
+                    
+                    Bezier2 curve {
+                      origin,
+                      origin + Real2(0.5) * (intersect - origin),
+                      prevOrigin + Real2(0.5) * (intersect - prevOrigin),
+                      prevOrigin
+                    };
+                    mesh->extrude(lane.definition->profile, curve, { -lane.definition->profile.dimensions.x * Real(0.5), 0 }, scale);
+                  }
                 }
               }
               break;
@@ -1182,6 +1261,21 @@ void RoadNetwork::draw() {
       // Draw
       mesh.mesh->draw(Program::pbr);
       meshes++;
+    }
+  }
+}
+
+void RoadNetwork::drawZones() {
+  // Draw the zones
+  if (!_zoneMeshes.isEmpty()) {
+    // Setup the material
+    _zoneTexture->load(Uniforms::s_albedo);
+    bgfx::setUniform(Uniforms::u_textureTile, Real4(1.0));
+    
+    for (Resource<Mesh> &mesh : _zoneMeshes) {
+      bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |        \
+   BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
+      mesh->draw(Program::pbr);
     }
   }
 }

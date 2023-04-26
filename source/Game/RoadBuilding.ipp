@@ -10,7 +10,6 @@
 #include <CityBuilder/Rendering/DynamicMesh.h>
 USING_NS_CITY_BUILDER
 
-// Define the action states
 namespace {
   struct Road_Building {
     /// The current point where the road is being built.

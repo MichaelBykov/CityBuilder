@@ -68,10 +68,16 @@ struct Game {
     
     /// The user is currently placing a road.
     road_building,
+    
+    /// The user is currently zoning.
+    zoning,
   };
   
   /// Start building a road.
   void buildRoad(RoadDef *road);
+  
+  /// Start zoning.
+  void zone(ZoneDef *zone);
   
   /// Cancel the current action.
   void cancel();

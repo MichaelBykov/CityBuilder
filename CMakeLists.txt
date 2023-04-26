@@ -21,6 +21,7 @@ add_library(CityBuilder
   "source/Geometry/Profile.cpp"
   "source/Geometry/Ray3.cpp"
   "source/Tools/Markup.cpp"
+  "source/Zones/ZoneDef.cpp"
   "source/Roads/LaneDef.cpp"
   "source/Roads/RoadDef.cpp"
   "source/Roads/Road.cpp"
@@ -129,15 +130,22 @@ if(APPLE)
   )
   set_source_files_properties(${RESOURCES_ROADS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/roads)
   
+  set(RESOURCES_ZONES
+    "zones/residential.zone"
+  )
+  set_source_files_properties(${RESOURCES_ZONES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/zones)
+  
   compile_texture(pavement.texture     media/pavement.png)
   compile_texture(falloff.texture      media/falloff.png)
   compile_texture(lane-markers.texture media/lane-markers.png)
   compile_texture(sidewalk.texture     media/sidewalk.png)
+  compile_texture(zone.texture         media/zone.png)
   set(RESOURCES_TEXTURES
     pavement.texture
     falloff.texture
     lane-markers.texture
     sidewalk.texture
+    zone.texture
   )
   set_source_files_properties(${RESOURCES_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/textures)
   
@@ -153,6 +161,7 @@ if(APPLE)
     driver/main.cpp
     ${RESOURCE_FILES}
     ${RESOURCES_ROADS}
+    ${RESOURCES_ZONES}
     ${RESOURCES_TEXTURES}
     ${RESOURCES_UI_TEXTURES}
   )

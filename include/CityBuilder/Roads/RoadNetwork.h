@@ -123,6 +123,9 @@ struct RoadNetwork {
   /// Draw the roads.
   void draw();
   
+  /// Draw the zones.
+  void drawZones();
+  
 private:
   /// A mesh in the road network.
   struct _mesh {
@@ -167,8 +170,14 @@ private:
   /// The intersections in the network.
   List<Intersection *> _intersections;
   
+  /// The zone meshes
+  List<Resource<Mesh>> _zoneMeshes;
+  
   /// The texture for road markings
   Resource<Texture> _markingTexture;
+  
+  /// The texture for zones
+  Resource<Texture> _zoneTexture;
 };
 
 NS_CITY_BUILDER_END
