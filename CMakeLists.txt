@@ -21,6 +21,7 @@ add_library(CityBuilder
   "source/Geometry/Profile.cpp"
   "source/Geometry/Ray3.cpp"
   "source/Tools/Markup.cpp"
+  "source/Zones/ZoneDef.cpp"
   "source/Roads/LaneDef.cpp"
   "source/Roads/RoadDef.cpp"
   "source/Roads/Road.cpp"
@@ -34,6 +35,7 @@ add_library(CityBuilder
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
+  "Source/Rendering/ColorMesh.cpp"
   "Source/Rendering/DynamicMesh.cpp"
   "Source/Rendering/UIMesh.cpp"
   "Source/Rendering/Program.cpp"
@@ -115,6 +117,8 @@ if(APPLE)
   compile_shader(ui.fragment.shader FRAGMENT shaders/ui.fragment.sc)
   compile_shader(hover.vertex.shader VERTEX shaders/hover.vertex.sc)
   compile_shader(hover.fragment.shader FRAGMENT shaders/hover.fragment.sc)
+  compile_shader(zone.vertex.shader VERTEX shaders/zone.vertex.sc)
+  compile_shader(zone.fragment.shader FRAGMENT shaders/zone.fragment.sc)
   compile_texture(grass.texture media/grass-tmp.jpg)
   set(RESOURCE_FILES
     vertex.shader
@@ -123,6 +127,8 @@ if(APPLE)
     ui.fragment.shader
     hover.vertex.shader
     hover.fragment.shader
+    zone.vertex.shader
+    zone.fragment.shader
     grass.texture
   )
   
@@ -134,15 +140,22 @@ if(APPLE)
   )
   set_source_files_properties(${RESOURCES_ROADS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/roads)
   
+  set(RESOURCES_ZONES
+    "zones/residential.zone"
+  )
+  set_source_files_properties(${RESOURCES_ZONES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/zones)
+  
   compile_texture(pavement.texture     media/pavement.png)
   compile_texture(falloff.texture      media/falloff.png)
   compile_texture(lane-markers.texture media/lane-markers.png)
   compile_texture(sidewalk.texture     media/sidewalk.png)
+  compile_texture(zone.texture         media/zone.png)
   set(RESOURCES_TEXTURES
     pavement.texture
     falloff.texture
     lane-markers.texture
     sidewalk.texture
+    zone.texture
   )
   set_source_files_properties(${RESOURCES_TEXTURES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/textures)
   
@@ -168,6 +181,7 @@ if(APPLE)
     driver/main.cpp
     ${RESOURCE_FILES}
     ${RESOURCES_ROADS}
+    ${RESOURCES_ZONES}
     ${RESOURCES_TEXTURES}
     ${RESOURCES_UI_TEXTURES}
   )

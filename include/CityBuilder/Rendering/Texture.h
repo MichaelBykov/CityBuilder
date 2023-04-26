@@ -24,6 +24,19 @@ struct Texture {
   ///   The texture must be square.
   Texture(const String &name, int size = 128, bool mipMaps = true);
   
+  /// Load a texture from a file.
+  /// \param[in] name
+  ///   The resource name of the texture to load.
+  /// \param[in] flags
+  ///   The flags to use when creating the texture.
+  /// \param[in] size
+  ///   The width/height of the texture.
+  /// \param[in] mipMaps
+  ///   Whether the texture has mip-maps generated for it.
+  /// \remarks
+  ///   The texture must be square.
+  Texture(const String &name, uint64_t flags, int size = 128, bool mipMaps = true);
+  
   // Prevent texture transfer.
   Texture(const Texture &other) = delete;
   

@@ -63,6 +63,7 @@ Game::Game() {
     
     case 3:
       // Zone residential
+      zone(&ZoneDef::zones["Residential"]);
       break;
     }
   };
@@ -116,6 +117,7 @@ Ray3 Game::rayFromMouse() {
 
 // The game actions
 #include "Game/RoadBuilding.ipp"
+#include "Game/Zoning.ipp"
 
 
 
@@ -144,6 +146,32 @@ void Game::update(Real elapsed) {
     }
   } break;
   
+  case Action::zoning: {
+    Zoning *state = (Zoning *)_actionState;
+    
+    // Display
+    bgfx::dbgTextPrintf(4, 6, 0x0f, "Zoning: %s",
+      (const char *)state->zone->name);
+    
+    // Project the mouse cursor into the world
+    Optional<Real3> intersection = rayFromMouse().xzIntersection(0);
+    if (intersection) {
+      // Determine where to zone
+      bool side;
+      Road *road = _roads.getZone(*intersection, side);
+      if (road != nullptr) {
+        // Update the zone display
+        state->update(road, side);
+        state->displayVisible = true;
+      } else {
+        state->displayVisible = false;
+      }
+    } else {
+      // Hide the zone display
+      state->displayVisible = false;
+    }
+  } break;
+  
   default:
     // Nothing to do
     break;
@@ -157,9 +185,9 @@ void Game::draw() {
   
   // Check what needs to be drawn for the current action
   switch (_action) {
-  case Action::road_building: {
-    // Draw the road being built
-    Road_Building *state = (Road_Building *)_actionState;
+  case Action::zoning: {
+    // Draw all the zone areas
+    _roads.drawZones();
   } break;
   
   default:
@@ -179,6 +207,14 @@ void Game::drawHovers() {
       state->display->draw(Program::hover);
   } break;
   
+  case Action::zoning: {
+    // Draw the currently highlighted zone, if applicable
+    Zoning *state = (Zoning *)_actionState;
+    
+    if (state->displayVisible)
+      state->display->draw(Program::hover);
+  } break;
+  
   default:
     // Nothing to draw
     break;
@@ -192,6 +228,13 @@ void Game::buildRoad(RoadDef *road) {
   _actionState = new Road_Building(road);
 }
 
+void Game::zone(ZoneDef *zone) {
+  _act(Action::zoning);
+  
+  // Create the zoning state
+  _actionState = new Zoning(zone);
+}
+
 void Game::cancel() {
   _act(Action::none);
 }
@@ -202,6 +245,13 @@ void Game::_act(Action action) {
   case Action::road_building: {
     // Destroy the building state
     Road_Building *state = (Road_Building *)_actionState;
+    delete state;
+    _actionState = nullptr;
+  } break;
+  
+  case Action::zoning: {
+    // Destroy the zoning state
+    Zoning *state = (Zoning *)_actionState;
     delete state;
     _actionState = nullptr;
   } break;
