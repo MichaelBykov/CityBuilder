@@ -52,6 +52,23 @@ Game::Game() {
   Input::setMoveKeys(KeyCode::w, KeyCode::s, KeyCode::a, KeyCode::d);
   Input::setOrbitKeys(KeyCode::up, KeyCode::down, KeyCode::left, KeyCode::right);
   Input::listenForAxes();
+  Input::onQuickAction += [this](int action) {
+    switch (action) {
+    case 1:
+      // Build a single-lane road
+      buildRoad(&RoadDef::roads["Single-Lane Road"]);
+      break;
+    
+    case 2:
+      // Build a highway road
+      buildRoad(&RoadDef::roads["2-Lane Highway"]);
+      break;
+    
+    case 3:
+      // Zone residential
+      break;
+    }
+  };
   
   // Set as the main game instance
   _instance = this;
@@ -594,13 +611,6 @@ void Game::update(Real elapsed) {
     // Project the mouse cursor into the world
     Optional<Real3> intersection = rayFromMouse().xzIntersection(0);
     if (intersection) {
-      bgfx::dbgTextPrintf(4, 6, 0x0f,
-        "mouse: %f, %f, %f",
-        (float)intersection->x,
-        (float)intersection->y,
-        (float)intersection->z
-      );
-      
       // Determine where to snap to
       Real3 snap = _roads.snap(*intersection);
       

@@ -29,9 +29,6 @@ void Events::start() {
   
   // Create the shader uniforms
   Uniforms::create();
-  
-  // Start building roads for testing
-  game->buildRoad(&RoadDef::roads["2-Lane Highway"]);
 }
 
 void Events::stop() {

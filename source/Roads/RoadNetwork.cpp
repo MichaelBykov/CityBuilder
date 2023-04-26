@@ -926,11 +926,6 @@ void RoadNetwork::draw() {
       meshes++;
     }
   }
-  
-  bgfx::dbgTextPrintf(4, 5, 0x0f,
-    "%d roads, %d meshes",
-    count, meshes
-  );
 }
 
 

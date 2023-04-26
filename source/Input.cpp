@@ -20,6 +20,8 @@ Event<> Input::onPrimaryMouseDown { };
 
 Event<> Input::onCancel { };
 
+Event<int> Input::onQuickAction { };
+
 
 
 /* -------------------------------------------------------------------------- *\
@@ -215,6 +217,20 @@ void Events::inputStart(Input &input) {
         NS_CITY_BUILDER Input::_usedKeys[key]) {
       // Axis
       NS_CITY_BUILDER Input::_keysDown[key] = true;
+    }
+    
+    // Quick actions
+    switch (key) {
+    case (int)KeyCode::_0: NS_CITY_BUILDER Input::onQuickAction(0); break;
+    case (int)KeyCode::_1: NS_CITY_BUILDER Input::onQuickAction(1); break;
+    case (int)KeyCode::_2: NS_CITY_BUILDER Input::onQuickAction(2); break;
+    case (int)KeyCode::_3: NS_CITY_BUILDER Input::onQuickAction(3); break;
+    case (int)KeyCode::_4: NS_CITY_BUILDER Input::onQuickAction(4); break;
+    case (int)KeyCode::_5: NS_CITY_BUILDER Input::onQuickAction(5); break;
+    case (int)KeyCode::_6: NS_CITY_BUILDER Input::onQuickAction(6); break;
+    case (int)KeyCode::_7: NS_CITY_BUILDER Input::onQuickAction(7); break;
+    case (int)KeyCode::_8: NS_CITY_BUILDER Input::onQuickAction(8); break;
+    case (int)KeyCode::_9: NS_CITY_BUILDER Input::onQuickAction(9); break;
     }
     
     // Handle the system modifier keys

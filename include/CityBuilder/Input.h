@@ -116,6 +116,11 @@ struct Input {
   /// An event fired when a "cancel" key (e.x. escape, backspace) is pressed.
   static Event<> onCancel;
   
+  /// A quick action.
+  /// \param action
+  ///   The ID of the quick action in the range 0-9 (inclusive).
+  static Event<int> onQuickAction;
+  
 private:
   friend void Events::inputStart (Events::Input &input);
   friend void Events::inputStop  (Events::Input &input);
