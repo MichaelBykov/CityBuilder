@@ -14,13 +14,13 @@ Game::Game() {
   // Setup the scene
   _sun = DistanceLight({ -0.2, -1, -0.2 }, 1, { 255, 255, 200 }, { 150 });
   _mainCamera = OrbitalCamera();
+  _mainCamera.rotate(45_deg, 0);
+  _mainCamera.zoom(20);
+  _mainCamera.slide({ 0, -10 });
   
   // Create some initial roads
-  RoadDef *highway = &RoadDef::roads["2-Lane Highway"];
-  Road *road1 = _roads.add(new Road(highway, new Line2({ 0, 0 }, { 10, 10 })));
-  Road *road2 = _roads.add(new Road(highway, new Bezier2({ 10, 10 }, { 20, 20 }, { 10, 30 })));
-  _roads.connect(road1, road2);
-  _roads.add(new Road(&RoadDef::roads["Single-Lane Road"], new Line2({ 0, -10 }, { 10, -10 })));
+  _roads.build(&RoadDef::roads["2-Lane Highway"], new Line2({ -200, 0 }, { 200, 0 }));
+  _roads.build(&RoadDef::roads["Single-Lane Road"], new Line2({ 0, 0 }, { 0, 20 }));
   _roads.update();
   
   // Add the ground plane

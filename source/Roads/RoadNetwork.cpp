@@ -522,19 +522,29 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad, Intersection *&s
 }
 
 bool RoadNetwork::validate(RoadDef *roadDef, Real3 point) {
+  Real2 p = { point.x, point.z };
+  Real radius = roadDef->dimensions.x * Real(0.5) * scale;
+  Bounds2 bounds = { p - Real2(radius), Real2(radius * Real(2)) };
+  
   // Check if the road would interfere with any other roads
   Road *_snappedRoad;
   Intersection *_snappedIntersection;
   snap(point, _snappedRoad, _snappedIntersection);
-  if (_snappedRoad != nullptr || _snappedIntersection != nullptr) {
+  if (_snappedRoad != nullptr) {
+    // Check that it's not too close to the end
+    Real dist = _snappedRoad->path.start().distance(p);
+    if (dist > 0.1 && dist < _snappedRoad->path.radius() + radius)
+      return false;
+    dist = _snappedRoad->path.end().distance(p);
+    if (dist > 0.1 && dist < _snappedRoad->path.radius() + radius)
+      return false;
+    return true;
+  } else if (_snappedIntersection != nullptr) {
     // Begin at the snap point
     return true;
   }
   
   // Check if the road would interfere with any other roads
-  Real2 p = { point.x, point.z };
-  Real radius = roadDef->dimensions.x * Real(0.5) * scale;
-  Bounds2 bounds = { p - Real2(radius), Real2(radius * Real(2)) };
   for (Road *road : _roads) {
     if (!road->path.bounds().intersects(bounds))
       continue;
@@ -619,10 +629,10 @@ bool RoadNetwork::validate(RoadDef *roadDef, Ref<Path2 &> path) {
     if (!road->path.intersectionTest(_path))
       // New road would overlap with the existing road
       return false;
-    if (road->start.type == Connection::none &&
+    if (road->start.type != Connection::intersection &&
         _path.circleTest(road->path.start(), road->path.radius()))
       return false;
-    if (road->end.type == Connection::none &&
+    if (road->end.type != Connection::intersection &&
         _path.circleTest(road->path.end(), road->path.radius()))
       return false;
     
