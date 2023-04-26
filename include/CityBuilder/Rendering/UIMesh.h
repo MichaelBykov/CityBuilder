@@ -21,6 +21,8 @@ struct UIMesh {
     Real3 position;
     /// The texture coordinates of the vertex.
     Real2 uv;
+    /// The color of the vertex.
+    Color4 color;
   };
   
   /// Create a new UI mesh.
