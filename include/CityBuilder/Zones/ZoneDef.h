@@ -21,6 +21,8 @@ struct ZoneDef {
   /// The name of the zone.
   String name;
   
+  Color3 color;
+  
   
   
   /// A map of all of the loaded zones.

@@ -153,6 +153,23 @@ void Game::update(Real elapsed) {
     bgfx::dbgTextPrintf(4, 6, 0x0f, "Zoning: %s",
       (const char *)state->zone->name);
     
+    // Project the mouse cursor into the world
+    Optional<Real3> intersection = rayFromMouse().xzIntersection(0);
+    if (intersection) {
+      // Determine where to zone
+      bool side;
+      Road *road = _roads.getZone(*intersection, side);
+      if (road != nullptr) {
+        // Update the zone display
+        state->update(road, side);
+        state->displayVisible = true;
+      } else {
+        state->displayVisible = false;
+      }
+    } else {
+      // Hide the zone display
+      state->displayVisible = false;
+    }
   } break;
   
   default:
@@ -192,6 +209,10 @@ void Game::drawHovers() {
   
   case Action::zoning: {
     // Draw the currently highlighted zone, if applicable
+    Zoning *state = (Zoning *)_actionState;
+    
+    if (state->displayVisible)
+      state->display->draw(Program::hover);
   } break;
   
   default:

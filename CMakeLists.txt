@@ -30,6 +30,7 @@ add_library(CityBuilder
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
+  "Source/Rendering/ColorMesh.cpp"
   "Source/Rendering/DynamicMesh.cpp"
   "Source/Rendering/UIMesh.cpp"
   "Source/Rendering/Program.cpp"
@@ -111,6 +112,8 @@ if(APPLE)
   compile_shader(ui.fragment.shader FRAGMENT shaders/ui.fragment.sc)
   compile_shader(hover.vertex.shader VERTEX shaders/hover.vertex.sc)
   compile_shader(hover.fragment.shader FRAGMENT shaders/hover.fragment.sc)
+  compile_shader(zone.vertex.shader VERTEX shaders/zone.vertex.sc)
+  compile_shader(zone.fragment.shader FRAGMENT shaders/zone.fragment.sc)
   compile_texture(grass.texture media/grass-tmp.jpg)
   set(RESOURCE_FILES
     vertex.shader
@@ -119,6 +122,8 @@ if(APPLE)
     ui.fragment.shader
     hover.vertex.shader
     hover.fragment.shader
+    zone.vertex.shader
+    zone.fragment.shader
     grass.texture
   )
   

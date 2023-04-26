@@ -18,6 +18,9 @@ bool ZoneDef::load(const String &path) {
   bool success = parseMarkup(path, zone)
     .section("zone")
       .field("name", zone.name)
+      .field("color", zone.color, {
+        { "green", Color3(125, 255, 65) }
+      })
   ;
   if (!success)
     return false;

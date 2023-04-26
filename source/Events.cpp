@@ -26,6 +26,7 @@ void Events::start() {
   Program::pbr   = new Program(      "vertex",       "fragment");
   Program::hover = new Program("hover.vertex", "hover.fragment");
   Program::ui    = new Program(   "ui.vertex",    "ui.fragment");
+  Program::zone  = new Program( "zone.vertex",  "zone.fragment");
   
   // Create the shader uniforms
   Uniforms::create();

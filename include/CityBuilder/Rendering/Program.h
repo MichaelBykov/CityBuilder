@@ -47,6 +47,9 @@ struct Program {
   /// The standard UI shader.
   static Resource<Program> ui;
   
+  /// The standard zone shader.
+  static Resource<Program> zone;
+  
 private:
   /// The loaded program handle.
   bgfx::ProgramHandle _program;

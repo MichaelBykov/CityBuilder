@@ -15,6 +15,8 @@ Resource<Program> Program::hover = nullptr;
 
 Resource<Program> Program::ui = nullptr;
 
+Resource<Program> Program::zone = nullptr;
+
 bgfx::ShaderHandle loadShader(const char *name, const char *extension) {
   char *contents;
   size_t length;

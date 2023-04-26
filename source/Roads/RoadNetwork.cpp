@@ -751,6 +751,39 @@ bool RoadNetwork::build(RoadDef *road, Ref<Path2 &> path) {
   return true;
 }
 
+Road *RoadNetwork::getZone(Real3 point, bool &side) {
+  Road *closest = nullptr;
+  Real distance;
+  
+  Real2 p { point.x, point.z };
+  Real2 projection;
+  for (Road *road : _roads)
+    if (road->definition->allowBuildings != RoadDef::Buildings::none &&
+        road->path.bounds().inflated(3.0).contains(p) &&
+        (projection = road->path.path().project(p))
+        .distance(p) < road->path.radius() + Real(3)) {
+      Real t = road->path.inverse(projection);
+      Real2 point  = road->path.point (t);
+      if (closest == nullptr || point.squareDistance(p) < distance) {
+        closest = road;
+        distance = point.squareDistance(p);
+        
+        Real2 normal = road->path.normal(t);
+        side = (p - point).dot(normal).isPositive();
+      }
+    }
+  return closest;
+}
+
+void RoadNetwork::setZone(Road *road, bool side, ZoneDef *zone) {
+  if (side) {
+    road->_rightZone = zone;
+  } else {
+    road->_leftZone  = zone;
+  }
+  road->_dirty = true;
+}
+
 void RoadNetwork::update() {
   // Update the roads
   for (Road *road : _roads)
@@ -897,11 +930,17 @@ void RoadNetwork::update() {
       
       // Create a zone mesh
       if (road->definition->allowBuildings != RoadDef::Buildings::none) {
-        Resource<Mesh> mesh = new Mesh();
+        Resource<ColorMesh> mesh = new ColorMesh();
         
         // Extrude the zone
-        mesh->extrude(zoneProfile, road->path.path(), { road->definition->dimensions.x * Real(0.5), 0.1 }, scale);
-        mesh->extrude(inverseZoneProfile, road->path.path(), { -road->definition->dimensions.x * Real(0.5) - Real(9), 0.1 }, scale);
+        mesh->extrude(zoneProfile, road->path.path(), Color4(
+          road->_rightZone ? road->_rightZone->color : Color3(255, 255, 255),
+          255
+        ), { road->definition->dimensions.x * Real(0.5), 0.1 }, scale);
+        mesh->extrude(inverseZoneProfile, road->path.path(), Color4(
+          road->_leftZone ? road->_leftZone->color : Color3(255, 255, 255),
+          255
+        ), { -road->definition->dimensions.x * Real(0.5) - Real(9), 0.1 }, scale);
         
         road->_zoneMesh = mesh;
         _zoneMeshes.append(mesh);
@@ -1272,10 +1311,11 @@ void RoadNetwork::drawZones() {
     _zoneTexture->load(Uniforms::s_albedo);
     bgfx::setUniform(Uniforms::u_textureTile, Real4(1.0));
     
-    for (Resource<Mesh> &mesh : _zoneMeshes) {
-      bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |        \
-   BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
-      mesh->draw(Program::pbr);
+    for (Resource<ColorMesh> &mesh : _zoneMeshes) {
+      bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+        BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA |
+        BGFX_STATE_BLEND_ALPHA);
+      mesh->draw(Program::zone);
     }
   }
 }

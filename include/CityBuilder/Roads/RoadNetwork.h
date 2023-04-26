@@ -115,6 +115,26 @@ struct RoadNetwork {
   
   
   
+  /// Get a zone at a given point, if one exists there.
+  /// \param[in] point
+  ///   The point to test for zones.
+  /// \param[out] side
+  ///   Whether or not the zone is on the left or right side of the road.
+  /// \returns
+  ///   The road to which the belongs to at the given point, if one exists.
+  Road *getZone(Real3 point, bool &side);
+  
+  /// Set a zone for a road.
+  /// \param[in] road
+  ///   The road to zone.
+  /// \param[in] side
+  ///   The side of the road to zone.
+  /// \param[in] zone
+  ///   The zone to set.
+  void setZone(Road *road, bool side, ZoneDef *zone);
+  
+  
+  
   /// Update any roads in the network.
   void update();
   
@@ -171,7 +191,7 @@ private:
   List<Intersection *> _intersections;
   
   /// The zone meshes
-  List<Resource<Mesh>> _zoneMeshes;
+  List<Resource<ColorMesh>> _zoneMeshes;
   
   /// The texture for road markings
   Resource<Texture> _markingTexture;
