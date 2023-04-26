@@ -65,6 +65,16 @@ Game::Game() {
       // Zone residential
       zone(&ZoneDef::zones["Residential"]);
       break;
+    
+    case 4:
+      // Zone commercial
+      zone(&ZoneDef::zones["Commercial"]);
+      break;
+    
+    case 5:
+      // Zone industrial
+      zone(&ZoneDef::zones["Industrial"]);
+      break;
     }
   };
   

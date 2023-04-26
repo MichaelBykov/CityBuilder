@@ -128,8 +128,8 @@ RoadNetwork::RoadNetwork() {
     ) ||
     !ZoneDef::loadBatch("zones/",
       "residential",
-      // "commercial",
-      // "industrial",
+      "commercial",
+      "industrial",
       nullptr
     )
   ) exit(1);
