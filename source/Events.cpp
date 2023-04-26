@@ -26,6 +26,7 @@ void Events::start() {
   
   // Load the default shader
   Program::pbr = new Program("vertex", "fragment"); 
+  Program::hover = new Program("hover.vertex", "hover.fragment");
   
   // Create the shader uniforms
   Uniforms::create();
@@ -41,7 +42,7 @@ void Events::stop() {
 void Events::pause() {
   // Overlay a paused text over the scene
   bgfx::dbgTextClear();
-  bgfx::dbgTextPrintf(4, 6, 0x0f, "PAUSED");
+  bgfx::dbgTextPrintf(4, 4, 0x0f, "PAUSED");
   bgfx::setDebug(BGFX_DEBUG_TEXT);
 }
 
@@ -77,8 +78,12 @@ void Events::update() {
     bgfx::setUniform(Uniforms::u_sunDirection, game->sun().direction);
   }
   
-  // Setup
+  // Update the scene
   bgfx::dbgTextClear();
+  game->update(dt);
+  
+  // Setup
+  // bgfx::dbgTextClear();
   bgfx::setState(BGFX_STATE_DEFAULT);
   Real2 screen;
   {

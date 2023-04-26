@@ -10,6 +10,7 @@
 #include <CityBuilder/Events.h>
 #include <CityBuilder/Storage/List.h>
 #include <CityBuilder/Storage/String.h>
+#include <CityBuilder/Storage/Event.h>
 #include <functional>
 
 NS_CITY_BUILDER_BEGIN
@@ -97,6 +98,29 @@ struct Input {
   /// Set the mouse orbit speed.
   static void setMouseOrbitSpeed(Real2 speed);
   
+  /// Get the current position of the mouse on the screen, in pixels.
+  static Real2 mousePosition();
+  
+  /// Whether the primary mouse button is currently down.
+  static bool primaryMouseDown();
+  
+  /// Whether the secondary mouse button is currently down.
+  static bool secondaryMouseDown();
+  
+  /// Whether the shift key is currently down.
+  static bool shiftDown();
+  
+  /// An event fired when the primary mouse button is pressed.
+  static Event<> onPrimaryMouseDown;
+  
+  /// An event fired when a "cancel" key (e.x. escape, backspace) is pressed.
+  static Event<> onCancel;
+  
+  /// A quick action.
+  /// \param action
+  ///   The ID of the quick action in the range 0-9 (inclusive).
+  static Event<int> onQuickAction;
+  
 private:
   friend void Events::inputStart (Events::Input &input);
   friend void Events::inputStop  (Events::Input &input);
@@ -137,11 +161,14 @@ private:
   /// The mouse orbit speed.
   static Real2 _mouseOrbitSpeed;
   
-  /// Whether or not the left mouse button is currently down.
-  static bool _leftMouseDown;
+  /// Whether or not the primary mouse button is currently down.
+  static bool _primaryMouseDown;
   
-  /// Whether or not the right mouse button is currently down.
-  static bool _rightMouseDown;
+  /// Whether or not the secondary mouse button is currently down.
+  static bool _secondaryMouseDown;
+  
+  /// The current mouse position, in pixels.
+  static Real2 _mousePos;
   
   /// Whether or not the standard system keys (e.x. shift, alt, command, etc)
   /// are currently pressed.

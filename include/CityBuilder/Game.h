@@ -11,6 +11,7 @@
 #include "Rendering/DistanceLight.h"
 #include "Rendering/Object.h"
 #include "Roads/RoadNetwork.h"
+#include "Geometry/Ray3.h"
 #include "Input.h"
 
 NS_CITY_BUILDER_BEGIN
@@ -45,16 +46,35 @@ struct Game {
     return *_instance;
   }
   
-  /// Begin or resume running the game.
-  void run();
-  
-  /// Close (shutdown) the game.
-  void close();
+  /// Create a ray from the camera in the direction of where the mouse is
+  /// currently pointing.
+  Ray3 rayFromMouse();
   
   /// Called when a new frame has started.
   /// \param[in] elapsed
   ///   The total time elapsed since the last frame.
   void update(Real elapsed);
+  
+  /// Draw the game scene.
+  void draw();
+  
+  /// Draw any hovers in the game scene.
+  void drawHovers();
+  
+  /// A description of the action the user is currently performing.
+  enum class Action {
+    /// The user is not performing any actions, simply observing.
+    none,
+    
+    /// The user is currently placing a road.
+    road_building,
+  };
+  
+  /// Start building a road.
+  void buildRoad(RoadDef *road);
+  
+  /// Cancel the current action.
+  void cancel();
   
 private:
   /// The scene's sun.
@@ -68,6 +88,15 @@ private:
   
   /// The road network.
   RoadNetwork _roads;
+  
+  /// The action the user is currently performing.
+  Action _action = Action::none;
+  
+  /// Change which action the user is currently performing.
+  void _act(Action action);
+  
+  /// The current action state.
+  void *_actionState = nullptr;
   
   /// The main game instance.
   static Game *_instance;

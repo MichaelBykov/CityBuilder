@@ -37,6 +37,18 @@ struct LaneDef {
       all_vehicles,
     };
     
+    /// The way the lane should connect at intersections.
+    enum class Connection {
+      /// The lane should not connect at intersections.
+      none,
+      /// The lane should connect to all of the same lane traveling in the same
+      /// direction.
+      sameDirection,
+      /// The lane should connect to the nearest lane of the same type, if it
+      /// exists.
+      nearest
+    };
+    
     /// The start x-coordinate of the lane.
     Real start;
     /// The end x-coordinate of the lane.
@@ -47,6 +59,8 @@ struct LaneDef {
     Type type;
     /// The traffic category of the lane.
     Category category;
+    /// The way the lane should connect at intersections.
+    Connection connection = Connection::none;
   };
   
   /// The profile of the lane.

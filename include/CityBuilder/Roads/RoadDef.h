@@ -71,6 +71,14 @@ struct RoadDef {
     all
   };
   
+  /// The extent of the decorations at intersections.
+  enum class DecorExtent {
+    /// The decorations do not extend at intersections.
+    none,
+    /// The decorations extend to the center of the intersection.
+    center
+  };
+  
   /// The decorations of the road.
   ProfileMesh decorations;
   
@@ -82,6 +90,9 @@ struct RoadDef {
   
   /// The texture to use for road decorations.
   Resource<Texture> decorationsTexture;
+  
+  /// The extent of the decorations at intersections.
+  DecorExtent decorationsExtent = DecorExtent::none;
   
   /// The name of the road.
   String name;
