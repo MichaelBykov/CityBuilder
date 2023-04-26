@@ -28,6 +28,7 @@ add_library(CityBuilder
   "source/UI/System.cpp"
   "source/UI/Primitive/Node.cpp"
   "source/UI/Primitive/Rectangle.cpp"
+  "source/UI/Primitive/Rounded.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"
