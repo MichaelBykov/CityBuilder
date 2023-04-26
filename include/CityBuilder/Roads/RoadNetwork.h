@@ -61,10 +61,12 @@ struct RoadNetwork {
   ///   The point to snap.
   /// \param[out] snapped
   ///   The road that was snapped to.
+  /// \param[out] snappedIntersection
+  ///   The intersection that was snapped to.
   /// \returns
   ///   The snapped point or the point untouched if there are no nearby roads
   ///   to snap to.
-  Real3 snap(const Real3 &point, Road *&snapped);
+  Real3 snap(const Real3 &point, Road *&snapped, Intersection *&snappedIntersection);
   
   /// Snap a point to the nearest road.
   /// \param[in] point
@@ -76,7 +78,8 @@ struct RoadNetwork {
   ///   to snap to.
   inline Real3 snap(const Real3 &point) {
     Road *snapped;
-    return snap(point, snapped);
+    Intersection *snappedIntersection;
+    return snap(point, snapped, snappedIntersection);
   }
   
   

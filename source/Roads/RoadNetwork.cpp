@@ -379,7 +379,7 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
         // Add if it's not already there
         bool exists = false;
         for (Real2 p : intersections)
-          if (p.approxEqual(projection).verticalAnd()) {
+          if (p.squareDistance(projection) < 0.1) {
             exists = true;
             break;
           }
@@ -392,7 +392,7 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
         // Add if it's not already there
         bool exists = false;
         for (Real2 p : intersections)
-          if (p.approxEqual(projection).verticalAnd()) {
+          if (p.squareDistance(projection) < 0.1) {
             exists = true;
             break;
           }
@@ -405,7 +405,7 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
         // Add if it's not already there
         bool exists = false;
         for (Real2 p : intersections)
-          if (p.approxEqual(projection).verticalAnd()) {
+          if (p.squareDistance(projection) < 0.1) {
             exists = true;
             break;
           }
@@ -418,7 +418,7 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
         // Add if it's not already there
         bool exists = false;
         for (Real2 p : intersections)
-          if (p.approxEqual(projection).verticalAnd()) {
+          if (p.squareDistance(projection) < 0.1) {
             exists = true;
             break;
           }
@@ -459,10 +459,20 @@ List<Road *> RoadNetwork::intersect(Road *a, Road *b) {
   return _a;
 }
 
-Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
+Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad, Intersection *&snappedIntersection) {
   snappedRoad = nullptr;
-  bool snapped = false;
+  snappedIntersection = nullptr;
+  
   Real2 p = { point.x, point.z };
+  
+  for (Intersection *intersection : _intersections)
+    if (intersection->center.distance(p) < intersection->radius) {
+      // Snap directly to the intersection
+      snappedIntersection = intersection;
+      return { intersection->center.x, point.y, intersection->center.y };
+    }
+  
+  bool snapped = false;
   Real2 closest;
   Real distance;
   
@@ -486,6 +496,11 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
     // Snap to the end if within radius
     if (p.squareDistance(snappedRoad->path.end()) <
       (snappedRoad->definition->dimensions.x * Real(0.5 * scale)).square()) {
+      if (snappedRoad->end.type == Connection::intersection) {
+        snappedIntersection = snappedRoad->end.other.intersection;
+        snappedRoad = nullptr;
+        return { snappedIntersection->center.x, point.y, snappedIntersection->center.y };
+      }
       closest = snappedRoad->path.end();
     }
   }
@@ -494,6 +509,11 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
     // Snap to the start if within radius
     if (p.squareDistance(snappedRoad->path.start()) <
       (snappedRoad->definition->dimensions.x * Real(0.5 * scale)).square()) {
+      if (snappedRoad->start.type == Connection::intersection) {
+        snappedIntersection = snappedRoad->start.other.intersection;
+        snappedRoad = nullptr;
+        return { snappedIntersection->center.x, point.y, snappedIntersection->center.y };
+      }
       closest = snappedRoad->path.start();
     }
   }
@@ -504,8 +524,9 @@ Real3 RoadNetwork::snap(const Real3 &point, Road *&snappedRoad) {
 bool RoadNetwork::validate(RoadDef *roadDef, Real3 point) {
   // Check if the road would interfere with any other roads
   Road *_snappedRoad;
-  snap(point, _snappedRoad);
-  if (_snappedRoad != nullptr) {
+  Intersection *_snappedIntersection;
+  snap(point, _snappedRoad, _snappedIntersection);
+  if (_snappedRoad != nullptr || _snappedIntersection != nullptr) {
     // Begin at the snap point
     return true;
   }
@@ -598,10 +619,10 @@ bool RoadNetwork::validate(RoadDef *roadDef, Ref<Path2 &> path) {
     if (!road->path.intersectionTest(_path))
       // New road would overlap with the existing road
       return false;
-    if (road->start.type != Connection::road &&
+    if (road->start.type == Connection::none &&
         _path.circleTest(road->path.start(), road->path.radius()))
       return false;
-    if (road->end.type != Connection::road &&
+    if (road->end.type == Connection::none &&
         _path.circleTest(road->path.end(), road->path.radius()))
       return false;
     
@@ -629,19 +650,30 @@ bool RoadNetwork::build(RoadDef *road, Ref<Path2 &> path) {
   // Create the road
   Road *r = add(new Road(road, path));
   
-  // Attempt to attach to other roads
-  for (intptr_t i = 0; i < count; i++) {
-    Road *_road = _roads[i];
-    if (connect(_road, r)) {
-      // Make sure the connected road is redrawn too to remove the previous
-      // end cap
-      _road->_dirty = true;
-      
+  // Attempt to attach to intersections
+  for (Intersection *intersection : _intersections)
+    if (r->path.start().squareDistance(intersection->center) < 1 ||
+        r->path.  end().squareDistance(intersection->center) < 1) {
+      intersection->addRoad(r);
       if (r->start.type != Connection::none &&
-          r->end.type   != Connection::none)
+          r->end.type != Connection::none)
         break;
     }
-  }
+  
+  // Attempt to attach to other roads
+  if (r->start.type == Connection::none || r->end.type   == Connection::none)
+    for (intptr_t i = 0; i < count; i++) {
+      Road *_road = _roads[i];
+      if (connect(_road, r)) {
+        // Make sure the connected road is redrawn too to remove the previous
+        // end cap
+        _road->_dirty = true;
+        
+        if (r->start.type != Connection::none &&
+            r->end.type   != Connection::none)
+          break;
+      }
+    }
   
   // Create intersections
   List<Road *> segments { r };
