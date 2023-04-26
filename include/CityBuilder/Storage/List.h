@@ -232,7 +232,7 @@ public:
   
   /// Whether or not the list is empty.
   bool isEmpty() const {
-    return _data == nullptr;
+    return _data == nullptr || _data->count == 0;
   }
   
   const T *begin() const {

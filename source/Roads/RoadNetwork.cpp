@@ -766,7 +766,7 @@ void RoadNetwork::update() {
       // Create a new mesh
       BSTree<LaneDef *, int> lanes;
       
-      for (Intersection::Arm &arm : intersection->arms)
+      for (Intersection::Arm &arm : intersection->arms) {
         for (const RoadDef::Lane &lane : arm.road->definition->lanes)
           for (const auto &traffic : lane.definition->traffic)
             switch (traffic.connection) {
@@ -881,6 +881,35 @@ void RoadNetwork::update() {
               }
               break;
             }
+        
+        // Extend decorations as applicable
+        switch (arm.road->definition->decorationsExtent) {
+        case RoadDef::DecorExtent::center: {
+          // Decor to the center
+          Line2 line {
+            arm.start ? arm.road->path.start() : arm.road->path.end(),
+            intersection->center
+          };
+          
+          if (!_meshes.has(arm.road->definition->decorationsTexture.address()))
+            _meshes.set(arm.road->definition->decorationsTexture.address(), { });
+          
+          Resource<Mesh> mesh = new Mesh();
+          intersection->_meshes.append({
+            arm.road->definition->decorationsTexture.address(), mesh
+          });
+          _meshes[arm.road->definition->decorationsTexture.address()]
+            .append({ mesh, { 1, line.length() } });
+          
+          // Extrude
+          mesh->extrude(arm.road->definition->decorations,
+            line, { -arm.road->definition->dimensions.x * Real(0.5), 0 }, scale);
+        } break;
+        
+        default:
+          break;
+        }
+      }
       
       // Push all the created meshes to the GPU
       for (Intersection::_mesh &mesh : intersection->_meshes)

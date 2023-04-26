@@ -3,6 +3,8 @@ name "2-Lane Highway"
 allow-buildings none
 
 [decorations]
+extend center
+
 # Left road falloff
 M 0   ,0    uv 0   normal -1,0.66
 C 0.66,0.07 uv 0.5 normal -1,1

@@ -26,14 +26,18 @@ bool RoadDef::load(const String &path) {
     .section("road")
       .field("name", road.name)
       .field("allow-buildings", road.allowBuildings, {
-        { "none" , RoadDef::Buildings::none },
-        { "left" , RoadDef::Buildings::left },
+        { "none" , RoadDef::Buildings::none  },
+        { "left" , RoadDef::Buildings::left  },
         { "right", RoadDef::Buildings::right },
-        { "all"  , RoadDef::Buildings::all }
+        { "all"  , RoadDef::Buildings::all   }
       })
     .section("texture")
       .field("decorations", texture)
     .section("decorations")
+      .field("extend", road.decorationsExtent, {
+        { "none"  , RoadDef::DecorExtent::none   },
+        { "center", RoadDef::DecorExtent::center }
+      })
       .profilePoints(decorations)
     .section("lanes")
       .records({ "U", "L", "R" }, road.lanes)
