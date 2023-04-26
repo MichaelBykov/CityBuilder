@@ -375,6 +375,12 @@ namespace {
         road->definition,
         road->path.path().split(start, 1)
       )));
+      
+      for (Road *r : roads) {
+        r->setLeftZone(road->leftZone());
+        r->setRightZone(road->rightZone());
+      }
+      
       network->remove(road);
     } else
       roads.append(road);

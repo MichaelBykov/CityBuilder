@@ -40,6 +40,24 @@ struct Road {
   ///   The road's path.
   Road(RoadDef *definition, Ref<Path2 &> path);
   
+  
+  
+  /// Get the road's left zone.
+  ZoneDef *leftZone() const;
+  
+  /// Set the road's left zone.
+  /// \param[in] zone
+  ///   The zone to set
+  void setLeftZone(ZoneDef *zone);
+  
+  /// Get the road's right zone.
+  ZoneDef *rightZone() const;
+  
+  /// Set the road's right zone.
+  /// \param[in] zone
+  ///   The zone to set
+  void setRightZone(ZoneDef *zone);
+  
 private:
   friend struct RoadNetwork;
   friend struct Intersection;
