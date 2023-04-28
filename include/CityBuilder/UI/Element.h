@@ -105,7 +105,7 @@ public:
   List<Ref<Element>> getChildren();
 
   /// @brief Draws the element.
-  void draw();
+  virtual void draw();
 
 private:
   // The representative node of this element.

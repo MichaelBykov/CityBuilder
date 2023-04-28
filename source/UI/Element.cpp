@@ -122,8 +122,8 @@ List<Ref<Element>> Element::getChildren() {
 
 void Element::draw() {
   if (_children.count() > 0) {
-    for (int i = 0; i < _children.count(); i++) {
-      _children[i]->draw();
+    for (auto &child : _children) {
+      child->draw();
     }
   } else {
     System::loadTexture(_getActiveNode()->getTexture());
