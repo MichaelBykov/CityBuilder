@@ -136,6 +136,11 @@ public:
   const T *operator->() const {
     return &_data->data;
   }
+
+  /// Compare refs
+  bool operator ==(const Ref &other) const {
+    return _data == other._data;
+  }
 };
 
 
@@ -294,5 +299,10 @@ public:
   /// Access a member of the referenced value.
   const T *operator->() const {
     return &_data->data;
+  }
+
+  /// Compare refs
+  bool operator ==(const Ref &other) const {
+    return _data == other._data;
   }
 };
