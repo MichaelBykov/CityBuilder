@@ -12,6 +12,7 @@ As we have it currently, the object of the application is to plan out a city
 by defining what the underlying network of roads there are in the city and the
 zoning rules for the structures around those roads.
 
+
 Roads can be drawn freely, including with curves.
 There is a central highway that can be connected to.
 Zones can be defined for a variety of use cases, currently: residential,
@@ -37,8 +38,26 @@ Zones can be overwritten freely.
 
 Drawing a road over other roads will create intersections as appropriate.
 
+We decided to not use a game engine and instead handle everything directly,
+including working with the low-level graphics APIs.
+This means that virtually everything in this project is of our own creation.
+
 If you have any questions about any part of the project feel free to contact us
 and we will be able to explain and/or show anything to you.
+
+
+
+## Media
+
+[video](https://youtu.be/X44Je-ELWCU)
+
+Some fun intersections because it getting the roads working flawlessly took quite a bit of time and work.
+![](<images/Intersection 1.png>)
+![](<images/Intersection 2.png>)
+
+An example of a small city grid.
+![](<images/Roads 1.png>)
+![](<images/Roads 2.png>)
 
 
 
