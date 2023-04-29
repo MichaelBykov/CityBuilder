@@ -63,6 +63,31 @@ Note that we currently only have a program driver implemented for MacOS, and
 as such it wont be able to run on or build for any other OS.
 
 
+## UI
+
+The UI is split into two categories of renderables: Primitives and Elements.
+
+A primitive is any class of UI node that is based off the abstract class Node.
+Primitives are responsible for setting basic attributes such as dimensions, position,
+texture, and the representative mesh. Examples of primitivess are a rounded rectangle,
+a regular rectangle, and a text character.
+
+Elements are a higher-order class that manage UI primitives. Elements are concerned with
+managing child-parent node relationships, and their visual representations (textures).
+
+The default behavior of child nodes is to render in a linear column row. The parent node
+does calculations to figure out what it's bounds are when properties such as padding and
+border are present. Using the calculated bounds, it lays offsets each child's position.
+
+There is a texture manager that takes loaded textures and a representative texture key that
+can be passed to Nodes in order to draw things like icons and background images. The standard
+texture used by a node depends on what type it is. For example, the rounded rectangle uses 
+the rounded texture, and the rectangle takes the rectangle texture. When using the element class,
+it can seamlessly switch which type of Node it's using under the hood, during runtime. If you
+have a white perfect square, you could set the radius at and it handles all the texture
+complexities on your behalf.
+
+
 
 ## Project Structure
 
