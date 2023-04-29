@@ -20,6 +20,9 @@ Rounded::Rounded(Ref<Node &> other) {
   setPosition(other->getPosition());
   setColor(other->getColor());
   setZIndex(other->getZIndex());
+  if (other->getTexture() != "Square") {
+    setTexture(other->getTexture());
+  }
 }
 
 void Rounded::setMesh(Real2 offset) {

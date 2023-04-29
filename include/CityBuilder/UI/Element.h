@@ -15,7 +15,7 @@ namespace UI {
 
 class Element {
 public:
-  Element() {}
+  Element();
   ~Element() {}
 
   /// @brief Set the width and height of the node.
@@ -27,6 +27,8 @@ public:
   Real2 getDimensions();
   
   /// @brief  Set the position of the node.
+  /// \remarks
+  ///   This is like position: relative; from css land.
   /// @param position 
   void setPosition(Real2 position);
 
@@ -60,7 +62,7 @@ public:
 
   /// @brief Set's the border width
   /// \remarks
-  ///   This lays out like content: border-box; from css land.
+  ///   This lays out like content: content-box; from css land.
   /// @param width 
   void setBorderWidth(Real width);
 
@@ -84,6 +86,14 @@ public:
   /// @return color
   Color4 getBorderColor();
 
+  /// @brief Sets the background image
+  /// @param textureKey 
+  void setBackgroundImage(const String& textureKey);
+
+  /// @brief Gets the background image
+  /// @return textureKey
+  String& getBackgroundImage();
+
   /// @brief Sets the parent element
   /// @param parent 
   void setParent(Ref<Element> parent);
@@ -94,18 +104,33 @@ public:
 
   /// @brief Adds a child element
   /// @param child
-  void appendChild(Ref<Element> child);
+  void appendChild(Ref<Element &> child);
 
   /// @brief Finds and removes a child
   /// @param child
-  void removeChild(Ref<Element> child);
+  void removeChild(Ref<Element &> child);
 
   /// @brief Gets all children
   /// @return list of children
-  List<Ref<Element>> getChildren();
+  List<Ref<Element &>> getChildren();
+
+  /// @brief Sets the gap between children
+  /// @param gap 
+  void setGap(Real2 gap);
+
+  /// @brief Gets the gap between children
+  /// @return 
+  Real2 getGap();
+
+  /// @brief Calculates the bounds of the element
+  void calculateBounds();
+
+  /// @brief Gets the bounds of the element
+  /// @return bounds
+  Real2 getBounds();
 
   /// @brief Draws the element.
-  virtual void draw();
+  virtual void draw(Real2 offset = { 0, 0 });
 
 private:
   // The representative node of this element.
@@ -116,7 +141,10 @@ private:
   Real4 _margin;
   Real _borderWidth;
   Color4 _borderColor;
-  List<Ref<Element>> _children;
+  List<Ref<Element &>> _children;
+  Real2 _bounds;
+  Real2 _gap;
+  bool _isDirty;
 
   /// @brief Figures out which node is in use
   /// @return node-like

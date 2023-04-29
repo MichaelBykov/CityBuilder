@@ -11,6 +11,11 @@
 USING_NS_CITY_BUILDER
 using namespace UI;
 
+Element::Element() {
+  _isDirty = true;
+  _gap = { 0, 0 };
+}
+
 Ref<Node &> Element::_getActiveNode() {
   if (!_square.empty()) {
     return (Ref<Node &>)_square;
@@ -24,6 +29,7 @@ Ref<Node &> Element::_getActiveNode() {
 
 void Element::setDimensions(Real2 size) {
   _getActiveNode()->setDimensions(size);
+  _isDirty = true;
 }
 
 Real2 Element::getDimensions() {
@@ -32,6 +38,7 @@ Real2 Element::getDimensions() {
 
 void Element::setPosition(Real2 position) {
   _getActiveNode()->setPosition(position);
+  _isDirty = true;
 }
 
 Real2 Element::getPosition() {
@@ -48,6 +55,7 @@ Color4 Element::getColor() {
 
 void Element::setPadding(Real4 padding) {
   _padding = padding;
+  _isDirty = true;
 }
 
 Real4 Element::getPadding() {
@@ -56,6 +64,7 @@ Real4 Element::getPadding() {
 
 void Element::setMargin(Real4 margin) {
   _margin = margin;
+  _isDirty = true;
 }
 
 Real4 Element::getMargin() {
@@ -64,6 +73,7 @@ Real4 Element::getMargin() {
 
 void Element::setBorderWidth(Real width) {
   _borderWidth = width;
+  _isDirty = true;
 }
 
 Real Element::getBorderWidth() {
@@ -76,6 +86,7 @@ void Element::setBorderRadius(Real radius) {
     _round->setBorderRadius(radius);
     _square = nullptr;
   } else {
+    _square = new Rectangle((Ref<Node &>)_round);
     _round = nullptr;
   }
 }
@@ -103,30 +114,77 @@ Color4 Element::getBorderColor() {
   }
 }
 
-void Element::appendChild(Ref<Element> child) {
-  _children.append(child);
+void Element::setBackgroundImage(const String& textureKey) {
+  _getActiveNode()->setTexture(textureKey);
 }
 
-void Element::removeChild(Ref<Element> child) {
+String& Element::getBackgroundImage() {
+  return _getActiveNode()->getTexture();
+}
+
+void Element::appendChild(Ref<Element &> child) {
+  _children.append(child);
+  _isDirty = true;
+}
+
+void Element::removeChild(Ref<Element &> child) {
   for (int i = 0; i < _children.count(); i++) {
     if (_children[i] == child) {
       _children.remove(i);
+      _isDirty = true;
       break;
     }
   }
 }
 
-List<Ref<Element>> Element::getChildren() {
+List<Ref<Element &>> Element::getChildren() {
   return _children;
 }
 
-void Element::draw() {
-  if (_children.count() > 0) {
+Real2 Element::getBounds() {
+  return _bounds;
+}
+
+void Element::draw(Real2 offset) {
+  if (_isDirty) {
+    _bounds = { 0, 0 };
+
+    // Add up size of children
     for (auto &child : _children) {
-      child->draw();
+      _bounds.x += child->getBounds().x;
+
+      if (_bounds.y < getDimensions().y) {
+        _bounds.y = getDimensions().y;
+      }
+
+      // Apply gap if not first child
+      if (child != _children[0]) {
+        _bounds.x += _gap.x;
+      }
     }
-  } else {
-    System::loadTexture(_getActiveNode()->getTexture());
-    _getActiveNode()->drawMesh({ 0, 0 });
+
+    // Don't go smaller than current width
+    if (_bounds.x < getDimensions().x) {
+      _bounds.x = getDimensions().x;
+    }
+    if (_bounds.y < getDimensions().y) {
+      _bounds.y = getDimensions().y;
+    }
+
+    // Consider padding
+    _bounds.x += _padding.w + _padding.y;
+    _bounds.y += _padding.x + _padding.z;
+
+    // Set node size
+    _getActiveNode()->setDimensions(_bounds);
   }
+
+  System::loadTexture(_getActiveNode()->getTexture());
+
+  // Draw this node relative to parent
+  _getActiveNode()->drawMesh(offset);
+  for (auto &child : _children) {
+    child->draw(offset + getPosition());
+  }
+
 }

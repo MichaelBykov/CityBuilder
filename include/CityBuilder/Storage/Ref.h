@@ -141,6 +141,11 @@ public:
   bool operator ==(const Ref &other) const {
     return _data == other._data;
   }
+
+  /// Doesn't equal
+  bool operator !=(const Ref &other) const {
+    return _data != other._data;
+  }
 };
 
 
@@ -304,5 +309,10 @@ public:
   /// Compare refs
   bool operator ==(const Ref &other) const {
     return _data == other._data;
+  }
+
+  /// Doesn't equal
+  bool operator !=(const Ref &other) const {
+    return _data != other._data;
   }
 };

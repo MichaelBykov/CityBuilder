@@ -21,7 +21,10 @@ namespace {
   Ref<Rectangle &> zone_ico;
   Ref<Rectangle &> road_ico;
   Ref<Rectangle &> dozer_ico;
-  Ref<Element &> YEYUH;
+  Ref<Element &> hotbar;
+  Ref<Element &> zone;
+  Ref<Element &> road;
+  Ref<Element &> dozer;
 }
 
 void System::addTexture(const String& name, const String& path, int size, bool mipMaps) {
@@ -65,9 +68,14 @@ void System::start() {
   dozer_ico->setColor({ 179, 179, 179, 255 });
   dozer_ico->setTexture("Bulldozer");
 
-  YEYUH = new Element();
-  YEYUH->setColor({ 255, 255, 255, 255 });
-  YEYUH->setBorderRadius(20);
+  // hotbar = new Element();
+  // hotbar->setColor({ 45, 45, 45, 255 });
+  // hotbar->setBorderRadius(7);
+
+  // zone = new Element();
+  // zone->setDimensions({ 24, 24 });
+  // zone->setBackgroundImage("Zone");
+  // hotbar->appendChild(zone);
 }
 
 void System::resize(const Real2& screen) {
@@ -95,8 +103,8 @@ void System::resize(const Real2& screen) {
   Real2 dozer_ico_pos = { road_ico_pos.x + ico_size.x + Real(7), road_ico_pos.y };
   dozer_ico->setPosition(dozer_ico_pos);
 
-  YEYUH->setDimensions({ 100, 100 });
-  YEYUH->setPosition({ 100, 100 });
+  // hotbar->setDimensions({ 100, 100 });
+  // hotbar->setPosition({ 100, 100 });
 }
 
 void System::drawNode(Ref<Node &> root, Real2 offset) {
@@ -143,5 +151,5 @@ void System::draw(const Real2& screen) {
   System::loadTexture("Bulldozer");
   dozer_ico->drawMesh({ 0, 0 });
 
-  YEYUH->draw();
+  // hotbar->draw();
 }
