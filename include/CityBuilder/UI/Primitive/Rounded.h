@@ -13,9 +13,8 @@ namespace UI {
 
 class Rounded: public Node {
 public:
-  Rounded() {
-    setTexture("Round");
-  }
+  Rounded();
+  Rounded(Ref<Node &> other);
   ~Rounded() {}
 
   /// @brief Sets up the rounded rectangle mesh

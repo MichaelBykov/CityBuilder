@@ -32,6 +32,7 @@ add_library(CityBuilder
   "source/UI/Primitive/Rectangle.cpp"
   "source/UI/Primitive/Rounded.cpp"
   "source/UI/Primitive/Character.cpp"
+  "source/UI/Element.cpp"
   "Source/Rendering/Camera.cpp"
   "Source/Rendering/OrbitalCamera.cpp"
   "Source/Rendering/Mesh.cpp"

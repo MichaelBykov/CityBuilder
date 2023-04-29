@@ -10,6 +10,21 @@
 USING_NS_CITY_BUILDER
 using namespace UI;
 
+Rectangle::Rectangle() {
+  setTexture("Square");
+}
+
+Rectangle::Rectangle(Ref<Node &> other) {
+  setTexture("Square");
+  setDimensions(other->getDimensions());
+  setPosition(other->getPosition());
+  setColor(other->getColor());
+  setZIndex(other->getZIndex());
+  if (other->getTexture() != "Rounded") {
+    setTexture(other->getTexture());
+  }
+}
+
 void Rectangle::setMesh(Real2 offset) {
   Real2 local = offset + _position;
 

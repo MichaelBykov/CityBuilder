@@ -15,6 +15,8 @@ namespace UI {
 
 class Node {
 public:
+  virtual ~Node() = default;
+
   /// @brief Set the width and height of the node.
   /// @param size 
   void setDimensions(Real2 size);

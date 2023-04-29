@@ -13,9 +13,8 @@ namespace UI {
 
 class Rectangle: public Node {
 public:
-  Rectangle() {
-    setTexture("Square");
-  }
+  Rectangle();
+  Rectangle(Ref<Node &> other);
   ~Rectangle() {}
 
   /// @brief Sets up the rectangle mesh

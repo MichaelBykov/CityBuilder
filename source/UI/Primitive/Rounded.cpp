@@ -10,6 +10,21 @@
 USING_NS_CITY_BUILDER
 using namespace UI;
 
+Rounded::Rounded() {
+  setTexture("Round");
+}
+
+Rounded::Rounded(Ref<Node &> other) {
+  setTexture("Round");
+  setDimensions(other->getDimensions());
+  setPosition(other->getPosition());
+  setColor(other->getColor());
+  setZIndex(other->getZIndex());
+  if (other->getTexture() != "Square") {
+    setTexture(other->getTexture());
+  }
+}
+
 void Rounded::setMesh(Real2 offset) {
   Real2 local = offset + _position;
 
